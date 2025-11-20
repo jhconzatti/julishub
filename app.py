@@ -1,14 +1,23 @@
-import requests
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from routers import markets, calculators
 
-# URL da API pública de cotações
-url = "https://economia.awesomeapi.com.br/last/USD-BRL"
+app = FastAPI()
 
-print("Consultando API...")
+# Configuração de Segurança (CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-response = requests.get(url)
-data = response.json()
+# Rota Raiz (Health Check)
+@app.get("/")
+def home():
+    return {"status": "online", "project": "JulisHub API"}
 
-# Acessando os dados (parecido com JSON do JS)
-cotacao = data['USDBRL']['bid']
-
-print(f"O Dólar está custando: R$ {cotacao}")
+# Registrando as rotas de Mercado com o prefixo /api
+app.include_router(markets.router, prefix="/api") # Markets
+app.include_router(calculators.router, prefix="/api") # Calculators

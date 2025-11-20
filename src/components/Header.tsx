@@ -1,68 +1,50 @@
-import { Moon, Sun, BarChart3 } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
+import Navigation from "./Navigation"; 
+import { useTheme } from "@/contexts/ThemeContext";
+import { Moon, Sun, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
-  const { i18n } = useTranslation();
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
-
-  const languages = [
-    { code: 'pt-BR', label: 'PT' },
-    { code: 'en', label: 'EN' },
-    { code: 'es', label: 'ES' },
-  ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <BarChart3 className="h-5 w-5 text-primary-foreground" />
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        
+        {/* 1. Logo */}
+        <Link to="/" className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
+          <div className="bg-primary text-primary-foreground p-1.5 rounded-lg">
+            <Wallet className="w-5 h-5" />
           </div>
-          <h1 className="text-xl font-bold">
-            <span className="text-foreground">Julis</span>
-            <span className="text-primary">Hub</span>
-          </h1>
+          <span className="hidden sm:inline-block">JulisHub</span>
+        </Link>
+
+        {/* 2. Navegação (Agora autônoma, sem props) */}
+        <div className="hidden md:flex">
+            <Navigation />
         </div>
 
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center gap-1 rounded-full bg-muted/50 p-1">
-            {languages.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => changeLanguage(lang.code)}
-                className={`px-3 py-1.5 text-xs font-medium transition-all rounded-full ${
-                  i18n.language === lang.code
-                    ? 'bg-card shadow-md text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {lang.label}
-              </button>
-            ))}
-          </div>
-
-          <Button 
-            variant="ghost" 
-            size="icon" 
+        {/* 3. Ações */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={toggleTheme}
             className="rounded-full"
+            title="Alternar Tema"
           >
             {theme === 'dark' ? (
-              <Sun className="h-5 w-5" />
+              <Sun className="h-5 w-5 text-orange-400 transition-all" />
             ) : (
-              <Moon className="h-5 w-5" />
+              <Moon className="h-5 w-5 text-slate-700 transition-all" />
             )}
           </Button>
         </div>
+
       </div>
     </header>
   );
 };
 
+// MUDANÇA CRUCIAL AQUI: Export Default
 export default Header;

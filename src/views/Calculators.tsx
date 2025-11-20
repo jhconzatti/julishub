@@ -1,170 +1,137 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Calculator, DollarSign, Briefcase, TrendingUp, PiggyBank, Percent, ArrowRight } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Calculator, DollarSign, TrendingUp } from "lucide-react";
 
-const Calculators = () => {
-  const { t } = useTranslation();
-  const [activeCalculator, setActiveCalculator] = useState<string>('cltSalary');
-  const [grossSalary, setGrossSalary] = useState('');
-  const [result, setResult] = useState<string | null>(null);
+export default function Calculators() {
+  // Estado do Formulário
+  const [form, setForm] = useState({
+    aporte_inicial: 1000,
+    aporte_mensal: 500,
+    taxa_anual: 12,
+    anos: 10
+  });
 
-  const calculators = [
-    {
-      id: 'cltSalary',
-      title: t('calculators.cltSalary'),
-      icon: DollarSign,
-      description: 'Calculate your net salary after taxes and deductions',
-    },
-    {
-      id: 'cltVacation',
-      title: t('calculators.cltVacation'),
-      icon: Briefcase,
-      description: 'Calculate your vacation pay',
-    },
-    {
-      id: 'thirteenth',
-      title: t('calculators.thirteenth'),
-      icon: Calculator,
-      description: 'Calculate your 13th salary',
-    },
-    {
-      id: 'financialIndependence',
-      title: t('calculators.financialIndependence'),
-      icon: TrendingUp,
-      description: 'Calculate how much you need to achieve financial independence',
-    },
-    {
-      id: 'pgblVgbl',
-      title: t('calculators.pgblVgbl'),
-      icon: PiggyBank,
-      description: 'Compare PGBL vs VGBL retirement plans',
-    },
-    {
-      id: 'fixedIncome',
-      title: t('calculators.fixedIncome'),
-      icon: Percent,
-      description: 'Calculate returns on fixed income investments',
-    },
-  ];
+  const [resultado, setResultado] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleCalculate = () => {
-    const salary = parseFloat(grossSalary);
-    if (isNaN(salary) || salary <= 0) {
-      toast.error('Please enter a valid salary');
-      return;
-    }
-
-    // Simple calculation example (CLT Net Salary)
-    const inss = salary * 0.11; // 11% INSS
-    const irrf = salary * 0.075; // 7.5% IRRF (simplified)
-    const netSalary = salary - inss - irrf;
-
-    setResult(
-      `Gross Salary: R$ ${salary.toFixed(2)}\nINSS: R$ ${inss.toFixed(
-        2
-      )}\nIRRF: R$ ${irrf.toFixed(2)}\nNet Salary: R$ ${netSalary.toFixed(2)}`
-    );
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: parseFloat(e.target.value) || 0 });
   };
 
-  const activeCalcData = calculators.find((c) => c.id === activeCalculator);
+  const calcular = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/juros-compostos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      
+      const data = await response.json();
+      setResultado(data);
+    } catch (error) {
+      console.error("Erro ao calcular", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-full">
-      {/* Sidebar Menu */}
-      <aside className="lg:w-1/3 space-y-2">
-        {calculators.map((calc) => {
-          const Icon = calc.icon;
-          const isActive = activeCalculator === calc.id;
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Simulador de Investimentos</h2>
+        <p className="text-muted-foreground">Descubra o poder dos juros compostos no longo prazo.</p>
+      </div>
 
-          return (
-            <button
-              key={calc.id}
-              onClick={() => {
-                setActiveCalculator(calc.id);
-                setResult(null);
-                setGrossSalary('');
-              }}
-              className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 text-left ${
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-lg'
-                  : 'bg-card hover:bg-muted/50 text-foreground border border-border'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Icon
-                  className={`h-5 w-5 ${
-                    isActive ? 'text-primary-foreground' : 'text-primary'
-                  }`}
-                />
-                <span className="font-medium">{calc.title}</span>
-              </div>
-              {isActive && <ArrowRight className="h-5 w-5" />}
-            </button>
-          );
-        })}
-      </aside>
-
-      {/* Content Area */}
-      <div className="lg:w-2/3">
-        <Card className="rounded-xl border-border">
+      <div className="grid gap-6 lg:grid-cols-3">
+        
+        {/* Coluna 1: Formulário de Input */}
+        <Card className="lg:col-span-1 h-fit">
           <CardHeader>
-            <div className="flex items-center gap-3">
-              {activeCalcData && (
-                <>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <activeCalcData.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>{activeCalcData.title}</CardTitle>
-                    <CardDescription>{activeCalcData.description}</CardDescription>
-                  </div>
-                </>
-              )}
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" /> Parâmetros
+            </CardTitle>
+            <CardDescription>Preencha os dados da simulação</CardDescription>
           </CardHeader>
-
-          {activeCalculator === 'cltSalary' && (
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="grossSalary">Gross Monthly Salary (R$)</Label>
-                <Input
-                  id="grossSalary"
-                  type="number"
-                  placeholder="5000.00"
-                  value={grossSalary}
-                  onChange={(e) => setGrossSalary(e.target.value)}
-                  className="rounded-lg"
-                />
-              </div>
-              <Button onClick={handleCalculate} className="w-full rounded-lg">
-                <Calculator className="mr-2 h-4 w-4" />
-                {t('calculators.calculate')}
-              </Button>
-              {result && (
-                <div className="rounded-lg border border-border bg-muted/50 p-4">
-                  <h3 className="mb-2 font-semibold">{t('calculators.result')}</h3>
-                  <pre className="whitespace-pre-wrap text-sm">{result}</pre>
-                </div>
-              )}
-            </CardContent>
-          )}
-
-          {activeCalculator !== 'cltSalary' && (
-            <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Calculator under development
-              </p>
-            </CardContent>
-          )}
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Aporte Inicial (R$)</Label>
+              <Input type="number" name="aporte_inicial" value={form.aporte_inicial} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label>Aporte Mensal (R$)</Label>
+              <Input type="number" name="aporte_mensal" value={form.aporte_mensal} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label>Taxa de Juros Anual (%)</Label>
+              <Input type="number" name="taxa_anual" value={form.taxa_anual} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label>Tempo (Anos)</Label>
+              <Input type="number" name="anos" value={form.anos} onChange={handleChange} />
+            </div>
+            
+            <Button className="w-full mt-4" onClick={calcular} disabled={loading}>
+              {loading ? "Calculando..." : "Simular Futuro"}
+            </Button>
+          </CardContent>
         </Card>
+
+        {/* Coluna 2: Resultados e Gráfico */}
+        <div className="lg:col-span-2 space-y-6">
+          {resultado ? (
+            <>
+              {/* Cards de Resumo */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="bg-slate-50 dark:bg-slate-900">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Investido</CardTitle></CardHeader>
+                  <CardContent><div className="text-2xl font-bold text-slate-600">R$ {resultado.resumo.total_investido.toLocaleString()}</div></CardContent>
+                </Card>
+                <Card className="bg-green-50 dark:bg-green-950/30 border-green-200">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm text-green-600 dark:text-green-400">Total em Juros</CardTitle></CardHeader>
+                  <CardContent><div className="text-2xl font-bold text-green-600 dark:text-green-400">+ R$ {resultado.resumo.total_juros.toLocaleString()}</div></CardContent>
+                </Card>
+                <Card className="bg-primary/10 border-primary/20">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm text-primary">Patrimônio Final</CardTitle></CardHeader>
+                  <CardContent><div className="text-2xl font-bold text-primary">R$ {resultado.resumo.total_final.toLocaleString()}</div></CardContent>
+                </Card>
+              </div>
+
+              {/* Gráfico */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Evolução Patrimonial</CardTitle>
+                </CardHeader>
+                <CardContent className="h-[350px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={resultado.grafico} margin={{top: 20, right: 30, left: 20, bottom: 5}}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="ano" tick={{fontSize: 12}} />
+                      <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{fontSize: 12}} />
+                      <Tooltip 
+                        formatter={(value: number) => [`R$ ${value.toLocaleString()}`, ""]}
+                        contentStyle={{borderRadius: '8px'}}
+                      />
+                      <Legend />
+                      <Bar dataKey="investido" name="Dinheiro do Bolso" stackId="a" fill="#94a3b8" />
+                      <Bar dataKey="juros" name="Juros Compostos" stackId="a" fill="#10b981" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10">
+              <TrendingUp className="w-16 h-16 mb-4 opacity-20" />
+              <p>Preencha os dados ao lado e clique em Simular para ver a mágica acontecer.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default Calculators;
+}

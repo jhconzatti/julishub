@@ -45,6 +45,10 @@ const resources = {
         volume: 'Volume',
         marketCap: 'Cap. Mercado',
       },
+      footer: {
+        rights: "Todos os direitos reservados.",
+        developedBy: "Desenvolvido por",
+      },
     },
   },
   en: {
@@ -89,6 +93,10 @@ const resources = {
         volume: 'Volume',
         marketCap: 'Market Cap',
       },
+      footer: {
+        rights: "All rights reserved.",
+        developedBy: "Developed by",
+      },
     },
   },
   es: {
@@ -132,6 +140,10 @@ const resources = {
         change: 'Cambio',
         volume: 'Volumen',
         marketCap: 'Cap. Mercado',
+      },
+      footer: {
+        rights: "Todos los derechos reservados.",
+        developedBy: "Desarrollado por",
       },
     },
   },
