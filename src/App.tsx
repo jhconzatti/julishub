@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
-import { Footer } from "./components/Footer"; // Importe o Footer aqui
+import Footer from "./components/Footer";
 
 // Importação das Páginas
 import Index from "./pages/Index";
@@ -20,24 +20,26 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
-        <div className="flex min-h-screen flex-col">
-          {/* Header fica FORA das Routes para aparecer em todas as páginas */}
+        <div className="flex min-h-screen flex-col bg-background font-sans antialiased">
+          
+          {/* Header */}
           <Header />
           
-          <main className="flex-1">
+          {/* CORREÇÃO AQUI: Adicionado 'container mx-auto px-4' para alinhar com cabeçalho */}
+          <main className="flex-1 container mx-auto px-4 py-8">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/markets" element={<Markets />} />
               <Route path="/calculators" element={<Calculators />} />
               <Route path="/stocks" element={<Stocks />} />
               <Route path="/indicators" element={<Indicators />} />
-              {/* Rota de erro 404 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
 
-          {/* Footer fica FORA das Routes */}
+          {/* Footer */}
           <Footer />
+          
         </div>
         
         <Toaster />

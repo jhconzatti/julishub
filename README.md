@@ -1,73 +1,120 @@
-# Welcome to your Lovable project
+# 🚀 JulisHub - Financial & Technical Portfolio
 
-## Project info
+Bem-vindo ao **JulisHub**, uma aplicação Fullstack moderna desenvolvida para centralizar ferramentas financeiras, indicadores de mercado e demonstrar capacidades técnicas de desenvolvimento web e arquitetura de software.
 
-**URL**: https://lovable.dev/projects/ab33b018-9b4d-4c4a-818f-ea742cfb44b1
+O projeto utiliza uma abordagem desacoplada, separando uma interface rica e responsiva de um backend robusto em Python.
 
-## How can I edit this code?
+## 🛠️ Tech Stack
 
-There are several ways of editing your application.
+### Frontend (Client-Side)
+* **Core:** React (Vite), TypeScript
+* **Estilização:** Tailwind CSS, Shadcn/ui
+* **Gerenciamento de Estado/Dados:** React Hooks, Context API
+* **Visualização de Dados:** Recharts
+* **Internacionalização:** i18next (Suporte PT, EN, ES)
+* **Deploy:** Vercel (Frontend)
 
-**Use Lovable**
+### Backend (Server-Side)
+* **Core:** Python 3.12+
+* **Framework:** FastAPI (Alta performance e documentação automática)
+* **Servidor:** Uvicorn
+* **Validação de Dados:** Pydantic
+* **Integrações:** AwesomeAPI (Cotações), Yahoo Finance (Futuro)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ab33b018-9b4d-4c4a-818f-ea742cfb44b1) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📂 Estrutura do Projeto
 
-**Use your preferred IDE**
+O projeto segue uma organização modular:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```text
+julishub/
+├── src/                  # Frontend (React)
+│   ├── components/       # Componentes reutilizáveis (Header, Cards, UI)
+│   ├── views/            # Telas principais (Markets, Calculators, Stocks)
+│   ├── contexts/         # Contextos globais (Tema)
+│   ├── lib/              # Configurações (i18n, utils)
+│   └── hooks/            # Hooks personalizados
+├── routers/              # Backend (Rotas Modularizadas)
+│   ├── markets.py        # Lógica de cotação e histórico
+│   └── calculators.py    # Lógica de juros compostos
+├── app.py                # Ponto de entrada da API Python
+└── requirements.txt      # Dependências do Python
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## ⚡ Como Rodar o Projeto
 
-**Use GitHub Codespaces**
+Este é um projeto Fullstack, então você precisará de **dois terminais** rodando simultaneamente.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 1. Configurando o Backend (Python)
 
-## What technologies are used for this project?
+```bash
+# Crie um ambiente virtual (apenas na primeira vez)
+python -m venv .venv
 
-This project is built with:
+# Ative o ambiente
+# Windows:
+.\.venv\Scripts\Activate
+# Linux/Mac:
+source .venv/bin/activate
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Instale as dependências
+pip install fastapi uvicorn requests
 
-## How can I deploy this project?
+# Rode o servidor
+uvicorn app:app --reload
+```
+*O Backend estará rodando em: `http://127.0.0.1:8000`*
+*Documentação da API (Swagger): `http://127.0.0.1:8000/docs`*
 
-Simply open [Lovable](https://lovable.dev/projects/ab33b018-9b4d-4c4a-818f-ea742cfb44b1) and click on Share -> Publish.
+### 2. Configurando o Frontend (React)
 
-## Can I connect a custom domain to my Lovable project?
+Abra um **novo terminal** na raiz do projeto:
 
-Yes, you can!
+```bash
+# Instale as dependências do Node
+npm install
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Rode o servidor de desenvolvimento
+npm run dev
+```
+*O Frontend estará rodando em: `http://localhost:5173`*
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+## ✨ Funcionalidades Principais
+
+### 1. Mercados em Tempo Real (`/markets`)
+* Monitoramento de Dólar (USD/BRL) e Bitcoin (BTC/USD).
+* Gráficos interativos que carregam histórico de 30 dias sob demanda.
+* Atualização automática a cada 30 segundos.
+
+### 2. Calculadora de Juros Compostos (`/calculators`)
+* Simulador de investimento a longo prazo.
+* Cálculo processado no Backend (Python) garantindo precisão.
+* Gráfico de evolução patrimonial (Total Investido vs. Juros).
+
+### 3. Internacionalização e Temas
+* Alternância completa entre **Dark Mode** (Padrão) e **Light Mode**.
+* Suporte a Português, Inglês e Espanhol.
+
+---
+
+## 🌍 Modo Offline (Mock Mode)
+
+Para facilitar o desenvolvimento de interface sem depender da API Python (ou para trabalhar sem internet), o projeto suporta um modo Mock.
+
+1. Crie um arquivo `.env` na raiz do projeto.
+2. Adicione a configuração:
+```properties
+VITE_USE_MOCK=true
+```
+3. O Frontend passará a usar dados fictícios instantaneamente, permitindo trabalhar no layout sem o backend rodando.
+
+---
+
+## 📝 Licença
+
+Desenvolvido por **Juliano Conzatti**.

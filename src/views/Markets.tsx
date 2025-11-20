@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { getMarketData } from "@/services/marketService";
 
 // Tipos para os dados atuais (Snapshot)
 interface MarketData {
@@ -34,13 +35,14 @@ export default function Markets() {
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   // 1. Busca dados em tempo real (a cada 30s)
+  
   const fetchCurrentData = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/cotacao");
-      if (!response.ok) throw new Error("Erro na API");
-      const json = await response.json();
-      setMarketData(json);
-      setLoading(false);
+      const data = await getMarketData(); // A mágica acontece aqui
+      if (data) {
+        setMarketData(data);
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Erro ao buscar cotação:", error);
       setLoading(false);

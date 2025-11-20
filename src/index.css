@@ -2,12 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
+    /* --- PADRÃO (DARK) --- */
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
 
@@ -51,46 +48,60 @@ All colors MUST be HSL.
     --radius: 0.75rem;
   }
 
+  /* A classe .dark é redundante pois o :root já é dark, 
+     mas mantemos para compatibilidade com sistemas que forçam a classe */
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-
     --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 356 87% 29%;
     --primary-foreground: 0 0% 98%;
-
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-
     --border: 215 28% 17%;
     --input: 215 28% 17%;
     --ring: 356 87% 29%;
+  }
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 98%;
+  /* --- AQUI ENTRA O SEU NOVO TEMA CLARO --- */
+  .light {
+    --background: 0 0% 100%;     /* Branco */
+    --foreground: 222 47% 11%;   /* Texto Escuro (o fundo do dark) */
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --chart-1: 142 76% 36%;
-    --chart-2: 0 84% 60%;
-    --chart-3: 356 87% 29%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 217 91% 60%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Ajuste leve no primário para contraste no branco, mas mantendo a marca */
+    --primary: 356 87% 35%; 
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 210 40% 96.1%;  /* Cinza bem claro */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 214.3 31.8% 91.4%; /* Bordas cinza claro */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 356 87% 35%;
   }
 }
 
