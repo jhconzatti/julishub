@@ -23,6 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-#Pyhton
+# Pyhton
 .venv/
 __pycache__/
+
+# Vercel
+.vercel
+.env*.local
