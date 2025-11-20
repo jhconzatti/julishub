@@ -14,6 +14,8 @@ import Calculators from "./views/Calculators";
 import Stocks from "./views/Stocks";
 import Indicators from "./views/Indicators";
 
+import { Analytics } from "@vercel/analytics/next"
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -34,6 +36,7 @@ const App = () => (
               <Route path="/stocks" element={<Stocks />} />
               <Route path="/indicators" element={<Indicators />} />
               <Route path="*" element={<NotFound />} />
+              <Analytics />
             </Routes>
           </main>
 
