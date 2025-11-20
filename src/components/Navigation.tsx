@@ -33,6 +33,7 @@ const Navigation = () => {
             <Icon className="h-4 w-4" />
             <span>{item.label}</span>
           </NavLink>
+          
         );
       })}
     </nav>

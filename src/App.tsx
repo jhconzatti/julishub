@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
@@ -13,8 +14,6 @@ import Markets from "./views/Markets";
 import Calculators from "./views/Calculators";
 import Stocks from "./views/Stocks";
 import Indicators from "./views/Indicators";
-
-import { Analytics } from "@vercel/analytics/next"
 
 const queryClient = new QueryClient();
 
@@ -36,7 +35,6 @@ const App = () => (
               <Route path="/stocks" element={<Stocks />} />
               <Route path="/indicators" element={<Indicators />} />
               <Route path="*" element={<NotFound />} />
-              <Analytics />
             </Routes>
           </main>
 
@@ -48,6 +46,7 @@ const App = () => (
         <Toaster />
         <Sonner />
       </BrowserRouter>
+      <Analytics />
     </TooltipProvider>
   </QueryClientProvider>
 );
