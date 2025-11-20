@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { BarChart3, Flag, MapPin } from 'lucide-react';
 import MarketCard from '@/components/MarketCard';
 
 const Indicators = () => {
@@ -27,9 +28,12 @@ const Indicators = () => {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('indicators.brazil')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <Flag className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('indicators.brazil')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {brazilIndicators.map((indicator) => (
             <MarketCard key={indicator.title} {...indicator} />
@@ -38,9 +42,12 @@ const Indicators = () => {
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('indicators.usa')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('indicators.usa')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {usaIndicators.map((indicator) => (
             <MarketCard key={indicator.title} {...indicator} />
@@ -49,9 +56,12 @@ const Indicators = () => {
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('indicators.argentina')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <MapPin className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('indicators.argentina')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {argentinaIndicators.map((indicator) => (
             <MarketCard key={indicator.title} {...indicator} />

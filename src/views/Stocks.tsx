@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Briefcase, Building2, TrendingUp } from 'lucide-react';
 import MarketCard from '@/components/MarketCard';
 
 const Stocks = () => {
@@ -32,9 +33,12 @@ const Stocks = () => {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('stocks.usStocks')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <Briefcase className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('stocks.usStocks')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {usStocks.map((stock) => (
             <MarketCard key={stock.title} {...stock} />
@@ -43,9 +47,12 @@ const Stocks = () => {
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('stocks.brazilStocks')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <Building2 className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('stocks.brazilStocks')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {brazilStocks.map((stock) => (
             <MarketCard key={stock.title} {...stock} />
@@ -54,9 +61,12 @@ const Stocks = () => {
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('stocks.indices')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <TrendingUp className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('stocks.indices')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {indices.map((index) => (
             <MarketCard key={index.title} {...index} />
