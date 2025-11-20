@@ -12,28 +12,27 @@ const MarketCard = ({ title, value, change, changePercent }: MarketCardProps) =>
   const isPositive = change >= 0;
 
   return (
-    <Card className="transition-all hover:shadow-lg">
+    <Card className="transition-all duration-300 hover:shadow-md border-border rounded-xl">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="text-2xl font-bold text-card-foreground">{value}</div>
-          <div
-            className={`flex items-center gap-1 text-sm font-medium ${
-              isPositive ? 'text-success' : 'text-destructive'
-            }`}
-          >
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <div className="flex items-center gap-2">
             {isPositive ? (
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-4 w-4 text-emerald-500" />
             ) : (
-              <ArrowDown className="h-4 w-4" />
+              <ArrowDown className="h-4 w-4 text-red-500" />
             )}
-            <span>
+            <span
+              className={`text-sm font-medium ${
+                isPositive ? 'text-emerald-500' : 'text-red-500'
+              }`}
+            >
               {isPositive ? '+' : ''}
-              {changePercent.toFixed(2)}%
+              {change.toFixed(2)} ({isPositive ? '+' : ''}
+              {changePercent.toFixed(2)}%)
             </span>
           </div>
         </div>

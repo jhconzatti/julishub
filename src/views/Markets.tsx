@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Globe } from 'lucide-react';
 import MarketCard from '@/components/MarketCard';
 
 const Markets = () => {
@@ -29,9 +30,12 @@ const Markets = () => {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('markets.exchangeRates')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <Globe className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('markets.exchangeRates')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {exchangeRates.map((rate) => (
             <MarketCard key={rate.title} {...rate} />
@@ -40,9 +44,12 @@ const Markets = () => {
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold text-foreground">
-          {t('markets.topCryptos')}
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <Globe className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
+            {t('markets.topCryptos')}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {cryptos.map((crypto) => (
             <MarketCard key={crypto.title} {...crypto} />

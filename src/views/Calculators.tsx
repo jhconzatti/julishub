@@ -4,12 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calculator, DollarSign, Briefcase, TrendingUp, PiggyBank, Percent } from 'lucide-react';
+import { Calculator, DollarSign, Briefcase, TrendingUp, PiggyBank, Percent, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Calculators = () => {
   const { t } = useTranslation();
-  const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
+  const [activeCalculator, setActiveCalculator] = useState<string>('cltSalary');
   const [grossSalary, setGrossSalary] = useState('');
   const [result, setResult] = useState<string | null>(null);
 
@@ -71,68 +71,98 @@ const Calculators = () => {
     );
   };
 
+  const activeCalcData = calculators.find((c) => c.id === activeCalculator);
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="flex flex-col lg:flex-row gap-6 h-full">
+      {/* Sidebar Menu */}
+      <aside className="lg:w-1/3 space-y-2">
         {calculators.map((calc) => {
           const Icon = calc.icon;
           const isActive = activeCalculator === calc.id;
 
           return (
-            <Card
+            <button
               key={calc.id}
-              className={`cursor-pointer transition-all hover:shadow-lg ${
-                isActive ? 'border-primary ring-2 ring-primary' : ''
+              onClick={() => {
+                setActiveCalculator(calc.id);
+                setResult(null);
+                setGrossSalary('');
+              }}
+              className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 text-left ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-lg'
+                  : 'bg-card hover:bg-muted/50 text-foreground border border-border'
               }`}
-              onClick={() =>
-                setActiveCalculator(isActive ? null : calc.id)
-              }
             >
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">{calc.title}</CardTitle>
-                </div>
-                <CardDescription>{calc.description}</CardDescription>
-              </CardHeader>
-            </Card>
+              <div className="flex items-center gap-3">
+                <Icon
+                  className={`h-5 w-5 ${
+                    isActive ? 'text-primary-foreground' : 'text-primary'
+                  }`}
+                />
+                <span className="font-medium">{calc.title}</span>
+              </div>
+              {isActive && <ArrowRight className="h-5 w-5" />}
+            </button>
           );
         })}
-      </div>
+      </aside>
 
-      {activeCalculator === 'cltSalary' && (
-        <Card>
+      {/* Content Area */}
+      <div className="lg:w-2/3">
+        <Card className="rounded-xl border-border">
           <CardHeader>
-            <CardTitle>CLT Net Salary Calculator</CardTitle>
-            <CardDescription>
-              Enter your gross monthly salary to calculate your net salary
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="grossSalary">Gross Monthly Salary (R$)</Label>
-              <Input
-                id="grossSalary"
-                type="number"
-                placeholder="5000.00"
-                value={grossSalary}
-                onChange={(e) => setGrossSalary(e.target.value)}
-              />
+            <div className="flex items-center gap-3">
+              {activeCalcData && (
+                <>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <activeCalcData.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>{activeCalcData.title}</CardTitle>
+                    <CardDescription>{activeCalcData.description}</CardDescription>
+                  </div>
+                </>
+              )}
             </div>
-            <Button onClick={handleCalculate} className="w-full">
-              {t('calculators.calculate')}
-            </Button>
-            {result && (
-              <div className="rounded-lg border border-border bg-muted p-4">
-                <h3 className="mb-2 font-semibold">{t('calculators.result')}</h3>
-                <pre className="whitespace-pre-wrap text-sm">{result}</pre>
+          </CardHeader>
+
+          {activeCalculator === 'cltSalary' && (
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="grossSalary">Gross Monthly Salary (R$)</Label>
+                <Input
+                  id="grossSalary"
+                  type="number"
+                  placeholder="5000.00"
+                  value={grossSalary}
+                  onChange={(e) => setGrossSalary(e.target.value)}
+                  className="rounded-lg"
+                />
               </div>
-            )}
-          </CardContent>
+              <Button onClick={handleCalculate} className="w-full rounded-lg">
+                <Calculator className="mr-2 h-4 w-4" />
+                {t('calculators.calculate')}
+              </Button>
+              {result && (
+                <div className="rounded-lg border border-border bg-muted/50 p-4">
+                  <h3 className="mb-2 font-semibold">{t('calculators.result')}</h3>
+                  <pre className="whitespace-pre-wrap text-sm">{result}</pre>
+                </div>
+              )}
+            </CardContent>
+          )}
+
+          {activeCalculator !== 'cltSalary' && (
+            <CardContent>
+              <p className="text-muted-foreground text-center py-8">
+                Calculator under development
+              </p>
+            </CardContent>
+          )}
         </Card>
-      )}
+      </div>
     </div>
   );
 };
