@@ -10,7 +10,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getMarketData } from "@/services/marketService";
+// Importar getMarketData e useTranslation
+import { getMarketData } from "@/services/marketService"; 
+import { useTranslation } from "react-i18next"; // Adicionado para uso futuro
 
 // Tipos para os dados atuais (Snapshot)
 interface MarketData {
@@ -20,13 +22,19 @@ interface MarketData {
 
 // Tipo para os dados do gráfico (Histórico)
 interface HistoryPoint {
-  data: string;
-  valor: number;
+  data: string; // Ex: "2024-11-20"
+  valor: number; // Valor da cotação
 }
 
+// Definindo a URL base da API
+// ATENÇÃO: Essa variável de ambiente agora é crucial e deve ser injetada pelo Vite.
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function Markets() {
-  // Estados
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
+  const { t } = useTranslation(); // Adicionado para internacionalização
+  
+  // Estados com tipagem estrita
+  const [marketData, setMarketData] = useState<MarketData | null>(null); 
   const [loading, setLoading] = useState(true);
   
   // Estado para controlar qual card está expandido e o seu gráfico
@@ -35,10 +43,10 @@ export default function Markets() {
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   // 1. Busca dados em tempo real (a cada 30s)
-  
   const fetchCurrentData = async () => {
     try {
-      const data = await getMarketData(); // A mágica acontece aqui
+      // getMarketData() deve usar o VITE_API_URL internamente para a cotação principal
+      const data = await getMarketData() as MarketData; 
       if (data) {
         setMarketData(data);
         setLoading(false);
@@ -60,6 +68,7 @@ export default function Markets() {
     // Se já estiver aberto, fecha
     if (selectedCoin === coin) {
       setSelectedCoin(null);
+      setHistoryData([]); // Limpa gráfico
       return;
     }
 
@@ -69,11 +78,22 @@ export default function Markets() {
     setHistoryData([]); // Limpa gráfico anterior
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/historico/${coin}`);
-      const json = await response.json();
+      // CORREÇÃO: Usa API_BASE_URL, que contém 'https://julis-hub-api.onrender.com/api'
+      const endpoint = `${API_BASE_URL}/historico/${coin}`;
+      console.log(`Buscando histórico de: ${endpoint}`);
+      
+      const response = await fetch(endpoint);
+      
+      if (!response.ok) {
+        throw new Error(`Falha ao carregar histórico: ${response.status}`);
+      }
+      
+      const json = await response.json() as HistoryPoint[];
       setHistoryData(json);
+
     } catch (error) {
       console.error("Erro ao buscar histórico:", error);
+      // Aqui você pode adicionar um toast de erro
     } finally {
       setLoadingHistory(false);
     }
@@ -91,12 +111,17 @@ export default function Markets() {
     );
   };
 
+  // Renderização principal (o JSX permanece o mesmo)
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Mercado Financeiro</h2>
-          <p className="text-muted-foreground">Cotações em tempo real e histórico de 30 dias.</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('markets.title') || "Mercado Financeiro"}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('markets.description') || "Cotações em tempo real e histórico de 30 dias."}
+          </p>
         </div>
         <button 
           onClick={fetchCurrentData}
@@ -109,8 +134,8 @@ export default function Markets() {
 
       {!marketData && loading && (
         <div className="grid gap-4 md:grid-cols-2">
-           <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
-           <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+           <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+           <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
         </div>
       )}
 
@@ -129,11 +154,11 @@ export default function Markets() {
             <CardContent>
               <div className="text-3xl font-bold">R$ {parseFloat(marketData.dolar.valor).toFixed(2)}</div>
               <div className="flex justify-between items-center mt-2">
-                 <VariationBadge value={marketData.dolar.var} />
-                 <span className="text-xs text-muted-foreground flex items-center">
-                    {selectedCoin === 'dolar' ? 'Clique para fechar' : 'Clique para ver gráfico'} 
-                    <TrendingUp className="w-3 h-3 ml-1" />
-                 </span>
+                <VariationBadge value={marketData.dolar.var} />
+                <span className="text-xs text-muted-foreground flex items-center">
+                   {selectedCoin === 'dolar' ? 'Clique para fechar' : 'Clique para ver gráfico'} 
+                   <TrendingUp className="w-3 h-3 ml-1" />
+                </span>
               </div>
             </CardContent>
             
@@ -158,6 +183,7 @@ export default function Markets() {
                         tickLine={false} 
                         axisLine={false}
                         minTickGap={30}
+                        tickFormatter={(value) => value.slice(5, 10)} // Exibe apenas Mês/Dia
                       />
                       <YAxis 
                         domain={['auto', 'auto']} 
@@ -165,10 +191,10 @@ export default function Markets() {
                         tickLine={false} 
                         axisLine={false}
                         width={40}
-                        tickFormatter={(value) => `R$${value}`}
+                        tickFormatter={(value) => `R$${value.toFixed(2)}`}
                       />
                       <Tooltip 
-                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, "Valor"]}
+                        formatter={(value: number) => [`R$ ${value.toFixed(4)}`, "Valor"]}
                         contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
                       />
                       <Area 
@@ -198,11 +224,11 @@ export default function Markets() {
             <CardContent>
               <div className="text-3xl font-bold">US$ {parseFloat(marketData.bitcoin.valor).toLocaleString('en-US')}</div>
               <div className="flex justify-between items-center mt-2">
-                 <VariationBadge value={marketData.bitcoin.var} />
-                 <span className="text-xs text-muted-foreground flex items-center">
-                    {selectedCoin === 'bitcoin' ? 'Clique para fechar' : 'Clique para ver gráfico'} 
-                    <TrendingUp className="w-3 h-3 ml-1" />
-                 </span>
+                <VariationBadge value={marketData.bitcoin.var} />
+                <span className="text-xs text-muted-foreground flex items-center">
+                   {selectedCoin === 'bitcoin' ? 'Clique para fechar' : 'Clique para ver gráfico'} 
+                   <TrendingUp className="w-3 h-3 ml-1" />
+                </span>
               </div>
             </CardContent>
 
@@ -227,6 +253,7 @@ export default function Markets() {
                         tickLine={false} 
                         axisLine={false}
                         minTickGap={30}
+                        tickFormatter={(value) => value.slice(5, 10)} // Exibe apenas Mês/Dia
                       />
                       <YAxis 
                         domain={['auto', 'auto']} 
