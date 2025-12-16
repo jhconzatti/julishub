@@ -1,66 +1,131 @@
 from fastapi import APIRouter, HTTPException
-from datetime import datetime
 import requests
 
 router = APIRouter()
 
-@router.get("/cotacao")
-def get_cotacao():
-    # Lógica Original
-    url = "https://economia.awesomeapi.com.br/last/USD-BRL,BTC-USD"
+def fetch_awesomeapi():
+    """Tenta buscar dados da AwesomeAPI"""
     try:
-        response = requests.get(url)
-        data = response.json()
+        # Busca Dólar, Euro e Bitcoin
+        url = "https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL,BTC-USD"
+        resp = requests.get(url, timeout=3)
+        if resp.status_code != 200: return None
+        
+        data = resp.json()
         return {
             "dolar": {
-                "valor": data['USDBRL']['bid'],
-                "var": data['USDBRL']['varBid']
+                "valor": data["USDBRL"]["bid"],
+                "var": data["USDBRL"]["pctChange"]
+            },
+            "euro": {
+                "valor": data["EURBRL"]["bid"],
+                "var": data["EURBRL"]["pctChange"]
             },
             "bitcoin": {
-                "valor": data['BTCUSD']['bid'],
-                "var": data['BTCUSD']['varBid']
+                "valor": data["BTCUSD"]["bid"],
+                "var": data["BTCUSD"]["pctChange"]
+            },
+            "ibovespa": { # AwesomeAPI não tem IBOV fácil, retornamos zerado ou buscamos de outra
+                "valor": "0.00",
+                "var": "0.00"
             }
         }
-    except Exception:
-        raise HTTPException(status_code=503, detail="Erro ao buscar cotação")
+    except:
+        return None
+
+def fetch_hgbrasil():
+    """Fallback: Tenta buscar da HG Brasil (dados podem ter delay de 15min na free)"""
+    try:
+        # A chave pública da HG Brasil para testes é 'key=development' ou sem chave (limite baixo)
+        # O ideal é você criar uma conta grátis em hgbrasil.com e colocar sua chave aqui
+        url = "https://api.hgbrasil.com/finance?format=json-cors&key=development"
+        resp = requests.get(url, timeout=3)
+        if resp.status_code != 200: return None
+        
+        data = resp.json()["results"]
+        currencies = data["currencies"]
+        stocks = data["stocks"]
+        
+        return {
+            "dolar": {
+                "valor": str(currencies["USD"]["buy"]),
+                "var": str(currencies["USD"]["variation"])
+            },
+            "euro": {
+                "valor": str(currencies["EUR"]["buy"]),
+                "var": str(currencies["EUR"]["variation"])
+            },
+            "bitcoin": {
+                "valor": str(currencies["BTC"]["buy"]),
+                "var": str(currencies["BTC"]["variation"])
+            },
+            "ibovespa": {
+                "valor": str(stocks["IBOVESPA"]["points"]),
+                "var": str(stocks["IBOVESPA"]["variation"])
+            }
+        }
+    except:
+        return None
+
+@router.get("/cotacao")
+def get_cotacao():
+    # 1. Tenta AwesomeAPI (Melhor para moedas em tempo real)
+    data = fetch_awesomeapi()
+    
+    # 2. Se falhar ou se quisermos complementar (ex: IBOV), tenta HG Brasil
+    if not data:
+        print("AwesomeAPI falhou, tentando HG Brasil...")
+        data = fetch_hgbrasil()
+        
+    # 3. Se tudo falhar, retorna zerado para não quebrar o Frontend
+    if not data:
+        return {
+            "dolar": {"valor": "0.00", "var": "0.00"},
+            "euro": {"valor": "0.00", "var": "0.00"},
+            "bitcoin": {"valor": "0.00", "var": "0.00"},
+            "ibovespa": {"valor": "0.00", "var": "0.00"}
+        }
+        
+    # Se conseguimos dados da AwesomeAPI mas falta IBOVESPA, tentamos pegar só IBOV da HG
+    if data["ibovespa"]["valor"] == "0.00":
+        hg_data = fetch_hgbrasil()
+        if hg_data:
+            data["ibovespa"] = hg_data["ibovespa"]
+
+    return data
 
 @router.get("/historico/{moeda}")
 def get_historico(moeda: str):
-    # Lógica Nova: Busca 30 dias de histórico
-    # Mapeamento simples para entender o que o frontend pede
-    codigos = {
+    # AwesomeAPI ainda é a melhor para histórico gratuito simples
+    symbol_map = {
         "dolar": "USD-BRL",
+        "euro": "EUR-BRL",
         "bitcoin": "BTC-USD"
     }
     
-    if moeda not in codigos:
-        raise HTTPException(status_code=400, detail="Moeda não suportada")
-    
-    pair_code = codigos[moeda]
-    # API do AwesomeAPI para sequencial (30 dias)
-    url = f"https://economia.awesomeapi.com.br/json/daily/{pair_code}/30"
+    symbol = symbol_map.get(moeda)
+    if not symbol: return []
     
     try:
-        response = requests.get(url)
-        data = response.json()
+        url = f"https://economia.awesomeapi.com.br/json/daily/{symbol}/30"
+        resp = requests.get(url, timeout=5)
         
-        # Tratamento de dados: A API devolve muita sujeira, vamos limpar para o React
-        # Ela devolve uma lista. Vamos pegar Data e Valor de Fechamento (bid)
-        historico_limpo = []
+        if resp.status_code != 200: return []
+
+        data = resp.json()
+        historico = []
         
-        for dia in data:
-            # Converter timestamp para data legível (Ex: "20/11")
-            timestamp = int(dia['timestamp'])
-            data_formatada = datetime.fromtimestamp(timestamp).strftime('%d/%m')
+        for item in data:
+            from datetime import datetime
+            ts = int(item["timestamp"])
+            date_str = datetime.fromtimestamp(ts).strftime("%d/%m")
             
-            historico_limpo.append({
-                "data": data_formatada,
-                "valor": float(dia['bid'])
+            historico.append({
+                "data": date_str,
+                "valor": float(item["bid"])
             })
             
-        # A API entrega do mais novo pro mais velho, vamos inverter para o gráfico
-        return historico_limpo[::-1] 
-
+        return historico[::-1]
     except Exception as e:
-        print(e) # Para debug no terminal
-        raise HTTPException(status_code=503, detail="Erro ao buscar histórico")
+        print(f"Erro histórico: {e}")
+        return []
