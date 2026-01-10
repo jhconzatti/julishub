@@ -19,32 +19,18 @@ interface ExchangeRate {
 }
 
 const CURRENCIES = [
-  // Principais
+  // Principais - Moedas disponíveis na AwesomeAPI
   { code: "BRL", symbol: "R$", name: "Real Brasileiro", flag: "🇧🇷" },
   { code: "USD", symbol: "US$", name: "Dólar Americano", flag: "🇺🇸" },
-  { code: "USDT", symbol: "US$✈️", name: "Dólar Turismo", flag: "✈️💵" },
   { code: "EUR", symbol: "€", name: "Euro", flag: "🇪🇺" },
-  { code: "EURT", symbol: "€✈️", name: "Euro Turismo", flag: "✈️€" },
   { code: "BTC", symbol: "₿", name: "Bitcoin", flag: "₿" },
   
   // América do Sul
   { code: "ARS", symbol: "ARS$", name: "Peso Argentino", flag: "🇦🇷" },
   { code: "CLP", symbol: "CLP$", name: "Peso Chileno", flag: "🇨🇱" },
-  { code: "COP", symbol: "COP$", name: "Peso Colombiano", flag: "🇨🇴" },
-  { code: "PEN", symbol: "S/", name: "Sol Peruano", flag: "🇵🇪" },
-  { code: "UYU", symbol: "UYU$", name: "Peso Uruguaio", flag: "🇺🇾" },
-  { code: "PYG", symbol: "₲", name: "Guarani Paraguaio", flag: "🇵🇾" },
-  { code: "BOB", symbol: "Bs", name: "Boliviano", flag: "🇧🇴" },
-  { code: "VES", symbol: "Bs.S", name: "Bolívar Venezuelano", flag: "🇻🇪" },
   
-  // América Central e Caribe
+  // América Central
   { code: "MXN", symbol: "MXN$", name: "Peso Mexicano", flag: "🇲🇽" },
-  { code: "CRC", symbol: "₡", name: "Colón Costarriquenho", flag: "🇨🇷" },
-  { code: "GTQ", symbol: "Q", name: "Quetzal Guatemalteco", flag: "🇬🇹" },
-  { code: "HNL", symbol: "L", name: "Lempira Hondurenho", flag: "🇭🇳" },
-  { code: "NIO", symbol: "C$", name: "Córdoba Nicaraguense", flag: "🇳🇮" },
-  { code: "PAB", symbol: "B/", name: "Balboa Panamenho", flag: "🇵🇦" },
-  { code: "DOP", symbol: "RD$", name: "Peso Dominicano", flag: "🇩🇴" },
 ];
 
 export default function ExchangeCalculator() {

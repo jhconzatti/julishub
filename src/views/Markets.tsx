@@ -10,11 +10,6 @@ import { DollarSign, Euro } from "lucide-react";
 import { fetchWithCache, canManualRefresh, getRemainingCooldown, updateManualRefreshTimestamp } from "@/lib/apiCache";
 import { toast } from "sonner";
 
-interface HistoryPoint {
-  data: string;
-  valor: number;
-}
-
 const getApiUrl = () => {
   const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
   const baseUrl = url.replace(/\/$/, ""); // Remove trailing slash
@@ -32,10 +27,6 @@ export default function Markets() {
   const [usaIndexes, setUsaIndexes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const [selectedPair, setSelectedPair] = useState<string | null>(null);
-  const [historyData, setHistoryData] = useState<HistoryPoint[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const fetchAllData = async (forceRefresh: boolean = false) => {
     setLoading(true);
@@ -62,30 +53,12 @@ export default function Markets() {
           group: "Principais",
         },
         {
-          pair: "USDT_BRL",
-          label: exchangeJson.USDT_BRL?.label || "Dólar Turismo → Real",
-          valor: `R$ ${parseFloat(exchangeJson.USDT_BRL?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USDT_BRL?.var || "0",
-          icon: <span>✈️💵</span>,
-          color: "green-600",
-          group: "Principais",
-        },
-        {
           pair: "EUR_BRL",
           label: exchangeJson.EUR_BRL?.label || "Euro → Real",
           valor: `R$ ${parseFloat(exchangeJson.EUR_BRL?.valor || "0").toFixed(2)}`,
           var: exchangeJson.EUR_BRL?.var || "0",
           icon: <Euro className="h-4 w-4" />,
           color: "blue-500",
-          group: "Principais",
-        },
-        {
-          pair: "EURT_BRL",
-          label: exchangeJson.EURT_BRL?.label || "Euro Turismo → Real",
-          valor: `R$ ${parseFloat(exchangeJson.EURT_BRL?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.EURT_BRL?.var || "0",
-          icon: <span>✈️€</span>,
-          color: "blue-600",
           group: "Principais",
         },
         {
@@ -165,127 +138,7 @@ export default function Markets() {
           group: "América do Sul",
         },
 
-        // América do Sul - Colômbia
-        {
-          pair: "USD_COP",
-          label: exchangeJson.USD_COP?.label || "Dólar → Peso Colombiano",
-          valor: `COP$ ${parseFloat(exchangeJson.USD_COP?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_COP?.var || "0",
-          icon: <span>🇨🇴</span>,
-          color: "yellow-500",
-          group: "América do Sul",
-        },
-        {
-          pair: "COP_BRL",
-          label: exchangeJson.COP_BRL?.label || "Peso Colombiano → Real",
-          valor: `R$ ${parseFloat(exchangeJson.COP_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.COP_BRL?.var || "0",
-          icon: <span>🇨🇴→🇧🇷</span>,
-          color: "yellow-400",
-          group: "América do Sul",
-        },
-
-        // América do Sul - Peru
-        {
-          pair: "USD_PEN",
-          label: exchangeJson.USD_PEN?.label || "Dólar → Sol Peruano",
-          valor: `PEN S/ ${parseFloat(exchangeJson.USD_PEN?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_PEN?.var || "0",
-          icon: <span>🇵🇪</span>,
-          color: "rose-500",
-          group: "América do Sul",
-        },
-        {
-          pair: "PEN_BRL",
-          label: exchangeJson.PEN_BRL?.label || "Sol Peruano → Real",
-          valor: `R$ ${parseFloat(exchangeJson.PEN_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.PEN_BRL?.var || "0",
-          icon: <span>🇵🇪→🇧🇷</span>,
-          color: "rose-400",
-          group: "América do Sul",
-        },
-
-        // América do Sul - Uruguai
-        {
-          pair: "USD_UYU",
-          label: exchangeJson.USD_UYU?.label || "Dólar → Peso Uruguaio",
-          valor: `UYU$ ${parseFloat(exchangeJson.USD_UYU?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_UYU?.var || "0",
-          icon: <span>🇺🇾</span>,
-          color: "sky-600",
-          group: "América do Sul",
-        },
-        {
-          pair: "UYU_BRL",
-          label: exchangeJson.UYU_BRL?.label || "Peso Uruguaio → Real",
-          valor: `R$ ${parseFloat(exchangeJson.UYU_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.UYU_BRL?.var || "0",
-          icon: <span>🇺🇾→🇧🇷</span>,
-          color: "sky-400",
-          group: "América do Sul",
-        },
-
-        // América do Sul - Paraguai
-        {
-          pair: "USD_PYG",
-          label: exchangeJson.USD_PYG?.label || "Dólar → Guarani Paraguaio",
-          valor: `PYG₲ ${parseFloat(exchangeJson.USD_PYG?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_PYG?.var || "0",
-          icon: <span>🇵🇾</span>,
-          color: "emerald-600",
-          group: "América do Sul",
-        },
-        {
-          pair: "PYG_BRL",
-          label: exchangeJson.PYG_BRL?.label || "Guarani Paraguaio → Real",
-          valor: `R$ ${parseFloat(exchangeJson.PYG_BRL?.valor || "0").toFixed(6)}`,
-          var: exchangeJson.PYG_BRL?.var || "0",
-          icon: <span>🇵🇾→🇧🇷</span>,
-          color: "emerald-400",
-          group: "América do Sul",
-        },
-
-        // América do Sul - Bolívia
-        {
-          pair: "USD_BOB",
-          label: exchangeJson.USD_BOB?.label || "Dólar → Boliviano",
-          valor: `BOB Bs ${parseFloat(exchangeJson.USD_BOB?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_BOB?.var || "0",
-          icon: <span>🇧🇴</span>,
-          color: "green-500",
-          group: "América do Sul",
-        },
-        {
-          pair: "BOB_BRL",
-          label: exchangeJson.BOB_BRL?.label || "Boliviano → Real",
-          valor: `R$ ${parseFloat(exchangeJson.BOB_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.BOB_BRL?.var || "0",
-          icon: <span>🇧🇴→🇧🇷</span>,
-          color: "green-400",
-          group: "América do Sul",
-        },
-
-        // América do Sul - Venezuela
-        {
-          pair: "USD_VES",
-          label: exchangeJson.USD_VES?.label || "Dólar → Bolívar Venezuelano",
-          valor: `VES Bs.S ${parseFloat(exchangeJson.USD_VES?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_VES?.var || "0",
-          icon: <span>🇻🇪</span>,
-          color: "red-600",
-          group: "América do Sul",
-        },
-        {
-          pair: "VES_BRL",
-          label: exchangeJson.VES_BRL?.label || "Bolívar Venezuelano → Real",
-          valor: `R$ ${parseFloat(exchangeJson.VES_BRL?.valor || "0").toFixed(6)}`,
-          var: exchangeJson.VES_BRL?.var || "0",
-          icon: <span>🇻🇪→🇧🇷</span>,
-          color: "red-400",
-          group: "América do Sul",
-        },
-
-        // América Central e Caribe - México
+        // América Central - México
         {
           pair: "USD_MXN",
           label: exchangeJson.USD_MXN?.label || "Dólar → Peso Mexicano",
@@ -293,7 +146,7 @@ export default function Markets() {
           var: exchangeJson.USD_MXN?.var || "0",
           icon: <span>🇲🇽</span>,
           color: "pink-500",
-          group: "América Central e Caribe",
+          group: "América Central",
         },
         {
           pair: "MXN_BRL",
@@ -302,130 +155,10 @@ export default function Markets() {
           var: exchangeJson.MXN_BRL?.var || "0",
           icon: <span>🇲🇽→🇧🇷</span>,
           color: "pink-400",
-          group: "América Central e Caribe",
-        },
-
-        // América Central - Costa Rica
-        {
-          pair: "USD_CRC",
-          label: exchangeJson.USD_CRC?.label || "Dólar → Colón Costarriquenho",
-          valor: `CRC₡ ${parseFloat(exchangeJson.USD_CRC?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_CRC?.var || "0",
-          icon: <span>🇨🇷</span>,
-          color: "blue-600",
-          group: "América Central e Caribe",
-        },
-        {
-          pair: "CRC_BRL",
-          label: exchangeJson.CRC_BRL?.label || "Colón Costarriquenho → Real",
-          valor: `R$ ${parseFloat(exchangeJson.CRC_BRL?.valor || "0").toFixed(6)}`,
-          var: exchangeJson.CRC_BRL?.var || "0",
-          icon: <span>🇨🇷→🇧🇷</span>,
-          color: "blue-400",
-          group: "América Central e Caribe",
-        },
-
-        // América Central - Guatemala
-        {
-          pair: "USD_GTQ",
-          label: exchangeJson.USD_GTQ?.label || "Dólar → Quetzal Guatemalteco",
-          valor: `GTQ Q ${parseFloat(exchangeJson.USD_GTQ?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_GTQ?.var || "0",
-          icon: <span>🇬🇹</span>,
-          color: "cyan-600",
-          group: "América Central e Caribe",
-        },
-        {
-          pair: "GTQ_BRL",
-          label: exchangeJson.GTQ_BRL?.label || "Quetzal Guatemalteco → Real",
-          valor: `R$ ${parseFloat(exchangeJson.GTQ_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.GTQ_BRL?.var || "0",
-          icon: <span>🇬🇹→🇧🇷</span>,
-          color: "cyan-400",
-          group: "América Central e Caribe",
-        },
-
-        // América Central - Honduras
-        {
-          pair: "USD_HNL",
-          label: exchangeJson.USD_HNL?.label || "Dólar → Lempira Hondurenho",
-          valor: `HNL L ${parseFloat(exchangeJson.USD_HNL?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_HNL?.var || "0",
-          icon: <span>🇭🇳</span>,
-          color: "indigo-600",
-          group: "América Central e Caribe",
-        },
-        {
-          pair: "HNL_BRL",
-          label: exchangeJson.HNL_BRL?.label || "Lempira Hondurenho → Real",
-          valor: `R$ ${parseFloat(exchangeJson.HNL_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.HNL_BRL?.var || "0",
-          icon: <span>🇭🇳→🇧🇷</span>,
-          color: "indigo-400",
-          group: "América Central e Caribe",
-        },
-
-        // América Central - Nicarágua
-        {
-          pair: "USD_NIO",
-          label: exchangeJson.USD_NIO?.label || "Dólar → Córdoba Nicaraguense",
-          valor: `NIO C$ ${parseFloat(exchangeJson.USD_NIO?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_NIO?.var || "0",
-          icon: <span>🇳🇮</span>,
-          color: "purple-600",
-          group: "América Central e Caribe",
-        },
-        {
-          pair: "NIO_BRL",
-          label: exchangeJson.NIO_BRL?.label || "Córdoba Nicaraguense → Real",
-          valor: `R$ ${parseFloat(exchangeJson.NIO_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.NIO_BRL?.var || "0",
-          icon: <span>🇳🇮→🇧🇷</span>,
-          color: "purple-400",
-          group: "América Central e Caribe",
-        },
-
-        // América Central - Panamá
-        {
-          pair: "USD_PAB",
-          label: exchangeJson.USD_PAB?.label || "Dólar → Balboa Panamenho",
-          valor: `PAB B/ ${parseFloat(exchangeJson.USD_PAB?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.USD_PAB?.var || "0",
-          icon: <span>🇵🇦</span>,
-          color: "teal-600",
-          group: "América Central e Caribe",
-        },
-        {
-          pair: "PAB_BRL",
-          label: exchangeJson.PAB_BRL?.label || "Balboa Panamenho → Real",
-          valor: `R$ ${parseFloat(exchangeJson.PAB_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.PAB_BRL?.var || "0",
-          icon: <span>🇵🇦→🇧🇷</span>,
-          color: "teal-400",
-          group: "América Central e Caribe",
-        },
-
-        // Caribe - República Dominicana
-        {
-          pair: "USD_DOP",
-          label: exchangeJson.USD_DOP?.label || "Dólar → Peso Dominicano",
-          valor: `DOP RD$ ${parseFloat(exchangeJson.USD_DOP?.valor || "0").toFixed(2)}`,
-          var: exchangeJson.USD_DOP?.var || "0",
-          icon: <span>🇩🇴</span>,
-          color: "violet-600",
-          group: "América Central e Caribe",
-        },
-        {
-          pair: "DOP_BRL",
-          label: exchangeJson.DOP_BRL?.label || "Peso Dominicano → Real",
-          valor: `R$ ${parseFloat(exchangeJson.DOP_BRL?.valor || "0").toFixed(4)}`,
-          var: exchangeJson.DOP_BRL?.var || "0",
-          icon: <span>🇩🇴→🇧🇷</span>,
-          color: "violet-400",
-          group: "América Central e Caribe",
+          group: "América Central",
         },
       ];
-      
+
       setExchangeData(exchangeArray);
       
       // Brazil indexes com cache
@@ -492,44 +225,7 @@ export default function Markets() {
     }
   };
 
-  const handleCardClick = async (pair: string) => {
-    if (selectedPair === pair) {
-      setSelectedPair(null);
-      setHistoryData([]);
-      return;
-    }
 
-    setSelectedPair(pair);
-    setLoadingHistory(true);
-    setHistoryData([]);
-
-    // Apenas pares principais têm histórico disponível
-    const historyMap: Record<string, string> = {
-      "USD_BRL": "dolar",
-      "EUR_BRL": "euro",
-      "BTC_USD": "bitcoin",
-    };
-
-    const historyKey = historyMap[pair];
-    if (!historyKey) {
-      setLoadingHistory(false);
-      return;
-    }
-
-    try {
-      const endpoint = `${API_BASE_URL}/historico/${historyKey}`;
-      const response = await fetch(endpoint);
-      
-      if (!response.ok) throw new Error(`Status: ${response.status}`);
-      
-      const json = await response.json() as HistoryPoint[];
-      setHistoryData(json);
-    } catch (error) {
-      console.error("❌ Erro ao buscar histórico:", error);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
@@ -542,14 +238,16 @@ export default function Markets() {
             {t('markets.description') || "Cotações e índices em tempo real"}
           </p>
         </div>
-        <button 
-          onClick={handleManualRefresh}
-          disabled={isRefreshing}
-          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Atualizar agora (disponível a cada 5 minutos)"
-        >
-          <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Atualizar agora (disponível a cada 5 minutos)"
+          >
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
+          </button>
+        </div>
       </div>
 
       <Tabs defaultValue="exchange" className="w-full">
@@ -578,10 +276,6 @@ export default function Markets() {
           ) : (
             <MarketExchange 
               exchangeData={exchangeData}
-              onCardClick={handleCardClick}
-              selectedPair={selectedPair}
-              historyData={historyData}
-              loadingHistory={loadingHistory}
             />
           )}
         </TabsContent>

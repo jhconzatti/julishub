@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,6 +119,8 @@ const saveToStorage = <T,>(key: string, value: T): void => {
 };
 
 export default function Calculators() {
+  const { t } = useTranslation();
+  
   // --- ESTADOS: INVESTIMENTO ---
   const [formInvest, setFormInvest] = useState<FormInvest>(() =>
     loadFromStorage(STORAGE_KEYS.INVEST, DEFAULT_FORM_INVEST)
@@ -343,16 +346,16 @@ export default function Calculators() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Calculadoras Financeiras</h2>
-        <p className="text-muted-foreground">Planejamento, dívidas e trabalhista em um só lugar.</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t('calculators.title')}</h2>
+        <p className="text-muted-foreground">{t('calculators.description')}</p>
       </div>
 
       <Tabs defaultValue="investimento" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-4">
-          <TabsTrigger value="investimento" className="text-xs sm:text-sm">Investimentos</TabsTrigger>
-          <TabsTrigger value="financiamento" className="text-xs sm:text-sm">Empréstimos</TabsTrigger>
-          <TabsTrigger value="salario" className="text-xs sm:text-sm">Salário Líquido</TabsTrigger>
-          <TabsTrigger value="exchange" className="text-xs sm:text-sm">Câmbio</TabsTrigger>
+          <TabsTrigger value="investimento" className="text-xs sm:text-sm">{t('calculators.investments')}</TabsTrigger>
+          <TabsTrigger value="financiamento" className="text-xs sm:text-sm">{t('calculators.loans')}</TabsTrigger>
+          <TabsTrigger value="salario" className="text-xs sm:text-sm">{t('calculators.netSalary')}</TabsTrigger>
+          <TabsTrigger value="exchange" className="text-xs sm:text-sm">{t('calculators.exchange')}</TabsTrigger>
         </TabsList>
 
         {/* --- ABA DE INVESTIMENTOS --- */}
@@ -361,29 +364,29 @@ export default function Calculators() {
             <Card className="lg:col-span-1 h-fit">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-600" /> Juros Compostos
+                  <TrendingUp className="w-5 h-5 text-green-600" /> {t('calculators.compoundInterest')}
                 </CardTitle>
-                <CardDescription>Simule o crescimento do seu dinheiro</CardDescription>
+                <CardDescription>{t('calculators.simulateGrowth')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Aporte Inicial (R$)</Label>
+                  <Label>{t('calculators.initialAmount')}</Label>
                   <Input type="number" name="aporte_inicial" value={formInvest.aporte_inicial} onChange={handleInvestChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Aporte Mensal (R$)</Label>
+                  <Label>{t('calculators.monthlyContribution')}</Label>
                   <Input type="number" name="aporte_mensal" value={formInvest.aporte_mensal} onChange={handleInvestChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Taxa Anual (%)</Label>
+                  <Label>{t('calculators.annualRate')}</Label>
                   <Input type="number" name="taxa_anual" value={formInvest.taxa_anual} onChange={handleInvestChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Anos</Label>
+                  <Label>{t('calculators.years')}</Label>
                   <Input type="number" name="anos" value={formInvest.anos} onChange={handleInvestChange} />
                 </div>
                 <Button className="w-full mt-4" onClick={calcularInvestimento} disabled={loadingInvest}>
-                  {loadingInvest ? "Calculando..." : "Simular"}
+                  {loadingInvest ? t('calculators.calculating') : t('calculators.calculate')}
                 </Button>
                 
                 {/* Botões de Histórico e Comparação */}
@@ -558,15 +561,15 @@ export default function Calculators() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="bg-slate-50 dark:bg-slate-900">
-                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">Total Investido</CardTitle></CardHeader>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">{t('calculators.totalInvested')}</CardTitle></CardHeader>
                       <CardContent><div className="text-xl font-bold text-slate-600">R$ {resultadoInvest.resumo.total_investido?.toLocaleString()}</div></CardContent>
                     </Card>
                     <Card className="bg-green-50 dark:bg-green-950/30 border-green-200">
-                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-green-600">Total em Juros</CardTitle></CardHeader>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-green-600">{t('calculators.totalInterest')}</CardTitle></CardHeader>
                       <CardContent><div className="text-xl font-bold text-green-600">+ R$ {resultadoInvest.resumo.total_juros?.toLocaleString()}</div></CardContent>
                     </Card>
                     <Card className="bg-primary/10 border-primary/20">
-                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-primary">Patrimônio Final</CardTitle></CardHeader>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-primary">{t('calculators.finalValue')}</CardTitle></CardHeader>
                       <CardContent><div className="text-xl font-bold text-primary">R$ {resultadoInvest.resumo.total_final?.toLocaleString()}</div></CardContent>
                     </Card>
                   </div>
@@ -589,7 +592,7 @@ export default function Calculators() {
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
                   <TrendingUp className="w-16 h-16 mb-4 opacity-20" />
-                  <p>{loadingInvest ? "Processando..." : "Preencha e simule para ver o gráfico."}</p>
+                  <p>{loadingInvest ? t('calculators.processing') : t('calculators.fillAndSimulate')}</p>
                 </div>
               )}
             </div>
@@ -602,25 +605,25 @@ export default function Calculators() {
             <Card className="lg:col-span-1 h-fit">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Landmark className="w-5 h-5 text-red-500" /> Financiamento (Price)
+                  <Landmark className="w-5 h-5 text-red-500" /> {t('calculators.financing')}
                 </CardTitle>
-                <CardDescription>Calcule a prestação mensal</CardDescription>
+                <CardDescription>{t('calculators.calculatePayment')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Valor Financiado (R$)</Label>
+                  <Label>{t('calculators.financingAmount')}</Label>
                   <Input type="number" name="valor_financiamento" value={formLoan.valor_financiamento} onChange={handleLoanChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Taxa Mensal (%)</Label>
+                  <Label>{t('calculators.monthlyRate')}</Label>
                   <Input type="number" name="taxa_mensal" value={formLoan.taxa_mensal} onChange={handleLoanChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Meses</Label>
+                  <Label>{t('calculators.months')}</Label>
                   <Input type="number" name="meses" value={formLoan.meses} onChange={handleLoanChange} />
                 </div>
                 <Button className="w-full mt-4" variant="secondary" onClick={calcularFinanciamento} disabled={loadingLoan}>
-                  {loadingLoan ? "Calculando..." : "Calcular Parcela"}
+                  {loadingLoan ? t('calculators.calculating') : t('calculators.calculate')}
                 </Button>
               </CardContent>
             </Card>
@@ -630,8 +633,8 @@ export default function Calculators() {
                 <div className="grid gap-6 animate-in slide-in-from-bottom-4">
                   <Card className="bg-primary text-primary-foreground border-none shadow-lg">
                     <CardHeader>
-                      <CardTitle>Sua Parcela Mensal</CardTitle>
-                      <CardDescription className="text-primary-foreground/80">Sistema de Amortização Francês (Price)</CardDescription>
+                      <CardTitle>{t('calculators.monthlyPayment')}</CardTitle>
+                      <CardDescription className="text-primary-foreground/80">{t('calculators.priceSystem')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="text-5xl font-extrabold">R$ {resultadoLoan.valor_prestacao?.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
@@ -640,11 +643,11 @@ export default function Calculators() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Card>
-                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">Total a Pagar</CardTitle></CardHeader>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">{t('calculators.totalPaid')}</CardTitle></CardHeader>
                       <CardContent><div className="text-2xl font-bold text-red-600">R$ {resultadoLoan.total_pago?.toLocaleString()}</div></CardContent>
                     </Card>
                     <Card>
-                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">Total em Juros</CardTitle></CardHeader>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">{t('calculators.totalInterest')}</CardTitle></CardHeader>
                       <CardContent><div className="text-2xl font-bold text-orange-500">R$ {resultadoLoan.total_juros?.toLocaleString()}</div></CardContent>
                     </Card>
                   </div>
@@ -652,7 +655,7 @@ export default function Calculators() {
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
                   <Calculator className="w-16 h-16 mb-4 opacity-20" />
-                  <p>{loadingLoan ? "Processando..." : "Informe valor e taxa para calcular."}</p>
+                  <p>{loadingLoan ? t('calculators.processing') : t('calculators.enterValueAndRate')}</p>
                 </div>
               )}
             </div>
@@ -665,25 +668,25 @@ export default function Calculators() {
             <Card className="lg:col-span-1 h-fit">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-blue-500" /> Salário Líquido
+                  <Wallet className="w-5 h-5 text-blue-500" /> {t('calculators.netSalary')}
                 </CardTitle>
-                <CardDescription>Descontos de INSS e IRRF (2024)</CardDescription>
+                <CardDescription>{t('calculators.inssIrrfDeductions')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Salário Bruto (R$)</Label>
+                  <Label>{t('calculators.grossSalary')}</Label>
                   <Input type="number" name="salario_bruto" value={formSalary.salario_bruto} onChange={handleSalaryChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Dependentes</Label>
+                  <Label>{t('calculators.dependents')}</Label>
                   <Input type="number" name="dependentes" value={formSalary.dependentes} onChange={handleSalaryChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Outros Descontos (R$)</Label>
+                  <Label>{t('calculators.otherDeductions')}</Label>
                   <Input type="number" name="outros_descontos" value={formSalary.outros_descontos} onChange={handleSalaryChange} />
                 </div>
                 <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700" onClick={calcularSalario} disabled={loadingSalary}>
-                  {loadingSalary ? "Calculando..." : "Calcular Salário"}
+                  {loadingSalary ? t('calculators.calculating') : t('calculators.calculate')}
                 </Button>
               </CardContent>
             </Card>
@@ -694,8 +697,8 @@ export default function Calculators() {
                   {/* Card Principal */}
                   <Card className="bg-blue-600 text-white border-none shadow-lg">
                     <CardHeader>
-                      <CardTitle>Salário Líquido Estimado</CardTitle>
-                      <CardDescription className="text-blue-100">Valor disponível após descontos legais</CardDescription>
+                      <CardTitle>{t('calculators.netSalary')}</CardTitle>
+                      <CardDescription className="text-blue-100">{t('calculators.availableAfterDeductions')}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex items-center justify-between">
                       <div className="text-5xl font-extrabold">R$ {resultadoSalary.salario_liquido?.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
@@ -706,7 +709,7 @@ export default function Calculators() {
                   {/* Detalhamento */}
                   <div className="grid gap-4">
                     <Card>
-                      <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Detalhamento dos Descontos</CardTitle></CardHeader>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">{t('calculators.deductionsBreakdown')}</CardTitle></CardHeader>
                       <CardContent>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
@@ -718,11 +721,11 @@ export default function Calculators() {
                             <span className="font-bold text-red-500">- R$ {resultadoSalary.irrf?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                           </div>
                           <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
-                            <span className="text-muted-foreground flex items-center"><ArrowRight className="w-4 h-4 mr-2" /> Outros</span>
+                            <span className="text-muted-foreground flex items-center"><ArrowRight className="w-4 h-4 mr-2" /> {t('calculators.others')}</span>
                             <span className="font-bold text-red-500">- R$ {resultadoSalary.outros_descontos?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                           </div>
                           <div className="border-t pt-2 flex justify-between items-center">
-                             <span className="font-bold">Total de Descontos</span>
+                             <span className="font-bold">{t('calculators.totalDeductions')}</span>
                              <span className="font-bold text-red-600">R$ {resultadoSalary.total_descontos?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                           </div>
                         </div>
@@ -733,7 +736,7 @@ export default function Calculators() {
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
                   <Wallet className="w-16 h-16 mb-4 opacity-20" />
-                  <p>{loadingSalary ? "Processando..." : "Informe o salário bruto e dependentes."}</p>
+                  <p>{loadingSalary ? t('calculators.processing') : t('calculators.enterSalaryAndDependents')}</p>
                 </div>
               )}
             </div>
