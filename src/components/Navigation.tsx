@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { TrendingUp, LineChart, Activity, Calculator } from 'lucide-react';
+import { TrendingUp, Activity, Calculator, Home, Newspaper, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const Navigation = () => {
@@ -7,10 +7,12 @@ const Navigation = () => {
   const { t } = useTranslation();
 
   const navItems = [
+    { path: '/', label: t('nav.home') || 'Inicial', icon: Home },
     { path: '/markets', label: t('nav.markets') || 'Mercados', icon: TrendingUp },
-    { path: '/stocks', label: t('nav.stocks') || 'Ações', icon: LineChart },
     { path: '/indicators', label: t('nav.indicators') || 'Indicadores', icon: Activity },
     { path: '/calculators', label: t('nav.calculators') || 'Calculadoras', icon: Calculator },
+    { path: '/news', label: t('nav.news') || 'Notícias', icon: Newspaper },
+    { path: '/blog', label: t('nav.blog') || 'Blog', icon: BookOpen },
   ];
 
   return (

@@ -12,8 +12,10 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Markets from "./views/Markets";
 import Calculators from "./views/Calculators";
-import Stocks from "./views/Stocks";
 import Indicators from "./views/Indicators";
+import News from "./views/News";
+import BlogList from "./views/BlogList";
+import BlogPost from "./views/BlogPost";
 
 const queryClient = new QueryClient();
 
@@ -32,8 +34,10 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/markets" element={<Markets />} />
               <Route path="/calculators" element={<Calculators />} />
-              <Route path="/stocks" element={<Stocks />} />
               <Route path="/indicators" element={<Indicators />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/blog" element={<BlogList />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

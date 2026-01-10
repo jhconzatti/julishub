@@ -1,53 +1,174 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Calculator, TrendingUp, Landmark, Wallet, Coins, ArrowRight } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Calculator, TrendingUp, Landmark, Wallet, Coins, ArrowRight, History, GitCompare, Trash2, Save } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import ExchangeCalculator from "@/components/ExchangeCalculator";
 
 // --- CONFIGURAÇÃO DA API ---
 const getApiBaseUrl = () => {
   let url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
   url = url.replace(/\/$/, ""); // Remove barra final
   if (!url.endsWith("/api")) {
-      url += "/api";
+    url += "/api";
   }
   return url;
 };
 
 const API_BASE_URL = getApiBaseUrl();
 
+// --- TIPOS ---
+interface FormInvest {
+  aporte_inicial: number;
+  aporte_mensal: number;
+  taxa_anual: number;
+  anos: number;
+}
+
+interface FormLoan {
+  valor_financiamento: number;
+  taxa_mensal: number;
+  meses: number;
+}
+
+interface FormSalary {
+  salario_bruto: number;
+  dependentes: number;
+  outros_descontos: number;
+}
+
+// --- CHAVES DO LOCALSTORAGE ---
+const STORAGE_KEYS = {
+  INVEST: 'julishub_form_invest',
+  LOAN: 'julishub_form_loan',
+  SALARY: 'julishub_form_salary',
+  HISTORY_INVEST: 'julishub_history_invest',
+  COMPARE_SCENARIOS: 'julishub_compare_scenarios',
+};
+
+// --- TIPOS PARA HISTÓRICO ---
+interface HistoryItem {
+  id: string;
+  timestamp: number;
+  form: FormInvest;
+  resultado: any;
+  nome?: string;
+}
+
+interface CompareScenario {
+  id: string;
+  nome: string;
+  form: FormInvest;
+  cor: string;
+}
+
+// --- VALORES PADRÃO ---
+const DEFAULT_FORM_INVEST: FormInvest = {
+  aporte_inicial: 1000,
+  aporte_mensal: 500,
+  taxa_anual: 12,
+  anos: 10,
+};
+
+const DEFAULT_FORM_LOAN: FormLoan = {
+  valor_financiamento: 50000,
+  taxa_mensal: 1.5,
+  meses: 48,
+};
+
+const DEFAULT_FORM_SALARY: FormSalary = {
+  salario_bruto: 3000,
+  dependentes: 0,
+  outros_descontos: 0,
+};
+
+// --- FUNÇÕES DE PERSISTÊNCIA ---
+const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored) as T;
+    }
+  } catch (error) {
+    console.error(`Erro ao carregar ${key} do localStorage:`, error);
+  }
+  return defaultValue;
+};
+
+const saveToStorage = <T,>(key: string, value: T): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Erro ao salvar ${key} no localStorage:`, error);
+  }
+};
+
 export default function Calculators() {
   // --- ESTADOS: INVESTIMENTO ---
-  const [formInvest, setFormInvest] = useState({
-    aporte_inicial: 1000,
-    aporte_mensal: 500,
-    taxa_anual: 12,
-    anos: 10
-  });
+  const [formInvest, setFormInvest] = useState<FormInvest>(() =>
+    loadFromStorage(STORAGE_KEYS.INVEST, DEFAULT_FORM_INVEST)
+  );
   const [resultadoInvest, setResultadoInvest] = useState<any>(null);
   const [loadingInvest, setLoadingInvest] = useState(false);
 
   // --- ESTADOS: FINANCIAMENTO ---
-  const [formLoan, setFormLoan] = useState({
-    valor_financiamento: 50000,
-    taxa_mensal: 1.5,
-    meses: 48
-  });
+  const [formLoan, setFormLoan] = useState<FormLoan>(() =>
+    loadFromStorage(STORAGE_KEYS.LOAN, DEFAULT_FORM_LOAN)
+  );
   const [resultadoLoan, setResultadoLoan] = useState<any>(null);
   const [loadingLoan, setLoadingLoan] = useState(false);
 
-  // --- ESTADOS: SALÁRIO LÍQUIDO (NOVO) ---
-  const [formSalary, setFormSalary] = useState({
-    salario_bruto: 3000,
-    dependentes: 0,
-    outros_descontos: 0
-  });
+  // --- ESTADOS: SALÁRIO LÍQUIDO ---
+  const [formSalary, setFormSalary] = useState<FormSalary>(() =>
+    loadFromStorage(STORAGE_KEYS.SALARY, DEFAULT_FORM_SALARY)
+  );
   const [resultadoSalary, setResultadoSalary] = useState<any>(null);
   const [loadingSalary, setLoadingSalary] = useState(false);
 
+  // --- ESTADOS: HISTÓRICO E COMPARAÇÃO ---
+  const [historico, setHistorico] = useState<HistoryItem[]>(() =>
+    loadFromStorage(STORAGE_KEYS.HISTORY_INVEST, [])
+  );
+  const [cenarios, setCenarios] = useState<CompareScenario[]>(() =>
+    loadFromStorage(STORAGE_KEYS.COMPARE_SCENARIOS, [])
+  );
+  const [comparacaoResultados, setComparacaoResultados] = useState<any[]>([]);
+  const [loadingComparacao, setLoadingComparacao] = useState(false);
+
+  // --- EFEITOS DE PERSISTÊNCIA ---
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.INVEST, formInvest);
+  }, [formInvest]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.LOAN, formLoan);
+  }, [formLoan]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.SALARY, formSalary);
+  }, [formSalary]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.HISTORY_INVEST, historico);
+  }, [historico]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.COMPARE_SCENARIOS, cenarios);
+  }, [cenarios]);
 
   // --- HANDLERS ---
   const handleInvestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,15 +191,104 @@ export default function Calculators() {
       const response = await fetch(`${API_BASE_URL}/juros-compostos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formInvest)
+        body: JSON.stringify(formInvest),
       });
-      if (!response.ok) throw new Error(`Erro API: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Erro API: ${response.status}`);
+      }
       const data = await response.json();
       setResultadoInvest(data);
+      
+      // Salvar no histórico
+      salvarNoHistorico(formInvest, data);
+      
+      toast.success("Simulação calculada com sucesso!");
     } catch (error) {
       console.error(error);
+      toast.error("Erro ao calcular investimento. Verifique sua conexão.");
     } finally {
       setLoadingInvest(false);
+    }
+  };
+
+  // --- FUNÇÕES DE HISTÓRICO ---
+  const salvarNoHistorico = (form: FormInvest, resultado: any) => {
+    const novoItem: HistoryItem = {
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+      form,
+      resultado,
+      nome: `Simulação ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+    };
+    setHistorico([novoItem, ...historico].slice(0, 10)); // Mantém últimas 10
+  };
+
+  const carregarDoHistorico = (item: HistoryItem) => {
+    setFormInvest(item.form);
+    setResultadoInvest(item.resultado);
+    toast.success("Simulação carregada do histórico!");
+  };
+
+  const removerDoHistorico = (id: string) => {
+    setHistorico(historico.filter(item => item.id !== id));
+    toast.success("Item removido do histórico");
+  };
+
+  const limparHistorico = () => {
+    setHistorico([]);
+    toast.success("Histórico limpo");
+  };
+
+  // --- FUNÇÕES DE COMPARAÇÃO ---
+  const adicionarCenario = () => {
+    if (cenarios.length >= 3) {
+      toast.error("Máximo de 3 cenários para comparação");
+      return;
+    }
+    
+    const cores = ['#3b82f6', '#10b981', '#f59e0b'];
+    const novoCenario: CompareScenario = {
+      id: Date.now().toString(),
+      nome: `Cenário ${cenarios.length + 1}`,
+      form: { ...formInvest },
+      cor: cores[cenarios.length],
+    };
+    setCenarios([...cenarios, novoCenario]);
+    toast.success("Cenário adicionado para comparação!");
+  };
+
+  const removerCenario = (id: string) => {
+    setCenarios(cenarios.filter(c => c.id !== id));
+    toast.success("Cenário removido");
+  };
+
+  const compararCenarios = async () => {
+    if (cenarios.length === 0) {
+      toast.error("Adicione pelo menos um cenário para comparar");
+      return;
+    }
+
+    setLoadingComparacao(true);
+    const resultados: any[] = [];
+
+    try {
+      for (const cenario of cenarios) {
+        const response = await fetch(`${API_BASE_URL}/juros-compostos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cenario.form),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          resultados.push({ ...data, nome: cenario.nome, cor: cenario.cor });
+        }
+      }
+      setComparacaoResultados(resultados);
+      toast.success("Comparação realizada!");
+    } catch (error) {
+      toast.error("Erro ao comparar cenários");
+    } finally {
+      setLoadingComparacao(false);
     }
   };
 
@@ -90,13 +300,17 @@ export default function Calculators() {
       const response = await fetch(`${API_BASE_URL}/financiamento`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formLoan)
+        body: JSON.stringify(formLoan),
       });
-      if (!response.ok) throw new Error(`Erro API: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Erro API: ${response.status}`);
+      }
       const data = await response.json();
       setResultadoLoan(data);
+      toast.success("Financiamento calculado com sucesso!");
     } catch (error) {
       console.error(error);
+      toast.error("Erro ao calcular financiamento. Verifique sua conexão.");
     } finally {
       setLoadingLoan(false);
     }
@@ -110,13 +324,17 @@ export default function Calculators() {
       const response = await fetch(`${API_BASE_URL}/salario-liquido`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formSalary)
+        body: JSON.stringify(formSalary),
       });
-      if (!response.ok) throw new Error(`Erro API: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Erro API: ${response.status}`);
+      }
       const data = await response.json();
       setResultadoSalary(data);
+      toast.success("Salário calculado com sucesso!");
     } catch (error) {
       console.error(error);
+      toast.error("Erro ao calcular salário. Verifique sua conexão.");
     } finally {
       setLoadingSalary(false);
     }
@@ -130,10 +348,11 @@ export default function Calculators() {
       </div>
 
       <Tabs defaultValue="investimento" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
-          <TabsTrigger value="investimento">Investimentos</TabsTrigger>
-          <TabsTrigger value="financiamento">Empréstimos</TabsTrigger>
-          <TabsTrigger value="salario">Salário Líquido</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 mb-4">
+          <TabsTrigger value="investimento" className="text-xs sm:text-sm">Investimentos</TabsTrigger>
+          <TabsTrigger value="financiamento" className="text-xs sm:text-sm">Empréstimos</TabsTrigger>
+          <TabsTrigger value="salario" className="text-xs sm:text-sm">Salário Líquido</TabsTrigger>
+          <TabsTrigger value="exchange" className="text-xs sm:text-sm">Câmbio</TabsTrigger>
         </TabsList>
 
         {/* --- ABA DE INVESTIMENTOS --- */}
@@ -166,6 +385,171 @@ export default function Calculators() {
                 <Button className="w-full mt-4" onClick={calcularInvestimento} disabled={loadingInvest}>
                   {loadingInvest ? "Calculando..." : "Simular"}
                 </Button>
+                
+                {/* Botões de Histórico e Comparação */}
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <History className="w-4 h-4 mr-2" />
+                        Histórico
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Histórico de Simulações</DialogTitle>
+                        <DialogDescription>
+                          Últimas 10 simulações realizadas
+                        </DialogDescription>
+                      </DialogHeader>
+                      <ScrollArea className="h-[400px] max-h-[60vh] w-full">
+                        {historico.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-8">Nenhuma simulação salva ainda</p>
+                        ) : (
+                          <div className="space-y-2 pr-4">
+                            {historico.map((item) => (
+                              <Card key={item.id} className="p-4">
+                                <div className="flex justify-between items-start">
+                                  <div className="space-y-1">
+                                    <p className="text-sm font-semibold">{item.nome}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      R$ {item.form.aporte_inicial} inicial + R$ {item.form.aporte_mensal}/mês
+                                      • {item.form.taxa_anual}% a.a. • {item.form.anos} anos
+                                    </p>
+                                    <p className="text-xs font-bold text-primary">
+                                      Resultado: R$ {item.resultado.resumo?.total_final?.toLocaleString()}
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => carregarDoHistorico(item)}
+                                    >
+                                      Carregar
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => removerDoHistorico(item.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
+                      {historico.length > 0 && (
+                        <Button variant="destructive" size="sm" onClick={limparHistorico}>
+                          Limpar Histórico
+                        </Button>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <GitCompare className="w-4 h-4 mr-2" />
+                        Comparar
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Comparação de Cenários</DialogTitle>
+                        <DialogDescription>
+                          Compare até 3 cenários de investimento diferentes
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4">
+                        <div className="flex gap-2">
+                          <Button onClick={adicionarCenario} disabled={cenarios.length >= 3}>
+                            <Save className="w-4 h-4 mr-2" />
+                            Adicionar Cenário Atual ({cenarios.length}/3)
+                          </Button>
+                          {cenarios.length > 0 && (
+                            <Button onClick={compararCenarios} disabled={loadingComparacao}>
+                              {loadingComparacao ? "Comparando..." : "Comparar Cenários"}
+                            </Button>
+                          )}
+                        </div>
+
+                        {cenarios.length > 0 && (
+                          <div className="grid gap-2">
+                            {cenarios.map((cenario) => (
+                              <Card key={cenario.id} className="p-3">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: cenario.cor }}
+                                    />
+                                    <div>
+                                      <p className="text-sm font-semibold">{cenario.nome}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        R$ {cenario.form.aporte_inicial} + R$ {cenario.form.aporte_mensal}/mês
+                                        • {cenario.form.taxa_anual}% • {cenario.form.anos} anos
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => removerCenario(cenario.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+
+                        {comparacaoResultados.length > 0 && (
+                          <Card className="p-4">
+                            <h4 className="font-semibold mb-4">Gráfico Comparativo</h4>
+                            <ResponsiveContainer width="100%" height={300}>
+                              <LineChart>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="ano" />
+                                <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                                <Tooltip formatter={(v: number) => `R$ ${v.toLocaleString()}`} />
+                                <Legend />
+                                {comparacaoResultados.map((resultado, idx) => (
+                                  <Line
+                                    key={idx}
+                                    type="monotone"
+                                    data={resultado.grafico}
+                                    dataKey="total"
+                                    name={resultado.nome}
+                                    stroke={resultado.cor}
+                                    strokeWidth={2}
+                                  />
+                                ))}
+                              </LineChart>
+                            </ResponsiveContainer>
+                            
+                            <div className="mt-4 space-y-2">
+                              {comparacaoResultados.map((resultado, idx) => (
+                                <div key={idx} className="flex justify-between items-center p-2 bg-muted rounded">
+                                  <span className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: resultado.cor }} />
+                                    {resultado.nome}
+                                  </span>
+                                  <span className="font-bold">R$ {resultado.resumo?.total_final?.toLocaleString()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </Card>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardContent>
             </Card>
 
@@ -298,7 +682,7 @@ export default function Calculators() {
                   <Label>Outros Descontos (R$)</Label>
                   <Input type="number" name="outros_descontos" value={formSalary.outros_descontos} onChange={handleSalaryChange} />
                 </div>
-                <Button className="w-full mt-4" onClick={calcularSalario} disabled={loadingSalary} className="bg-blue-600 hover:bg-blue-700">
+                <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700" onClick={calcularSalario} disabled={loadingSalary}>
                   {loadingSalary ? "Calculando..." : "Calcular Salário"}
                 </Button>
               </CardContent>
@@ -354,6 +738,11 @@ export default function Calculators() {
               )}
             </div>
           </div>
+        </TabsContent>
+
+        {/* --- ABA DE CÂMBIO --- */}
+        <TabsContent value="exchange" className="space-y-4">
+          <ExchangeCalculator />
         </TabsContent>
       </Tabs>
     </div>
