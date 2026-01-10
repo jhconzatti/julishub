@@ -10,6 +10,7 @@ interface ExchangeData {
   var: string;
   icon: React.ReactNode;
   color: string;
+  group?: string;
 }
 
 interface HistoryPoint {
@@ -117,41 +118,60 @@ export default function MarketExchange({
   historyData, 
   loadingHistory 
 }: MarketExchangeProps) {
+  // Agrupar moedas por região
+  const groupedData = exchangeData.reduce((acc, item) => {
+    const group = item.group || "Outros";
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(item);
+    return acc;
+  }, {} as Record<string, ExchangeData[]>);
+
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {exchangeData.map((item) => (
-        <Card 
-          key={item.pair}
-          className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-${item.color}/50 ${
-            selectedPair === item.pair ? `ring-2 ring-${item.color}` : ''
-          }`}
-          onClick={() => onCardClick(item.pair)}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{item.label}</CardTitle>
-            <div className={`text-${item.color}`}>{item.icon}</div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {item.valor}
-            </div>
-            <div className="flex justify-between items-center mt-2">
-              <VariationBadge value={item.var} />
-              <span className="text-xs text-muted-foreground flex items-center">
-                {selectedPair === item.pair ? 'Fechar' : 'Gráfico'} <TrendingUp className="w-3 h-3 ml-1" />
-              </span>
-            </div>
-          </CardContent>
-          {selectedPair === item.pair && (
-            <HistoryChart 
-              data={historyData} 
-              loading={loadingHistory} 
-              color={item.color} 
-              id={item.pair} 
-              prefix={item.pair.includes('BTC') ? '$' : 'R$'} 
-            />
-          )}
-        </Card>
+    <div className="space-y-8">
+      {Object.entries(groupedData).map(([groupName, items]) => (
+        <div key={groupName} className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground/80 border-b pb-2">
+            {groupName}
+          </h3>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {items.map((item) => (
+              <Card 
+                key={item.pair}
+                className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-${item.color}/50 ${
+                  selectedPair === item.pair ? `ring-2 ring-${item.color}` : ''
+                }`}
+                onClick={() => onCardClick(item.pair)}
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">{item.label}</CardTitle>
+                  <div className={`text-${item.color}`}>{item.icon}</div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {item.valor}
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <VariationBadge value={item.var} />
+                    <span className="text-xs text-muted-foreground flex items-center">
+                      {selectedPair === item.pair ? 'Fechar' : 'Gráfico'} <TrendingUp className="w-3 h-3 ml-1" />
+                    </span>
+                  </div>
+                </CardContent>
+                {selectedPair === item.pair && (
+                  <HistoryChart 
+                    data={historyData} 
+                    loading={loadingHistory} 
+                    color={item.color} 
+                    id={item.pair} 
+                    prefix={item.pair.includes('BTC') ? '$' : 'R$'} 
+                  />
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );

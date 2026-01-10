@@ -324,69 +324,286 @@ def get_exchange_rates():
     logger.info("💱 Requisição recebida: /exchange-rates")
     
     try:
-        # AwesomeAPI para pares principais
-        url = "https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL,ARS-BRL,USD-ARS,EUR-USD"
-        resp = requests.get(url, timeout=5)
+        # AwesomeAPI tem limite de pares por requisição, então dividimos em chunks
+        all_pairs = [
+            # Principais
+            "USD-BRL", "EUR-BRL", "EUR-USD",
+            # América do Sul
+            "USD-ARS", "ARS-BRL",  # Argentina
+            "USD-CLP", "CLP-BRL",  # Chile
+            "USD-COP", "COP-BRL",  # Colômbia
+            "USD-PEN", "PEN-BRL",  # Peru
+            "USD-UYU", "UYU-BRL",  # Uruguai
+            "USD-PYG", "PYG-BRL",  # Paraguai
+            "USD-BOB", "BOB-BRL",  # Bolívia
+            "USD-VES", "VES-BRL",  # Venezuela
+            # América Central
+            "USD-MXN", "MXN-BRL",  # México
+            "USD-CRC", "CRC-BRL",  # Costa Rica
+            "USD-GTQ", "GTQ-BRL",  # Guatemala
+            "USD-HNL", "HNL-BRL",  # Honduras
+            "USD-NIO", "NIO-BRL",  # Nicarágua
+            "USD-PAB", "PAB-BRL",  # Panamá
+            "USD-DOP", "DOP-BRL",  # República Dominicana
+            # Turismo
+            "USDT-BRL", "EURT-BRL",
+        ]
         
-        if resp.status_code != 200:
-            raise Exception(f"AwesomeAPI status {resp.status_code}")
-        
-        data = resp.json()
+        # Faz múltiplas requisições em chunks de 10 pares
+        data = {}
+        chunk_size = 10
+        for i in range(0, len(all_pairs), chunk_size):
+            chunk = all_pairs[i:i + chunk_size]
+            url = f"https://economia.awesomeapi.com.br/last/{','.join(chunk)}"
+            resp = requests.get(url, timeout=10)
+            
+            if resp.status_code != 200:
+                logger.warning(f"⚠️ AwesomeAPI chunk {i//chunk_size + 1} failed with status {resp.status_code}")
+                continue
+            
+            chunk_data = resp.json()
+            data.update(chunk_data)
         
         # CoinGecko para Bitcoin (grátis, sem API key)
         btc_url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl"
         btc_resp = requests.get(btc_url, timeout=5)
         btc_data = btc_resp.json() if btc_resp.status_code == 200 else {"bitcoin": {"usd": 0, "brl": 0}}
         
-        # Calcular BRL/ARS e EUR/ARS derivados
-        usd_brl = float(data["USDBRL"]["bid"])
-        ars_brl = float(data["ARSBRL"]["bid"])
-        eur_brl = float(data["EURBRL"]["bid"])
-        usd_ars = float(data["USDARS"]["bid"])
+        # Helper para conversão segura
+        def safe_float(value, default=0.0):
+            try:
+                return float(value) if value else default
+            except (ValueError, TypeError):
+                return default
         
+        # Calcular BRL/ARS derivado (inverso de ARS/BRL)
+        usd_brl = safe_float(data.get("USDBRL", {}).get("bid"))
+        ars_brl = safe_float(data.get("ARSBRL", {}).get("bid"))
         brl_ars = 1 / ars_brl if ars_brl > 0 else 0
-        eur_ars = (eur_brl / ars_brl) if ars_brl > 0 else 0
         
         result = {
+            # Principais
             "USD_BRL": {
-                "valor": data["USDBRL"]["bid"],
-                "var": data["USDBRL"]["pctChange"],
-                "label": "Dólar → Real",
+                "valor": data.get("USDBRL", {}).get("bid", "0"),
+                "var": data.get("USDBRL", {}).get("pctChange", "0"),
+                "label": "Dólar Comercial → Real",
             },
             "EUR_BRL": {
-                "valor": data["EURBRL"]["bid"],
-                "var": data["EURBRL"]["pctChange"],
+                "valor": data.get("EURBRL", {}).get("bid", "0"),
+                "var": data.get("EURBRL", {}).get("pctChange", "0"),
                 "label": "Euro → Real",
             },
+            "EUR_USD": {
+                "valor": data.get("EURUSD", {}).get("bid", "0"),
+                "var": data.get("EURUSD", {}).get("pctChange", "0"),
+                "label": "Euro → Dólar",
+            },
             "BTC_USD": {
-                "valor": str(btc_data["bitcoin"]["usd"]),
-                "var": "0.00",  # CoinGecko free não retorna variação
+                "valor": str(btc_data.get("bitcoin", {}).get("usd", 0)),
+                "var": "0.00",
                 "label": "Bitcoin → Dólar",
             },
+            "BTC_BRL": {
+                "valor": str(btc_data.get("bitcoin", {}).get("brl", 0)),
+                "var": "0.00",
+                "label": "Bitcoin → Real",
+            },
+            
+            # América do Sul - Argentina
             "USD_ARS": {
-                "valor": data["USDARS"]["bid"],
-                "var": data["USDARS"]["pctChange"],
+                "valor": data.get("USDARS", {}).get("bid", "0"),
+                "var": data.get("USDARS", {}).get("pctChange", "0"),
                 "label": "Dólar → Peso Argentino",
             },
             "ARS_BRL": {
-                "valor": data["ARSBRL"]["bid"],
-                "var": data["ARSBRL"]["pctChange"],
+                "valor": data.get("ARSBRL", {}).get("bid", "0"),
+                "var": data.get("ARSBRL", {}).get("pctChange", "0"),
                 "label": "Peso Argentino → Real",
             },
             "BRL_ARS": {
                 "valor": f"{brl_ars:.4f}",
-                "var": f"{-float(data['ARSBRL']['pctChange']):.2f}",  # Variação invertida
+                "var": f"{-safe_float(data.get('ARSBRL', {}).get('pctChange')):.2f}",
                 "label": "Real → Peso Argentino",
             },
-            "EUR_USD": {
-                "valor": data["EURUSD"]["bid"],
-                "var": data["EURUSD"]["pctChange"],
-                "label": "Euro → Dólar",
+            
+            # América do Sul - Chile
+            "USD_CLP": {
+                "valor": data.get("USDCLP", {}).get("bid", "0"),
+                "var": data.get("USDCLP", {}).get("pctChange", "0"),
+                "label": "Dólar → Peso Chileno",
             },
-            "EUR_ARS": {
-                "valor": f"{eur_ars:.4f}",
-                "var": "0.00",  # Derivado, sem variação precisa
-                "label": "Euro → Peso Argentino",
+            "CLP_BRL": {
+                "valor": data.get("CLPBRL", {}).get("bid", "0"),
+                "var": data.get("CLPBRL", {}).get("pctChange", "0"),
+                "label": "Peso Chileno → Real",
+            },
+            
+            # América do Sul - Colômbia
+            "USD_COP": {
+                "valor": data.get("USDCOP", {}).get("bid", "0"),
+                "var": data.get("USDCOP", {}).get("pctChange", "0"),
+                "label": "Dólar → Peso Colombiano",
+            },
+            "COP_BRL": {
+                "valor": data.get("COPBRL", {}).get("bid", "0"),
+                "var": data.get("COPBRL", {}).get("pctChange", "0"),
+                "label": "Peso Colombiano → Real",
+            },
+            
+            # América do Sul - Peru
+            "USD_PEN": {
+                "valor": data.get("USDPEN", {}).get("bid", "0"),
+                "var": data.get("USDPEN", {}).get("pctChange", "0"),
+                "label": "Dólar → Sol Peruano",
+            },
+            "PEN_BRL": {
+                "valor": data.get("PENBRL", {}).get("bid", "0"),
+                "var": data.get("PENBRL", {}).get("pctChange", "0"),
+                "label": "Sol Peruano → Real",
+            },
+            
+            # América do Sul - Uruguai
+            "USD_UYU": {
+                "valor": data.get("USDUYU", {}).get("bid", "0"),
+                "var": data.get("USDUYU", {}).get("pctChange", "0"),
+                "label": "Dólar → Peso Uruguaio",
+            },
+            "UYU_BRL": {
+                "valor": data.get("UYUBRL", {}).get("bid", "0"),
+                "var": data.get("UYUBRL", {}).get("pctChange", "0"),
+                "label": "Peso Uruguaio → Real",
+            },
+            
+            # América do Sul - Paraguai
+            "USD_PYG": {
+                "valor": data.get("USDPYG", {}).get("bid", "0"),
+                "var": data.get("USDPYG", {}).get("pctChange", "0"),
+                "label": "Dólar → Guarani Paraguaio",
+            },
+            "PYG_BRL": {
+                "valor": data.get("PYGBRL", {}).get("bid", "0"),
+                "var": data.get("PYGBRL", {}).get("pctChange", "0"),
+                "label": "Guarani Paraguaio → Real",
+            },
+            
+            # América do Sul - Bolívia
+            "USD_BOB": {
+                "valor": data.get("USDBOB", {}).get("bid", "0"),
+                "var": data.get("USDBOB", {}).get("pctChange", "0"),
+                "label": "Dólar → Boliviano",
+            },
+            "BOB_BRL": {
+                "valor": data.get("BOBBRL", {}).get("bid", "0"),
+                "var": data.get("BOBBRL", {}).get("pctChange", "0"),
+                "label": "Boliviano → Real",
+            },
+            
+            # América do Sul - Venezuela
+            "USD_VES": {
+                "valor": data.get("USDVES", {}).get("bid", "0"),
+                "var": data.get("USDVES", {}).get("pctChange", "0"),
+                "label": "Dólar → Bolívar Venezuelano",
+            },
+            "VES_BRL": {
+                "valor": data.get("VESBRL", {}).get("bid", "0"),
+                "var": data.get("VESBRL", {}).get("pctChange", "0"),
+                "label": "Bolívar Venezuelano → Real",
+            },
+            
+            # América Central e Caribe - México
+            "USD_MXN": {
+                "valor": data.get("USDMXN", {}).get("bid", "0"),
+                "var": data.get("USDMXN", {}).get("pctChange", "0"),
+                "label": "Dólar → Peso Mexicano",
+            },
+            "MXN_BRL": {
+                "valor": data.get("MXNBRL", {}).get("bid", "0"),
+                "var": data.get("MXNBRL", {}).get("pctChange", "0"),
+                "label": "Peso Mexicano → Real",
+            },
+            
+            # América Central - Costa Rica
+            "USD_CRC": {
+                "valor": data.get("USDCRC", {}).get("bid", "0"),
+                "var": data.get("USDCRC", {}).get("pctChange", "0"),
+                "label": "Dólar → Colón Costarriquenho",
+            },
+            "CRC_BRL": {
+                "valor": data.get("CRCBRL", {}).get("bid", "0"),
+                "var": data.get("CRCBRL", {}).get("pctChange", "0"),
+                "label": "Colón Costarriquenho → Real",
+            },
+            
+            # América Central - Guatemala
+            "USD_GTQ": {
+                "valor": data.get("USDGTQ", {}).get("bid", "0"),
+                "var": data.get("USDGTQ", {}).get("pctChange", "0"),
+                "label": "Dólar → Quetzal Guatemalteco",
+            },
+            "GTQ_BRL": {
+                "valor": data.get("GTQBRL", {}).get("bid", "0"),
+                "var": data.get("GTQBRL", {}).get("pctChange", "0"),
+                "label": "Quetzal Guatemalteco → Real",
+            },
+            
+            # América Central - Honduras
+            "USD_HNL": {
+                "valor": data.get("USDHNL", {}).get("bid", "0"),
+                "var": data.get("USDHNL", {}).get("pctChange", "0"),
+                "label": "Dólar → Lempira Hondurenho",
+            },
+            "HNL_BRL": {
+                "valor": data.get("HNLBRL", {}).get("bid", "0"),
+                "var": data.get("HNLBRL", {}).get("pctChange", "0"),
+                "label": "Lempira Hondurenho → Real",
+            },
+            
+            # América Central - Nicarágua
+            "USD_NIO": {
+                "valor": data.get("USDNIO", {}).get("bid", "0"),
+                "var": data.get("USDNIO", {}).get("pctChange", "0"),
+                "label": "Dólar → Córdoba Nicaraguense",
+            },
+            "NIO_BRL": {
+                "valor": data.get("NIOBRL", {}).get("bid", "0"),
+                "var": data.get("NIOBRL", {}).get("pctChange", "0"),
+                "label": "Córdoba Nicaraguense → Real",
+            },
+            
+            # América Central - Panamá
+            "USD_PAB": {
+                "valor": data.get("USDPAB", {}).get("bid", "0"),
+                "var": data.get("USDPAB", {}).get("pctChange", "0"),
+                "label": "Dólar → Balboa Panamenho",
+            },
+            "PAB_BRL": {
+                "valor": data.get("PABBRL", {}).get("bid", "0"),
+                "var": data.get("PABBRL", {}).get("pctChange", "0"),
+                "label": "Balboa Panamenho → Real",
+            },
+            
+            # Caribe - República Dominicana
+            "USD_DOP": {
+                "valor": data.get("USDDOP", {}).get("bid", "0"),
+                "var": data.get("USDDOP", {}).get("pctChange", "0"),
+                "label": "Dólar → Peso Dominicano",
+            },
+            "DOP_BRL": {
+                "valor": data.get("DOPBRL", {}).get("bid", "0"),
+                "var": data.get("DOPBRL", {}).get("pctChange", "0"),
+                "label": "Peso Dominicano → Real",
+            },
+            
+            # Turismo
+            "USDT_BRL": {
+                "valor": data.get("USDTBRL", {}).get("bid", "0"),
+                "var": data.get("USDTBRL", {}).get("pctChange", "0"),
+                "label": "Dólar Turismo → Real",
+            },
+            "EURT_BRL": {
+                "valor": data.get("EURTBRL", {}).get("bid", "0"),
+                "var": data.get("EURTBRL", {}).get("pctChange", "0"),
+                "label": "Euro Turismo → Real",
             },
         }
         
@@ -398,9 +615,27 @@ def get_exchange_rates():
         
     except Exception as e:
         logger.error(f"❌ Erro ao buscar exchange rates: {e}")
-        # Retorna valores zerados como fallback
-        pairs = ["USD_BRL", "EUR_BRL", "BTC_USD", "USD_ARS", "ARS_BRL", "BRL_ARS", "EUR_USD", "EUR_ARS"]
-        return {pair: {"valor": "0.00", "var": "0.00", "label": pair.replace("_", " → ")} for pair in pairs}
+        # Retorna valores zerados como fallback para todas as moedas
+        fallback_pairs = [
+            "USD_BRL", "EUR_BRL", "EUR_USD", "BTC_USD", "BTC_BRL",
+            "USD_ARS", "ARS_BRL", "BRL_ARS",
+            "USD_CLP", "CLP_BRL",
+            "USD_COP", "COP_BRL",
+            "USD_PEN", "PEN_BRL",
+            "USD_UYU", "UYU_BRL",
+            "USD_PYG", "PYG_BRL",
+            "USD_BOB", "BOB_BRL",
+            "USD_VES", "VES_BRL",
+            "USD_MXN", "MXN_BRL",
+            "USD_CRC", "CRC_BRL",
+            "USD_GTQ", "GTQ_BRL",
+            "USD_HNL", "HNL_BRL",
+            "USD_NIO", "NIO_BRL",
+            "USD_PAB", "PAB_BRL",
+            "USD_DOP", "DOP_BRL",
+            "USDT_BRL", "EURT_BRL",
+        ]
+        return {pair: {"valor": "0.00", "var": "0.00", "label": pair.replace("_", " → ")} for pair in fallback_pairs}
 
 
 @router.get("/indexes/brazil")

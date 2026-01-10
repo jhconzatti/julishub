@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowLeft, Calendar, Share2, Tag, Linkedin, Twitter } from "lucide-react";
+import { ArrowLeft, Calendar, Share2, Tag, Linkedin, Twitter, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -138,15 +138,19 @@ export default function BlogPost() {
 
       {/* Header do Artigo */}
       <header className="space-y-6">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
           {artigo.titulo}
         </h1>
+
+        <p className="text-xl text-muted-foreground leading-relaxed border-l-4 border-primary pl-4 italic">
+          {artigo.resumo}
+        </p>
 
         {/* Metadados */}
         <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
           {/* Autor */}
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 border-2 border-primary/20">
+            <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-lg">
               <AvatarImage src="https://github.com/julianoheberhardt.png" alt="Juliano Heberhardt Conzatti" />
               <AvatarFallback className="bg-primary/10 text-primary font-bold">JC</AvatarFallback>
             </Avatar>
@@ -157,17 +161,29 @@ export default function BlogPost() {
           </div>
 
           {/* Data */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full">
             <Calendar className="h-4 w-4" />
-            <span className="text-sm">{artigo.data}</span>
+            <span className="text-sm font-medium">{artigo.data}</span>
+          </div>
+
+          {/* Tempo de Leitura */}
+          <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-full">
+            <Clock className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-600">
+              {Math.max(1, Math.ceil(artigo.conteudo.split(' ').length / 200))} min de leitura
+            </span>
           </div>
         </div>
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2">
           {artigo.tags.map((tag, index) => (
-            <Badge key={index} variant="secondary" className="px-3 py-1">
-              <Tag className="h-3 w-3 mr-1" />
+            <Badge 
+              key={index} 
+              variant="secondary" 
+              className="px-3 py-1.5 hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
+            >
+              <Tag className="h-3 w-3 mr-1.5" />
               {tag}
             </Badge>
           ))}
@@ -190,27 +206,61 @@ export default function BlogPost() {
       <Separator />
 
       {/* Conteúdo do Artigo (Markdown) */}
-      <div className="prose prose-lg dark:prose-invert max-w-none
-        prose-headings:font-bold prose-headings:tracking-tight
-        prose-h1:text-4xl prose-h1:mb-4 prose-h1:mt-8
-        prose-h2:text-3xl prose-h2:mb-3 prose-h2:mt-8
-        prose-h3:text-2xl prose-h3:mb-2 prose-h3:mt-6
-        prose-p:text-lg prose-p:leading-relaxed prose-p:mb-6
-        prose-li:text-lg prose-li:leading-relaxed
-        prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-        prose-strong:text-foreground prose-strong:font-bold
-        prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-        prose-pre:bg-slate-900 prose-pre:text-slate-100
-        prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic
-        prose-table:border-collapse prose-table:w-full
-        prose-th:bg-primary/10 prose-th:p-3 prose-th:text-left
-        prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-700 prose-td:p-3
-        prose-img:rounded-xl prose-img:shadow-lg"
-      >
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <article className="prose prose-lg dark:prose-invert max-w-none
+        prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-16
+        prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-10 prose-h1:border-b prose-h1:pb-4
+        prose-h2:text-3xl prose-h2:mb-4 prose-h2:mt-10 prose-h2:text-primary
+        prose-h3:text-2xl prose-h3:mb-3 prose-h3:mt-8
+        prose-h4:text-xl prose-h4:mb-2 prose-h4:mt-6
+        prose-p:text-lg prose-p:leading-relaxed prose-p:mb-6 prose-p:text-foreground/90
+        prose-p:first-of-type:text-xl prose-p:first-of-type:leading-relaxed prose-p:first-of-type:text-foreground
+        prose-p:first-of-type:first-letter:text-7xl prose-p:first-of-type:first-letter:font-bold prose-p:first-of-type:first-letter:text-primary 
+        prose-p:first-of-type:first-letter:float-left prose-p:first-of-type:first-letter:mr-3 prose-p:first-of-type:first-letter:mt-1
+        prose-li:text-lg prose-li:leading-relaxed prose-li:mb-2
+        prose-ul:my-6 prose-ol:my-6
+        prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline prose-a:transition-all
+        prose-strong:text-foreground prose-strong:font-bold prose-strong:text-primary/90
+        prose-em:text-foreground/80 prose-em:italic
+        prose-code:text-primary prose-code:bg-primary/10 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-base prose-code:font-mono
+        prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:p-6 prose-pre:rounded-xl prose-pre:shadow-lg prose-pre:border prose-pre:border-slate-700
+        prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:py-4 
+        prose-blockquote:italic prose-blockquote:rounded-r-xl prose-blockquote:text-foreground/90 prose-blockquote:shadow-sm
+        prose-blockquote:not-italic prose-blockquote:font-medium prose-blockquote:text-xl
+        prose-table:border-collapse prose-table:w-full prose-table:my-8 prose-table:shadow-lg prose-table:rounded-lg prose-table:overflow-hidden
+        prose-th:bg-primary/10 prose-th:p-4 prose-th:text-left prose-th:font-bold prose-th:text-primary
+        prose-td:border prose-td:border-gray-200 dark:prose-td:border-gray-700 prose-td:p-4 prose-td:bg-white dark:prose-td:bg-slate-900/50
+        prose-tr:transition-colors hover:prose-tr:bg-primary/5
+        prose-img:rounded-xl prose-img:shadow-2xl prose-img:my-8 prose-img:border-4 prose-img:border-white dark:prose-img:border-slate-800
+        prose-hr:border-primary/20 prose-hr:my-12
+      ">
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // Customização adicional para tabelas
+            table: ({node, ...props}) => (
+              <div className="overflow-x-auto my-8">
+                <table {...props} className="min-w-full" />
+              </div>
+            ),
+            // Destaque para citações importantes
+            blockquote: ({node, children, ...props}) => (
+              <blockquote {...props} className="relative">
+                <span className="absolute -left-2 top-0 text-6xl text-primary/20 font-serif">"</span>
+                {children}
+              </blockquote>
+            ),
+            // Código inline destacado
+            code: ({node, inline, ...props}) => 
+              inline ? (
+                <code {...props} className="inline-code" />
+              ) : (
+                <code {...props} />
+              ),
+          }}
+        >
           {artigo.conteudo}
         </ReactMarkdown>
-      </div>
+      </article>
 
       <Separator className="my-12" />
 
