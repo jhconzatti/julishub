@@ -49,6 +49,22 @@ const Header = () => {
               <Moon className="h-5 w-5 text-slate-700 dark:text-slate-200 transition-all" />
             )}
           </Button>
+
+          {/* botão temporário para limpar cache durante testes */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              localStorage.clear();
+              // aviso simples para o desenvolvedor
+              alert('Cache limpo');
+            }}
+            className="rounded-full w-10 h-10 sm:w-9 sm:h-9"
+            title="Limpar Cache"
+          >
+            {/* ícone de lâmpada apagada para simbolizar "limpar" */}
+            <Sun className="h-5 w-5 text-red-500" />
+          </Button>
         </div>
 
       </div>

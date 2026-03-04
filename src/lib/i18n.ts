@@ -151,6 +151,15 @@ const resources = {
         fillAndSimulate: 'Preencha e simule para ver o gráfico.',
         enterValueAndRate: 'Informe valor e taxa para calcular.',
         enterSalaryAndDependents: 'Informe o salário bruto e dependentes.',
+
+        // aviso de câmbio (lista de itens retorna vetor)
+        warning_title: 'Aviso: Esta simulação pode estar baseada em câmbio comercial, que não considera:',
+        warning_items: [
+          'Taxas de câmbio turismo (geralmente 3-8% mais altas)',
+          'Spread financeiro de operações bancárias',
+          'IOF (Imposto sobre Operações Financeiras)',
+          'Taxas de corretagem ou transferência',
+        ],
       },
       common: {
         price: 'Preço',
@@ -312,7 +321,13 @@ const resources = {
         fillAndSimulate: 'Fill and simulate to see the chart.',
         enterValueAndRate: 'Enter value and rate to calculate.',
         enterSalaryAndDependents: 'Enter gross salary and dependents.',
-      },
+        warning_title: 'Warning: This simulation may be based on commercial exchange rates, which do not consider:',
+        warning_items: [
+          'Tourist exchange rates (typically 3–8% higher)',
+          'Banking financial spread',
+          'IOF (Tax on Financial Operations)',
+          'Brokerage or transfer fees',
+        ],      },
       common: {
         price: 'Price',
         change: 'Change',
@@ -463,6 +478,14 @@ const resources = {
         fillAndSimulate: 'Completá y simulá para ver el gráfico.',
         enterValueAndRate: 'Ingresá valor y tasa para calcular.',
         enterSalaryAndDependents: 'Ingresá el salario bruto y dependientes.',
+
+        warning_title: 'Aviso: Esta simulación puede basarse en el cambio comercial, que no considera:',
+        warning_items: [
+          'Tasas de cambio turístico (generalmente 3-8% más altas)',
+          'Spread financiero de operaciones bancarias',
+          'Impuesto sobre Operaciones Financieras (IOF)',
+          'Comisiones de corretaje o transferencia',
+        ],
       },
       common: {
         price: 'Precio',

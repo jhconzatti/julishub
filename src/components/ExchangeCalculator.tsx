@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +9,10 @@ import { ArrowDownUp, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const getApiUrl = () => {
-  const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
-  return url.replace(/\/$/, "");
+  const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+  const baseUrl = url.replace(/\/$/, ""); // remove trailing slash
+  // ensure /api suffix, matching logic used in Markets view
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 };
 const API_BASE_URL = getApiUrl();
 
@@ -40,6 +43,7 @@ export default function ExchangeCalculator() {
   const [result, setResult] = useState<number | null>(null);
   const [exchangeRates, setExchangeRates] = useState<Record<string, ExchangeRate>>({});
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchExchangeRates();
@@ -110,12 +114,13 @@ export default function ExchangeCalculator() {
       <Alert className="bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800">
         <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
         <AlertDescription className="text-yellow-800 dark:text-yellow-200">
-          <strong>Aviso:</strong> Esta simulação é baseada em câmbio comercial. Não considera:
+          <strong>{t('calculators.warning_title')}</strong>
           <ul className="list-disc ml-5 mt-2 text-sm">
-            <li>Taxas de câmbio turismo (geralmente 3-8% mais altas)</li>
-            <li>Spread financeiro de operações bancárias</li>
-            <li>IOF (Imposto sobre Operações Financeiras)</li>
-            <li>Taxas de corretagem ou transferência</li>
+            {(Array.isArray(t('calculators.warning_items', { returnObjects: true }))
+              ? t('calculators.warning_items', { returnObjects: true })
+              : []).map((item: string, idx: number) => (
+              <li key={idx}>{item}</li>
+            ))}
           </ul>
         </AlertDescription>
       </Alert>

@@ -132,26 +132,84 @@ export function clearAllCache(): void {
 /**
  * Hook para fetch com cache automático
  */
+
+// helper que verifica se um valor é "válido" para ser cacheado.
+// para os nossos casos quer dizer: não nulo/undefined/"" e não um objeto/array
+// composto apenas por zeros numéricos ou strings vazias.
+function hasNonZeroValue(obj: any): boolean {
+  if (obj === null || obj === undefined) return false;
+  if (typeof obj === 'number') return obj !== 0;
+  if (typeof obj === 'string') {
+    const trimmed = obj.trim();
+    if (trimmed === '') return false;
+    const num = parseFloat(trimmed.replace(',', '.'));
+    if (!isNaN(num)) {
+      return num !== 0;
+    }
+    return true; // string não numérica é considerada válida
+  }
+  if (Array.isArray(obj)) {
+    return obj.some(hasNonZeroValue);
+  }
+  if (typeof obj === 'object') {
+    return Object.values(obj).some(hasNonZeroValue);
+  }
+  // outros tipos (boolean, etc) assumimos válidos
+  return true;
+}
+
+/**
+ * Faz fetch de dados com cache e fallback.
+ * - não escreve no cache respostas nulas/vazias/"só zeros";
+ * - em caso de erro retorna o último valor válido em cache (stale-while-revalidate);
+ * - um refresh forçado ignora cache, mas mesmo assim repete a verificação de validade.
+ */
 export async function fetchWithCache<T>(
   key: string,
   fetchFn: () => Promise<T>,
   forceRefresh: boolean = false
 ): Promise<T> {
-  // Se não for refresh forçado, tenta buscar do cache
+  // tentamos cache válido se não for refresh forçado
   if (!forceRefresh) {
     const cached = getCache<T>(key);
     if (cached) {
-      console.log(`📦 Cache hit para ${key} (válido por mais ${Math.floor((CACHE_DURATION - (Date.now() - JSON.parse(localStorage.getItem(`api_cache_${key}`)!).timestamp)) / 1000 / 60)} minutos)`);
+      console.log(
+        `📦 Cache hit para ${key} (válido por mais ${Math.floor(
+          (CACHE_DURATION - (Date.now() - JSON.parse(localStorage.getItem(`api_cache_${key}`)!).timestamp)) /
+            1000 /
+            60
+        )} minutos)`
+      );
       return cached;
     }
   }
 
-  // Busca dados da API
   console.log(`🔄 Buscando dados frescos para ${key}...`);
-  const data = await fetchFn();
-  
-  // Salva no cache
-  setCache(key, data, forceRefresh);
-  
-  return data;
+  try {
+    const data = await fetchFn();
+
+    // somente cacheamos se o payload tiver algum valor não-zero/valido
+    if (hasNonZeroValue(data)) {
+      setCache(key, data, forceRefresh);
+    } else {
+      console.warn(`Dados inválidos/zerados recebidos para ${key}, não salvo no cache`, data);
+    }
+
+    // se o retorno for inválido e já existia cache, devolvemos o cache
+    if (!hasNonZeroValue(data)) {
+      const previous = getCache<T>(key);
+      if (previous) return previous;
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Erro ao obter dados para ${key}:`, error);
+    const previous = getCache<T>(key);
+    if (previous) {
+      console.log(`Usando cache stale para ${key} após erro`);
+      return previous;
+    }
+    throw error;
+  }
 }
+
