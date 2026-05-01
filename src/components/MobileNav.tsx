@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { TrendingUp, Activity, Calculator, Home, Menu, X } from 'lucide-react';
+import { TrendingUp, Activity, Calculator, Home, Menu, Newspaper, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useLang } from '@/hooks/use-lang';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -14,12 +15,15 @@ import {
 const MobileNav = () => {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
+  const { lp } = useLang();
 
   const navItems = [
-    { path: '/', label: t('nav.home') || 'Inicial', icon: Home },
-    { path: '/markets', label: t('nav.markets') || 'Mercados', icon: TrendingUp },
-    { path: '/indicators', label: t('nav.indicators') || 'Indicadores', icon: Activity },
-    { path: '/calculators', label: t('nav.calculators') || 'Calculadoras', icon: Calculator },
+    { path: lp('/'), label: t('nav.home') || 'Inicial', icon: Home, end: true },
+    { path: lp('/markets'), label: t('nav.markets') || 'Mercados', icon: TrendingUp },
+    { path: lp('/indicators'), label: t('nav.indicators') || 'Indicadores', icon: Activity },
+    { path: lp('/calculators'), label: t('nav.calculators') || 'Calculadoras', icon: Calculator },
+    { path: lp('/news'), label: t('nav.news') || 'Notícias', icon: Newspaper },
+    { path: lp('/blog'), label: t('nav.blog') || 'Blog', icon: BookOpen },
   ];
 
   return (
@@ -46,11 +50,12 @@ const MobileNav = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                end={item.end}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) => `
                   flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-base font-medium
-                  ${isActive 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                  ${isActive
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }
                 `}

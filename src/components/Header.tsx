@@ -2,12 +2,15 @@ import Navigation from "./Navigation";
 import MobileNav from "./MobileNav";
 import { LanguageToggle } from "./LanguageToggle";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Moon, Sun, Wallet } from "lucide-react";
+import { Moon, Sun, Wallet, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { clearAllCache } from "@/lib/apiCache";
+import { useLang } from "@/hooks/use-lang";
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
+  const { lp } = useLang();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -17,7 +20,7 @@ const Header = () => {
         {/* 1. Menu Mobile (Hamburger) + Logo */}
         <div className="flex items-center gap-3">
           <MobileNav />
-          <Link to="/" className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
+          <Link to={lp('/')} className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
             <div className="bg-primary text-primary-foreground p-1.5 rounded-lg">
               <Wallet className="w-5 h-5" />
             </div>
@@ -50,21 +53,21 @@ const Header = () => {
             )}
           </Button>
 
-          {/* botão temporário para limpar cache durante testes */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              localStorage.clear();
-              // aviso simples para o desenvolvedor
-              alert('Cache limpo');
-            }}
-            className="rounded-full w-10 h-10 sm:w-9 sm:h-9"
-            title="Limpar Cache"
-          >
-            {/* ícone de lâmpada apagada para simbolizar "limpar" */}
-            <Sun className="h-5 w-5 text-red-500" />
-          </Button>
+          {/* Botão de limpar cache — visível apenas em desenvolvimento */}
+          {import.meta.env.DEV && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                clearAllCache();
+                console.log('[DEV] API cache limpo.');
+              }}
+              className="rounded-full w-10 h-10 sm:w-9 sm:h-9 text-muted-foreground hover:text-destructive"
+              title="[DEV] Limpar cache da API"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+          )}
         </div>
 
       </div>

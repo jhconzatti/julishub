@@ -175,7 +175,10 @@ Adicione `vercel.json` na raiz:
 ### Variáveis de Ambiente
 ```bash
 VITE_API_URL=https://seu-backend.vercel.app/api
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
+
+O Google Analytics 4 só é carregado quando o usuário aceita cookies não essenciais no banner de consentimento. O Vercel Web Analytics segue o mesmo gate de consentimento.
 
 ---
 

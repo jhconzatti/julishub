@@ -1,0 +1,249 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "markets": "Mercados",
+    "indicators": "Indicadores",
+    "calculators": "Calculadoras",
+    "news": "Noticias",
+    "blog": "Blog"
+  },
+  "home": {
+    "tagline": "Tu hub financiero completo",
+    "title": {
+      "part1": "Dominá tus",
+      "part2": "Finanzas"
+    },
+    "subtitle": "Seguí el mercado financiero, simulá inversiones y tomá decisiones más inteligentes con datos en tiempo real.",
+    "cta": {
+      "simulate": "Simular Ahora",
+      "quotes": "Ver Cotizaciones",
+      "title": "Planeá tu futuro financiero con Interés Compuesto",
+      "description": "Descubrí cuánto puede rendir tu dinero con el tiempo. Nuestra calculadora de interés compuesto muestra gráficamente la evolución de tu patrimonio y el poder de los aportes mensuales.",
+      "button": "Probar Ahora"
+    },
+    "features": {
+      "title": "Explorá las Funcionalidades",
+      "subtitle": "Todo lo que necesitás para gestionar tus finanzas en un solo lugar",
+      "markets": {
+        "title": "Mercado Financiero",
+        "description": "Cotizaciones de monedas, criptomonedas e índices actualizadas en tiempo real",
+        "action": "Acceder"
+      },
+      "calculators": {
+        "title": "Calculadoras",
+        "description": "Simulá inversiones, préstamos y calculá tu salario neto",
+        "action": "Calcular"
+      },
+      "indicators": {
+        "title": "Indicadores Económicos",
+        "description": "SELIC, IPCA, CDI y otros indicadores oficiales del Banco Central",
+        "action": "Visualizar"
+      },
+      "news": {
+        "title": "Noticias Financieras",
+        "description": "Últimas noticias de economía y negocios de Brasil en tiempo real",
+        "action": "Leer Ahora"
+      },
+      "blog": {
+        "title": "Blog de Educación Financiera",
+        "description": "Artículos completos sobre inversiones, planificación e independencia financiera",
+        "action": "Leer Artículos"
+      }
+    },
+    "stats": {
+      "news": "Noticias por día",
+      "realData": "Datos Reales de APIs Oficiales",
+      "calculators": "Calculadoras Financieras Completas",
+      "realtime": "Actualización en Tiempo Real"
+    }
+  },
+  "markets": {
+    "title": "Mercados",
+    "description": "Cotizaciones e índices en tiempo real",
+    "exchangeRates": "Tipos de Cambio",
+    "topCryptos": "Top 10 Criptomonedas"
+  },
+  "news": {
+    "title": "Noticias Financieras",
+    "description": "Últimas noticias de economía y negocios de Brasil",
+    "refresh": "Actualizar noticias (disponible cada 5 minutos)",
+    "empty": "No hay noticias disponibles",
+    "emptyDescription": "Intentá actualizar nuevamente en algunos minutos.",
+    "readMore": "Leer Más",
+    "footer": "Noticias provistas por Google News • Actualización automática cada 60 minutos"
+  },
+  "blog": {
+    "title": "Blog de Educación Financiera",
+    "subtitle": "Aprendé a gestionar tus finanzas, invertir mejor y lograr tus objetivos financieros",
+    "searchPlaceholder": "Buscar artículos por título, tags o contenido...",
+    "noResults": "No se encontraron artículos",
+    "noResultsDescription": "Probá cambiar los filtros o buscar otros términos.",
+    "readMore": "Leer artículo completo",
+    "showing": "Mostrando",
+    "backToList": "Volver al blog",
+    "share": {
+      "title": "¿Te gustó este artículo?",
+      "description": "¡Compartilo con tus amigos y ayudá a más personas a aprender sobre finanzas!"
+    },
+    "related": {
+      "title": "También te puede gustar"
+    }
+  },
+  "indicators": {
+    "title": "Indicadores Económicos",
+    "description": "Datos oficiales en tiempo real",
+    "brazil": "Brasil",
+    "usa": "Estados Unidos",
+    "argentina": "Argentina"
+  },
+  "calculators": {
+    "title": "Calculadoras Financieras",
+    "description": "Planificación, deudas y laboral en un solo lugar.",
+    "cltSalary": "Salario Neto CLT",
+    "cltVacation": "Vacaciones CLT",
+    "thirteenth": "Aguinaldo",
+    "financialIndependence": "Independencia Financiera",
+    "pgblVgbl": "PGBL/VGBL",
+    "fixedIncome": "Renta Fija",
+    "compoundInterest": "Interés Compuesto",
+    "financing": "Financiamiento (Price)",
+    "exchange": "Cambio",
+    "investments": "Inversiones",
+    "loans": "Préstamos",
+    "netSalary": "Salario Neto",
+    "calculate": "Calcular",
+    "calculating": "Calculando...",
+    "result": "Resultado",
+    "initialAmount": "Aporte Inicial ($)",
+    "monthlyContribution": "Aporte Mensual ($)",
+    "annualRate": "Tasa Anual (%)",
+    "years": "Años",
+    "financingAmount": "Valor Financiado ($)",
+    "monthlyRate": "Tasa Mensual (%)",
+    "months": "Meses",
+    "grossSalary": "Salario Bruto ($)",
+    "dependents": "Dependientes",
+    "otherDeductions": "Otras Deducciones ($)",
+    "finalValue": "Patrimonio Final",
+    "totalInvested": "Total Invertido",
+    "earnings": "Ganancias",
+    "monthlyPayment": "Tu Cuota Mensual",
+    "totalPaid": "Total a Pagar",
+    "totalInterest": "Total en Intereses",
+    "simulateGrowth": "Simulá el crecimiento de tu dinero",
+    "calculatePayment": "Calculá la cuota mensual",
+    "inssIrrfDeductions": "Deducciones de INSS y IRRF (2024)",
+    "priceSystem": "Sistema de Amortización Francés (Price)",
+    "availableAfterDeductions": "Disponible después de deducciones legales",
+    "deductionsBreakdown": "Detalle de Deducciones",
+    "others": "Otros",
+    "totalDeductions": "Total de Deducciones",
+    "processing": "Procesando...",
+    "fillAndSimulate": "Completá y simulá para ver el gráfico.",
+    "enterValueAndRate": "Ingresá valor y tasa para calcular.",
+    "enterSalaryAndDependents": "Ingresá el salario bruto y dependientes.",
+    "warning_title": "Aviso: Esta simulación puede basarse en el cambio comercial, que no considera:",
+    "warning_items": [
+      "Tasas de cambio turístico (generalmente 3-8% más altas)",
+      "Spread financiero de operaciones bancarias",
+      "Impuesto sobre Operaciones Financieras (IOF)",
+      "Comisiones de corretaje o transferencia"
+    ]
+  },
+  "common": {
+    "price": "Precio",
+    "change": "Cambio",
+    "volume": "Volumen",
+    "marketCap": "Cap. Mercado"
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados.",
+    "developedBy": "Desarrollado por",
+    "privacy": "Política de Privacidad",
+    "cookies": "Preferencias de Cookies"
+  },
+  "cookieConsent": {
+    "badge": "Consentimiento de Cookies",
+    "title": "Elegí cómo JulisHub usa cookies y analytics",
+    "description": "Usamos almacenamiento esencial del navegador para recordar preferencias básicas del sitio y, con tu autorización, activamos analytics opcionales para medir rendimiento y entender la navegación.",
+    "policyLink": "Leé la Política de Privacidad.",
+    "acceptAll": "Aceptar Todo",
+    "essentialOnly": "Solo Esenciales"
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "summary": "Esta página explica, en lenguaje claro, cómo JulisHub trata la información cuando navegás por la plataforma.",
+    "lastUpdated": "Última actualización: 1 de mayo de 2026.",
+    "currentScope": {
+      "title": "Alcance actual:",
+      "description": "Hoy JulisHub usa almacenamiento del navegador para recordar idioma y tema, utiliza herramientas de analytics para medir estabilidad y navegación, y consulta APIs de terceros para mostrar datos de mercado. Si en el futuro se activan nuevas funciones como watchlists guardadas, notificaciones, autenticación o integraciones adicionales de medición, esta política se actualizará antes de ampliar el tratamiento de datos, con detalle de categorías de datos, finalidad, retención y controles aplicables."
+    },
+    "sections": {
+      "intro": {
+        "heading": "Introducción",
+        "paragraphs": [
+          "JulisHub es una plataforma enfocada en información financiera, indicadores, calculadoras y contenido educativo. Nuestro objetivo es ofrecer una experiencia útil y transparente, recolectando la menor cantidad posible de datos personales para operar el servicio.",
+          "La privacidad forma parte de la calidad del producto. Por eso explicamos de manera objetiva qué datos pueden tratarse, por qué ocurre y qué opciones tenés como titular, en línea con la Ley General de Protección de Datos Personales de Brasil (LGPD)."
+        ]
+      },
+      "automaticData": {
+        "heading": "Datos Recopilados Automáticamente",
+        "paragraphs": [
+          "Cuando accedés a JulisHub, algunos datos técnicos pueden procesarse automáticamente para cargar la aplicación, proteger la infraestructura, adaptar la interfaz a tu dispositivo y medir el rendimiento del servicio.",
+          "Actualmente JulisHub no requiere registro para la navegación habitual y no depende de datos sensibles para ofrecer sus funciones principales. Aun así, la infraestructura, las herramientas de analytics y los recursos del navegador pueden registrar información operativa como la listada a continuación.",
+          "No todo el almacenamiento en el navegador cumple la misma función. Las preferencias esenciales, como idioma y tema, pueden guardarse localmente para permitir personalización básica y continuidad de uso, mientras que las herramientas de analytics opcionales solo se activan cuando el usuario decide permitir ese tratamiento.",
+          "Las herramientas de analytics pueden recopilar eventos de navegación, páginas visitadas, interacciones, origen del tráfico, información agregada del dispositivo e indicadores de rendimiento para mejora continua, estabilidad, análisis de uso y toma de decisiones de producto.",
+          "Las cookies y tecnologías no esenciales, incluidas las relacionadas con Google Analytics (GA4) y con mediciones opcionales de analytics, solo se activan después de tu consentimiento explícito a través del Banner de Cookies. Sin ese consentimiento, permanecen activas únicamente las funciones estrictamente necesarias para el funcionamiento del sitio."
+        ],
+        "items": [
+          "Dirección IP y metadatos básicos de la conexión, normalmente tratados por servicios de hosting, seguridad y entrega de contenido.",
+          "Tipo y versión del navegador, sistema operativo, idioma preferido y características técnicas del dispositivo usadas para compatibilidad y diagnóstico.",
+          "Mediciones anonimizadas de rendimiento, disponibilidad y estabilidad generadas por Vercel Web Analytics, cuando son autorizadas por el usuario, para el monitoreo técnico de la aplicación.",
+          "Eventos y métricas de navegación tratados por Google Analytics (GA4), cuando son autorizados por el usuario, para entender tráfico, comportamiento de uso y recorridos de navegación.",
+          "Cookies estrictamente técnicas cuando sean necesarias para seguridad, estabilidad o funcionamiento esencial del servicio, y cookies no esenciales solo después del consentimiento explícito.",
+          "Datos almacenados en LocalStorage y SessionStorage para recordar preferencias esenciales como idioma y tema visual, sin uso para perfilado publicitario."
+        ]
+      },
+      "thirdParty": {
+        "heading": "Uso de APIs y Servicios de Terceros",
+        "paragraphs": [
+          "Para mostrar cotizaciones, índices y otros datos de mercado, JulisHub consulta APIs y proveedores externos. En ese flujo, algunos metadatos de conexión pueden ser procesados por esos terceros según la infraestructura involucrada y sus propias políticas de privacidad.",
+          "Además de esas integraciones, JulisHub puede utilizar Vercel Web Analytics para monitorear rendimiento y estabilidad con foco técnico e indicadores anonimizados, y Google Analytics (GA4) para comprender patrones de navegación, adquisición de tráfico y uso de las páginas, siempre de acuerdo con la elección registrada en el banner de consentimiento.",
+          "JulisHub usa las respuestas de esas APIs y servicios para presentar información financiera, monitorear la salud de la aplicación y orientar mejoras de producto, pero no controla por completo la disponibilidad, retención, seguridad ni las prácticas de tratamiento adoptadas por cada proveedor externo.",
+          "Cuando un servicio depende de cookies o identificadores no esenciales, como ocurre con Google Analytics (GA4) y con las mediciones opcionales de analytics adoptadas por JulisHub, la recolección correspondiente solo se realiza después del consentimiento explícito del usuario en el Banner de Cookies. También recomendamos revisar las políticas de privacidad de los proveedores terceros aplicables a cada integración."
+        ]
+      },
+      "protection": {
+        "heading": "Cómo Protegemos los Datos",
+        "paragraphs": [
+          "Adoptamos medidas técnicas y organizativas razonables para reducir riesgos, como el uso de conexión HTTPS, la limitación de exposición innecesaria de información y la revisión de las integraciones utilizadas por la aplicación.",
+          "También procuramos seguir el principio de minimización: tratar solo lo necesario para la funcionalidad ofrecida. Aun así, ningún entorno conectado a internet está completamente libre de riesgos, por lo que pueden realizarse monitoreos, actualizaciones y ajustes de forma continua.",
+          "Si funciones futuras exigen cuentas, base de datos, watchlists persistidas o notificaciones, JulisHub deberá aplicar controles compatibles con ese nuevo nivel de tratamiento, como gestión de acceso, segregación de permisos, registros de operación y criterios de retención alineados con la finalidad del servicio."
+        ]
+      },
+      "rights": {
+        "heading": "Tus Derechos",
+        "paragraphs": [
+          "Según la LGPD, podés solicitar información sobre el tratamiento de tus datos personales cuando corresponda. Eso incluye pedidos relacionados con el uso, la corrección o la eliminación de datos mantenidos por el servicio.",
+          "Analizaremos las solicitudes de manera razonable, considerando obligaciones legales, limitaciones técnicas y la naturaleza de los datos efectivamente tratados por JulisHub en cada funcionalidad."
+        ],
+        "items": [
+          "Confirmar la existencia de tratamiento y solicitar acceso a los datos personales vinculados con vos, cuando existan.",
+          "Solicitar la corrección de datos incompletos, inexactos o desactualizados.",
+          "Pedir anonimización, bloqueo o eliminación de datos innecesarios, excesivos o tratados en desacuerdo con la LGPD, cuando corresponda.",
+          "Obtener información sobre el intercambio con terceros y sobre las bases legales que justifican el tratamiento.",
+          "Revocar el consentimiento u oponerte al tratamiento en los casos en que la ley permita ese camino."
+        ]
+      },
+      "changesContact": {
+        "heading": "Cambios en la Política y Contacto",
+        "paragraphs": [
+          "Esta política puede actualizarse para reflejar cambios legales, técnicos o de producto. Cuando eso ocurra, publicaremos la nueva versión en esta página con la fecha de revisión correspondiente.",
+          "Si un cambio modifica de forma relevante cómo se tratan los datos personales, JulisHub procurará ofrecer transparencia adicional antes de aplicar ese cambio en la práctica.",
+          "La implementación futura de funciones como autenticación, watchlists persistidas, notificaciones y nuevas integraciones con base de datos puede requerir avisos complementarios, ajustes en el banner de consentimiento y revisiones de esta política para reflejar el flujo real de datos.",
+          "Para dudas, solicitudes o ejercicio de derechos, utilizá los canales oficiales publicados en JulisHub. Si en el futuro se crea un canal específico de privacidad, será informado en esta misma página."
+        ]
+      }
+    }
+  }
+}

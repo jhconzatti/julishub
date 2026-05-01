@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, BookOpen, Calendar, Tag, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLang } from "@/hooks/use-lang";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ const API_BASE_URL = getApiUrl();
 export default function BlogList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { lp } = useLang();
   
   const [artigos, setArtigos] = useState<Artigo[]>([]);
   const [filteredArtigos, setFilteredArtigos] = useState<Artigo[]>([]);
@@ -70,7 +72,7 @@ export default function BlogList() {
   };
 
   const handleArtigoClick = (slug: string) => {
-    navigate(`/blog/${slug}`);
+    navigate(lp(`/blog/${slug}`));
   };
 
   return (

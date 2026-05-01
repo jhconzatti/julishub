@@ -1,17 +1,22 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { ThemeProvider } from './contexts/ThemeContext.tsx'
 
-// 1. Importe apenas o arquivo para ele inicializar
-import './lib/i18n'; 
+// Initialise i18next — translations are now loaded lazily from /public/locales/
+import './lib/i18n';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
-      {/* 2. Removemos o <LanguageProvider> antigo daqui */}
-      <App />
+      <Suspense fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      }>
+        <App />
+      </Suspense>
     </ThemeProvider>
   </React.StrictMode>,
 )

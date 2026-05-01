@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowLeft, Calendar, Share2, Tag, Linkedin, Twitter, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLang } from "@/hooks/use-lang";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +30,10 @@ const getApiUrl = () => {
 const API_BASE_URL = getApiUrl();
 
 export default function BlogPost() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ lang: string; slug: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { lp } = useLang();
   
   const [artigo, setArtigo] = useState<Artigo | null>(null);
   const [artigosRelacionados, setArtigosRelacionados] = useState<Artigo[]>([]);
@@ -116,7 +118,7 @@ export default function BlogPost() {
     return (
       <div className="max-w-4xl mx-auto text-center py-20">
         <h2 className="text-2xl font-bold mb-4">Artigo não encontrado</h2>
-        <Button onClick={() => navigate('/blog')}>
+        <Button onClick={() => navigate(lp('/blog'))}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar para o blog
         </Button>
@@ -129,7 +131,7 @@ export default function BlogPost() {
       {/* Breadcrumb / Voltar */}
       <Button 
         variant="ghost" 
-        onClick={() => navigate('/blog')}
+        onClick={() => navigate(lp('/blog'))}
         className="group"
       >
         <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />

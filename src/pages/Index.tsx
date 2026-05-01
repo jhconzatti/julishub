@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Calculator, Activity, ChartBar, Sparkles, ArrowRight, Home, Newspaper, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useLang } from '@/hooks/use-lang';
 
 const Index = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { lp } = useLang();
 
   return (
     <div className="space-y-16 animate-in fade-in duration-700">
@@ -32,7 +34,7 @@ const Index = () => {
           <Button
             size="lg"
             className="text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto"
-            onClick={() => navigate('/calculators')}
+            onClick={() => navigate(lp('/calculators'))}
           >
             {t('home.cta.simulate')}
             <ArrowRight className="ml-2 h-5 w-5" />
@@ -41,7 +43,7 @@ const Index = () => {
             size="lg"
             variant="outline"
             className="text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto"
-            onClick={() => navigate('/markets')}
+            onClick={() => navigate(lp('/markets'))}
           >
             {t('home.cta.quotes')}
           </Button>
@@ -61,7 +63,7 @@ const Index = () => {
           {/* Card Mercado */}
           <Card
             className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-100"
-            onClick={() => navigate('/markets')}
+            onClick={() => navigate(lp('/markets'))}
           >
             <CardHeader>
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-950 rounded-lg flex items-center justify-center mb-2">
@@ -83,7 +85,7 @@ const Index = () => {
           {/* Card Notícias */}
           <Card
             className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-150"
-            onClick={() => navigate('/news')}
+            onClick={() => navigate(lp('/news'))}
           >
             <CardHeader>
               <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-lg flex items-center justify-center mb-2">
@@ -105,7 +107,7 @@ const Index = () => {
           {/* Card Calculadoras */}
           <Card
             className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-200"
-            onClick={() => navigate('/calculators')}
+            onClick={() => navigate(lp('/calculators'))}
           >
             <CardHeader>
               <div className="w-12 h-12 bg-green-100 dark:bg-green-950 rounded-lg flex items-center justify-center mb-2">
@@ -127,7 +129,7 @@ const Index = () => {
           {/* Card Indicadores */}
           <Card
             className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-300"
-            onClick={() => navigate('/indicators')}
+            onClick={() => navigate(lp('/indicators'))}
           >
             <CardHeader>
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-950 rounded-lg flex items-center justify-center mb-2">
@@ -149,7 +151,7 @@ const Index = () => {
           {/* Card Blog */}
           <Card
             className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-350"
-            onClick={() => navigate('/blog')}
+            onClick={() => navigate(lp('/blog'))}
           >
             <CardHeader>
               <div className="w-12 h-12 bg-rose-100 dark:bg-rose-950 rounded-lg flex items-center justify-center mb-2">
@@ -189,7 +191,7 @@ const Index = () => {
             size="lg"
             variant="secondary"
             className="text-lg px-8 mt-4"
-            onClick={() => navigate('/calculators')}
+            onClick={() => navigate(lp('/calculators'))}
           >
             {t('home.cta.button')}
             <ArrowRight className="ml-2 h-5 w-5" />

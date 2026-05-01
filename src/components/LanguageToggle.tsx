@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
@@ -9,10 +10,15 @@ import {
 
 export const LanguageToggle = () => {
   const { i18n } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const currentLang = i18n.language || 'pt-BR';
 
   const changeLanguage = (lang: string) => {
-    i18n.changeLanguage(lang);
+    // Strip the current /:lang prefix and replace with the new one
+    // e.g. /pt-BR/markets → /en/markets
+    const rest = location.pathname.replace(/^\/[^/]*/, '') || '';
+    navigate(`/${lang}${rest}`);
   };
 
   return (
