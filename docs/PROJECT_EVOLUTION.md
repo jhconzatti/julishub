@@ -14,7 +14,7 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 0C implementada localmente, com validação de produção pendente. MERVAL, S&P 500, Dow Jones e Nasdaq Composite agora usam dados estruturados do Yahoo Finance; os números fixos foram removidos. O BURCAP permanece explicitamente indisponível por não haver fonte simples e confiável dentro das restrições da sprint.
+Sprint 0D implementada localmente, com validação de produção pendente. A calculadora de salário líquido usa as faixas progressivas de INSS e as regras mensais de IRRF vigentes desde janeiro de 2026, incluindo a escolha da dedução mais vantajosa e a redução prevista pela Lei 15.270/2025.
 
 ## Known Issues
 
@@ -22,12 +22,12 @@ Sprint 0C implementada localmente, com validação de produção pendente. MERVA
 |---|---|---|---|---|---|
 | JH-001 | P1 | Production | Falhas de providers podem virar HTTP 200 com valores zero e ser exibidas/cacheadas como dados válidos. | Fallbacks numéricos removidos; sem cache, falha total retorna 503; payloads recebem validação por contrato. | Resolved locally — production validation pending |
 | JH-002 | P1 | Product/Data Correctness | Índices de Argentina e EUA eram valores fixos, embora a interface os apresentasse no contexto de mercado em tempo real. | MERVAL (`^MERV`), S&P 500 (`^GSPC`), Dow Jones (`^DJI`) e Nasdaq Composite (`^IXIC`) usam Yahoo Finance; BURCAP fica explicitamente indisponível e nenhum hardcode permanece como fallback. | Resolved locally — production validation pending |
-| JH-003 | P1 | Product/Data Correctness | Calculadora de salário usa tabelas de INSS/IRRF explicitamente rotuladas como 2024. | `routers/calculators.py`. | Open |
+| JH-003 | P1 | Product/Data Correctness | Calculadora de salário usava tabelas de INSS/IRRF explicitamente rotuladas como 2024. | INSS progressivo, teto previdenciário, deduções e redução mensal de IRRF atualizados para 2026; casos de R$ 4.000, R$ 5.000 e R$ 6.000 cobertos por testes e smoke local. | Resolved locally — production validation pending |
 | JH-004 | P1 | Production | Primeiras chamadas ao backend de produção excederam 30 s; após aquecimento, responderam em menos de 1,1 s. | Frontend limitado a 20 s por tentativa e uma segunda tentativa transitória; cold start da hospedagem não foi alterado. | Partially resolved — post-deploy validation pending |
 | JH-005 | P1 | API/Integration | Não há retries; o RSS não possui timeout explícito e há caminhos sequenciais de provider/fallback que acumulam latência. | Retry do cliente limitado a uma tentativa adicional; RSS usa timeout de conexão/leitura; fallback real sequencial foi preservado. | Resolved locally — production validation pending |
 | JH-006 | P2 | Error Handling | Estados de erro/indisponibilidade são inconsistentes; algumas telas convertem falha em vazio, zero ou apenas console. | Markets, Indicators, News e ExchangeCalculator agora distinguem loading, stale e indisponibilidade; Blog não pertenceu ao escopo da Sprint 0B. | Partially resolved |
 | JH-007 | P2 | Technical Debt | Baseline estático falha: ESLint reporta 22 erros/9 warnings e TypeScript reporta 2 erros. | Execuções da Sprint 0A. | Open |
-| JH-008 | P2 | Reliability | Não existe uma suíte automatizada abrangente para o produto. | Sprint 0B adicionou apenas nove testes backend focados na semântica de providers/cache; cobertura ampla continua pendente. | Open |
+| JH-008 | P2 | Reliability | Não existe uma suíte automatizada abrangente para o produto. | Há 27 testes backend focados em confiabilidade, mercados e salário CLT; cobertura ampla de frontend e dos demais domínios continua pendente. | Open |
 | JH-009 | P2 | Documentation | README e documentos históricos divergem do código/deploy atual e contêm conteúdo duplicado ou truncado. | README descreve backend Vercel, mock inexistente e timeouts divergentes; produção usa Render. | Open |
 | JH-010 | P2 | Performance | Bundle principal excede o limite de aviso do Vite. | JS minificado de 1.121,55 kB (330,27 kB gzip). | Open |
 | JH-011 | P3 | Repository Hygiene | Há backup e artefatos legados/mortos, além de dois lockfiles. | `MarketsOld.tsx.bak`, `marketService.ts`, `MarketCard.tsx`, `package-lock.json` e `bun.lockb`. | Open |
@@ -53,7 +53,7 @@ Sprint 0C implementada localmente, com validação de produção pendente. MERVA
 
 ### Tests
 
-- Quinze testes `unittest` focados em provider válido, fallback real, falha total, 503, zero legítimo, stale cache, News e integridade dos índices de Argentina/EUA.
+- Vinte e sete testes `unittest`: quinze de confiabilidade/mercados e doze da calculadora CLT 2026.
 - A suíte abrangente de produto permanece pendente em JH-008.
 
 ### Build
@@ -81,6 +81,9 @@ Sprint 0C implementada localmente, com validação de produção pendente. MERVA
 - Falha de atualização preserva cache anterior como stale; ausência de cache resulta em indisponibilidade explícita.
 - MERVAL, S&P 500, Dow Jones e Nasdaq Composite usam o endpoint estruturado de gráficos do Yahoo Finance, sem credencial ou nova dependência.
 - BURCAP não é substituído por outro índice nem recebe valor fictício; permanece explicitamente indisponível até existir fonte adequada.
+- A calculadora CLT usa as faixas progressivas de INSS vigentes desde janeiro de 2026; os exemplos previdenciários de 2025 não são usados como referência.
+- A base do IRRF usa a maior dedução entre INSS mais dependentes e o desconto simplificado mensal; outros descontos são aplicados somente ao líquido.
+- A redução mensal de IRRF segue a Lei 15.270/2025 e utiliza o salário bruto para definir e calcular a redução.
 
 ## Sprint History
 
@@ -120,15 +123,32 @@ Entregas:
 - cache separado e stale por mercado;
 - testes focados em valor real, falha, stale, payload inválido e zero legítimo.
 
+### Sprint 0D — CLT Salary Calculator 2026
+
+Status:
+Implementada localmente — validação de produção pendente.
+
+Entregas:
+- INSS progressivo com faixas de R$ 1.621,00, R$ 2.902,84, R$ 4.354,27 e teto de R$ 8.475,55;
+- IRRF mensal 2026, dedução por dependente de R$ 189,59 e desconto simplificado de R$ 607,20;
+- escolha automática da dedução mais vantajosa;
+- redução integral até R$ 5.000,00, parcial até R$ 7.350,00 e inexistente acima desse limite;
+- validação de entradas não negativas e doze testes específicos;
+- referências visuais de 2024 atualizadas para 2026 nos três idiomas.
+
+Casos de referência ajustados às faixas oficiais de INSS 2026:
+- R$ 4.000,00: INSS R$ 368,60; IRRF R$ 0,00; líquido R$ 3.631,40;
+- R$ 5.000,00: INSS R$ 501,51; IRRF R$ 0,00; líquido R$ 4.498,49;
+- R$ 6.000,00: INSS R$ 641,51; IRRF R$ 385,10; líquido R$ 4.973,39.
+
 ## Roadmap
 
 1. Post-deploy Reliability Validation — JH-001, JH-004 e JH-005.
-2. Functional & Data Correctness — JH-003.
-3. Quality Baseline & Tests — JH-007 e JH-008.
-4. Documentation & Repository Hygiene — JH-009 e JH-011.
-5. Performance & UX Cleanup — JH-006 e JH-010.
-6. Visual Polish & Portfolio Readiness — JH-012.
+2. Quality Baseline & Tests — JH-007 e JH-008.
+3. Documentation & Repository Hygiene — JH-009 e JH-011.
+4. Performance & UX Cleanup — JH-006 e JH-010.
+5. Visual Polish & Portfolio Readiness — JH-012.
 
 ## Next Sprint
 
-**Functional & Data Correctness:** resolver JH-003 após as validações pós-deploy pendentes.
+**Post-deploy Reliability Validation:** validar em produção as entregas locais das Sprints 0B, 0C e 0D antes de avançar para melhorias de qualidade e manutenção.

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 
 router = APIRouter()
@@ -81,59 +81,71 @@ def calcular_financiamento(dados: FinanciamentoInput):
     }
 
 
-# --- 3. Calculadora de Salário Líquido (CLT 2024) ---
+# --- 3. Calculadora de Salário Líquido (CLT 2026) ---
 class SalarioLiquidoInput(BaseModel):
-    salario_bruto: float
-    dependentes: int = 0
-    outros_descontos: float = 0
+    salario_bruto: float = Field(ge=0, allow_inf_nan=False)
+    dependentes: int = Field(default=0, ge=0)
+    outros_descontos: float = Field(default=0, ge=0, allow_inf_nan=False)
+
+
+INSS_2026_BRACKETS = (
+    (1621.00, 0.075),
+    (2902.84, 0.09),
+    (4354.27, 0.12),
+    (8475.55, 0.14),
+)
+IRRF_2026_BRACKETS = (
+    (2428.80, 0.0, 0.0),
+    (2826.65, 0.075, 182.16),
+    (3751.05, 0.15, 394.16),
+    (4664.68, 0.225, 675.49),
+    (float("inf"), 0.275, 908.73),
+)
+DEPENDENT_DEDUCTION_2026 = 189.59
+SIMPLIFIED_DEDUCTION_2026 = 607.20
+
+
+def calcular_inss_2026(salario_bruto: float) -> float:
+    salario_contribuicao = min(salario_bruto, INSS_2026_BRACKETS[-1][0])
+    inss = 0.0
+    faixa_anterior = 0.0
+
+    for limite, aliquota in INSS_2026_BRACKETS:
+        if salario_contribuicao <= faixa_anterior:
+            break
+        base_faixa = min(salario_contribuicao, limite) - faixa_anterior
+        inss += base_faixa * aliquota
+        faixa_anterior = limite
+
+    return inss
+
+
+def calcular_irrf_2026(salario_bruto: float, inss: float, dependentes: int) -> float:
+    deducoes_legais = inss + dependentes * DEPENDENT_DEDUCTION_2026
+    deducao_irrf = max(deducoes_legais, SIMPLIFIED_DEDUCTION_2026)
+    base_irrf = max(0.0, salario_bruto - deducao_irrf)
+
+    irrf_calculado = 0.0
+    for limite, aliquota, parcela_deduzir in IRRF_2026_BRACKETS:
+        if base_irrf <= limite:
+            irrf_calculado = max(0.0, base_irrf * aliquota - parcela_deduzir)
+            break
+
+    if salario_bruto <= 5000.00:
+        reducao = min(irrf_calculado, 312.89)
+    elif salario_bruto <= 7350.00:
+        reducao = min(irrf_calculado, max(0.0, 978.62 - 0.133145 * salario_bruto))
+    else:
+        reducao = 0.0
+
+    return max(0.0, irrf_calculado - reducao)
+
 
 @router.post("/salario-liquido")
 def calcular_salario_liquido(dados: SalarioLiquidoInput):
     sb = dados.salario_bruto
-    
-    # A. Cálculo INSS (Tabela Progressiva 2024)
-    # Teto do salário de contribuição: R$ 7.786,02
-    teto_inss = 7786.02
-    faixas_inss = [
-        (1412.00, 0.075),
-        (2666.68, 0.09),
-        (4000.03, 0.12),
-        (7786.02, 0.14)
-    ]
-    
-    inss = 0.0
-    salario_restante = min(sb, teto_inss)
-    faixa_anterior = 0
-    
-    for limite, aliquota in faixas_inss:
-        if salario_restante > faixa_anterior:
-            base_faixa = min(salario_restante, limite) - faixa_anterior
-            inss += base_faixa * aliquota
-            faixa_anterior = limite
-        else:
-            break
-            
-    # B. Cálculo IRRF (Tabela Vigente 2024 - A partir de Fev/24)
-    # Dedução por dependente: R$ 189,59
-    deducao_dependente = dados.dependentes * 189.59
-    base_irrf = sb - inss - deducao_dependente
-    
-    # Faixas IRRF e Parcelas a deduzir
-    faixas_irrf = [
-        (2259.20, 0.0, 0.0),
-        (2826.65, 0.075, 169.44),
-        (3751.05, 0.15, 381.44),
-        (4664.68, 0.225, 662.77),
-        (float('inf'), 0.275, 896.00)
-    ]
-    
-    irrf = 0.0
-    for limite, aliquota, deducao in faixas_irrf:
-        if base_irrf <= limite:
-            irrf = (base_irrf * aliquota) - deducao
-            break
-            
-    if irrf < 0: irrf = 0.0
+    inss = round(calcular_inss_2026(sb), 2)
+    irrf = round(calcular_irrf_2026(sb, inss, dados.dependentes), 2)
     
     # Resultado Final
     salario_liquido = sb - inss - irrf - dados.outros_descontos
