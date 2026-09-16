@@ -1,215 +1,172 @@
-/**
- * Sistema de cache para APIs
- * - Cache de 60 minutos para dados
- * - Trava de segurança de 5 minutos para atualização manual
- */
+import type { ApiResponse } from "@/lib/apiRequest";
 
 interface CacheData<T> {
+  version: 2;
   data: T;
   timestamp: number;
-  lastManualRefresh?: number;
 }
 
-const CACHE_DURATION = 60 * 60 * 1000; // 60 minutos
-const MANUAL_REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutos
+export interface CachedFetchResult<T> {
+  data: T;
+  isStale: boolean;
+  timestamp: number | null;
+  refreshFailed: boolean;
+}
 
-/**
- * Verifica se o cache ainda é válido
- */
+const CACHE_VERSION = "v2";
+const CACHE_DURATION = 60 * 60 * 1000;
+const MANUAL_REFRESH_COOLDOWN = 5 * 60 * 1000;
+
+const cacheKey = (key: string) => `api_cache_${CACHE_VERSION}_${key}`;
+const manualRefreshKey = (key: string) => `api_manual_refresh_${CACHE_VERSION}_${key}`;
+
 export function isCacheValid(timestamp: number | null): boolean {
-  if (!timestamp) return false;
-  const now = Date.now();
-  return now - timestamp < CACHE_DURATION;
+  return timestamp !== null && Date.now() - timestamp < CACHE_DURATION;
 }
 
-/**
- * Verifica se pode executar refresh manual (trava de 5 minutos)
- */
 export function canManualRefresh(lastRefreshTimestamp: number | null): boolean {
-  if (!lastRefreshTimestamp) return true;
-  const now = Date.now();
-  return now - lastRefreshTimestamp >= MANUAL_REFRESH_COOLDOWN;
+  return lastRefreshTimestamp === null
+    || Date.now() - lastRefreshTimestamp >= MANUAL_REFRESH_COOLDOWN;
 }
 
-/**
- * Obtém tempo restante para próximo refresh manual (em segundos)
- */
 export function getRemainingCooldown(lastRefreshTimestamp: number | null): number {
-  if (!lastRefreshTimestamp) return 0;
-  const now = Date.now();
-  const elapsed = now - lastRefreshTimestamp;
-  const remaining = MANUAL_REFRESH_COOLDOWN - elapsed;
+  if (lastRefreshTimestamp === null) return 0;
+  const remaining = MANUAL_REFRESH_COOLDOWN - (Date.now() - lastRefreshTimestamp);
   return Math.max(0, Math.ceil(remaining / 1000));
 }
 
-/**
- * Salva dados no cache do localStorage
- */
-export function setCache<T>(key: string, data: T, isManualRefresh: boolean = false): void {
+function readCache<T>(key: string, validate: (value: unknown) => value is T): CacheData<T> | null {
   try {
-    const cacheData: CacheData<T> = {
-      data,
-      timestamp: Date.now(),
-      lastManualRefresh: isManualRefresh ? Date.now() : undefined,
-    };
-    localStorage.setItem(`api_cache_${key}`, JSON.stringify(cacheData));
-  } catch (error) {
-    console.error(`Erro ao salvar cache para ${key}:`, error);
-  }
-}
+    const stored = localStorage.getItem(cacheKey(key));
+    if (!stored) return null;
 
-/**
- * Obtém dados do cache do localStorage
- */
-export function getCache<T>(key: string): T | null {
-  try {
-    const cached = localStorage.getItem(`api_cache_${key}`);
-    if (!cached) return null;
-
-    const cacheData: CacheData<T> = JSON.parse(cached);
-    
-    // Verifica se o cache ainda é válido (60 minutos)
-    if (isCacheValid(cacheData.timestamp)) {
-      return cacheData.data;
+    const parsed: unknown = JSON.parse(stored);
+    if (
+      typeof parsed !== "object"
+      || parsed === null
+      || !("version" in parsed)
+      || parsed.version !== 2
+      || !("timestamp" in parsed)
+      || typeof parsed.timestamp !== "number"
+      || !Number.isFinite(parsed.timestamp)
+      || !("data" in parsed)
+      || !validate(parsed.data)
+    ) {
+      localStorage.removeItem(cacheKey(key));
+      return null;
     }
 
-    // Cache expirado, remove
-    localStorage.removeItem(`api_cache_${key}`);
-    return null;
+    return parsed as CacheData<T>;
   } catch (error) {
     console.error(`Erro ao ler cache para ${key}:`, error);
     return null;
   }
 }
 
-/**
- * Obtém timestamp do último refresh manual
- */
+function setCache<T>(key: string, data: T, timestamp: number): void {
+  try {
+    const cacheData: CacheData<T> = { version: 2, data, timestamp };
+    localStorage.setItem(cacheKey(key), JSON.stringify(cacheData));
+  } catch (error) {
+    console.error(`Erro ao salvar cache para ${key}:`, error);
+  }
+}
+
 export function getLastManualRefresh(key: string): number | null {
   try {
-    const cached = localStorage.getItem(`api_cache_${key}`);
-    if (!cached) return null;
-
-    const cacheData: CacheData<any> = JSON.parse(cached);
-    return cacheData.lastManualRefresh || null;
-  } catch (error) {
+    const value = localStorage.getItem(manualRefreshKey(key));
+    if (!value) return null;
+    const timestamp = Number(value);
+    return Number.isFinite(timestamp) ? timestamp : null;
+  } catch {
     return null;
   }
 }
 
-/**
- * Atualiza apenas o timestamp de refresh manual
- */
 export function updateManualRefreshTimestamp(key: string): void {
   try {
-    const cached = localStorage.getItem(`api_cache_${key}`);
-    if (!cached) return;
-
-    const cacheData: CacheData<any> = JSON.parse(cached);
-    cacheData.lastManualRefresh = Date.now();
-    localStorage.setItem(`api_cache_${key}`, JSON.stringify(cacheData));
+    localStorage.setItem(manualRefreshKey(key), String(Date.now()));
   } catch (error) {
     console.error(`Erro ao atualizar timestamp de refresh para ${key}:`, error);
   }
 }
 
-/**
- * Limpa todo o cache de APIs
- */
 export function clearAllCache(): void {
   try {
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('api_cache_')) {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("api_cache_") || key.startsWith("api_manual_refresh_")) {
         localStorage.removeItem(key);
       }
     });
   } catch (error) {
-    console.error('Erro ao limpar cache:', error);
+    console.error("Erro ao limpar cache:", error);
   }
 }
 
 /**
- * Hook para fetch com cache automático
- */
-
-// helper que verifica se um valor é "válido" para ser cacheado.
-// para os nossos casos quer dizer: não nulo/undefined/"" e não um objeto/array
-// composto apenas por zeros numéricos ou strings vazias.
-function hasNonZeroValue(obj: any): boolean {
-  if (obj === null || obj === undefined) return false;
-  if (typeof obj === 'number') return obj !== 0;
-  if (typeof obj === 'string') {
-    const trimmed = obj.trim();
-    if (trimmed === '') return false;
-    const num = parseFloat(trimmed.replace(',', '.'));
-    if (!isNaN(num)) {
-      return num !== 0;
-    }
-    return true; // string não numérica é considerada válida
-  }
-  if (Array.isArray(obj)) {
-    return obj.some(hasNonZeroValue);
-  }
-  if (typeof obj === 'object') {
-    return Object.values(obj).some(hasNonZeroValue);
-  }
-  // outros tipos (boolean, etc) assumimos válidos
-  return true;
-}
-
-/**
- * Faz fetch de dados com cache e fallback.
- * - não escreve no cache respostas nulas/vazias/"só zeros";
- * - em caso de erro retorna o último valor válido em cache (stale-while-revalidate);
- * - um refresh forçado ignora cache, mas mesmo assim repete a verificação de validade.
+ * Usa apenas payload validado como last-known-good. Se a atualização falhar,
+ * mantém inclusive cache expirado como stale; sem cache, propaga a falha.
  */
 export async function fetchWithCache<T>(
   key: string,
-  fetchFn: () => Promise<T>,
-  forceRefresh: boolean = false
-): Promise<T> {
-  // tentamos cache válido se não for refresh forçado
-  if (!forceRefresh) {
-    const cached = getCache<T>(key);
-    if (cached) {
-      console.log(
-        `📦 Cache hit para ${key} (válido por mais ${Math.floor(
-          (CACHE_DURATION - (Date.now() - JSON.parse(localStorage.getItem(`api_cache_${key}`)!).timestamp)) /
-            1000 /
-            60
-        )} minutos)`
-      );
-      return cached;
-    }
+  fetchFn: () => Promise<ApiResponse<T>>,
+  validate: (value: unknown) => value is T,
+  forceRefresh = false,
+): Promise<CachedFetchResult<T>> {
+  const cached = readCache(key, validate);
+
+  if (!forceRefresh && cached && isCacheValid(cached.timestamp)) {
+    return {
+      data: cached.data,
+      isStale: false,
+      timestamp: cached.timestamp,
+      refreshFailed: false,
+    };
   }
 
-  console.log(`🔄 Buscando dados frescos para ${key}...`);
   try {
-    const data = await fetchFn();
-
-    // somente cacheamos se o payload tiver algum valor não-zero/valido
-    if (hasNonZeroValue(data)) {
-      setCache(key, data, forceRefresh);
-    } else {
-      console.warn(`Dados inválidos/zerados recebidos para ${key}, não salvo no cache`, data);
+    const response = await fetchFn();
+    if (!validate(response.data)) {
+      throw new Error(`Payload inválido para ${key}`);
     }
 
-    // se o retorno for inválido e já existia cache, devolvemos o cache
-    if (!hasNonZeroValue(data)) {
-      const previous = getCache<T>(key);
-      if (previous) return previous;
+    if (response.isStale) {
+      if (cached) {
+        return {
+          data: cached.data,
+          isStale: true,
+          timestamp: cached.timestamp,
+          refreshFailed: true,
+        };
+      }
+
+      const staleTimestamp = response.timestamp ?? Date.now();
+      setCache(key, response.data, staleTimestamp);
+      return {
+        data: response.data,
+        isStale: true,
+        timestamp: response.timestamp,
+        refreshFailed: true,
+      };
     }
 
-    return data;
+    const timestamp = response.timestamp ?? Date.now();
+    setCache(key, response.data, timestamp);
+    return {
+      data: response.data,
+      isStale: false,
+      timestamp,
+      refreshFailed: false,
+    };
   } catch (error) {
-    console.error(`Erro ao obter dados para ${key}:`, error);
-    const previous = getCache<T>(key);
-    if (previous) {
-      console.log(`Usando cache stale para ${key} após erro`);
-      return previous;
+    if (cached) {
+      return {
+        data: cached.data,
+        isStale: true,
+        timestamp: cached.timestamp,
+        refreshFailed: true,
+      };
     }
     throw error;
   }
 }
-

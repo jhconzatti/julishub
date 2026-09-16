@@ -150,6 +150,19 @@
       "Comisiones de corretaje o transferencia"
     ]
   },
+  "dataStates": {
+    "loading": "Cargando datos...",
+    "slow": "La conexión está tardando más de lo normal.",
+    "unavailable": "Los datos no están disponibles temporalmente.",
+    "retry": "Intentar de nuevo",
+    "stale": "Se muestran datos anteriores. La actualización más reciente falló.",
+    "staleAt": "Últimos datos válidos: {{date}}.",
+    "refresh": "Actualizar datos (disponible cada 5 minutos)",
+    "refreshSuccess": "Datos actualizados correctamente.",
+    "refreshFailed": "No fue posible actualizar los datos ahora.",
+    "cooldown": "Esperá {{minutes}}m{{seconds}}s antes de actualizar nuevamente.",
+    "rateUnavailable": "No hay una tasa válida disponible para esta conversión."
+  },
   "common": {
     "price": "Precio",
     "change": "Cambio",

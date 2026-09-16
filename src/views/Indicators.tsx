@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Landmark, TrendingUp, Activity, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
+import { DataUnavailable, SlowLoadingNotice, StaleDataNotice } from '@/components/DataState';
+import { fetchWithCache } from '@/lib/apiCache';
+import { fetchJsonWithRetry } from '@/lib/apiRequest';
+import { isIndicatorsResponse, type IndicatorsResponse } from '@/lib/apiValidators';
 
 // Configuração da API
 const getApiBaseUrl = () => {
@@ -18,46 +22,40 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-interface IndicadorData {
-  valor: string;
-  data?: string;
-  descricao: string;
-}
-
-interface IndicadoresResponse {
-  selic: IndicadorData;
-  ipca: IndicadorData;
-  cdi: IndicadorData;
-  erro?: string;
-}
-
 const Indicators = () => {
   const { t } = useTranslation();
-  const [indicadores, setIndicadores] = useState<IndicadoresResponse | null>(null);
+  const [indicadores, setIndicadores] = useState<IndicatorsResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+  const [isStale, setIsStale] = useState(false);
+  const [staleTimestamp, setStaleTimestamp] = useState<number | null>(null);
+
+  const fetchIndicadores = useCallback(async (forceRefresh = false) => {
+    setLoading(true);
+    setError(false);
+    try {
+      const result = await fetchWithCache<IndicatorsResponse>(
+        'indicadores',
+        () => fetchJsonWithRetry(`${API_BASE_URL}/indicadores`, isIndicatorsResponse),
+        isIndicatorsResponse,
+        forceRefresh,
+      );
+      setIndicadores(result.data);
+      setIsStale(result.isStale);
+      setStaleTimestamp(result.isStale ? result.timestamp : null);
+    } catch (requestError) {
+      console.error('Erro ao buscar indicadores:', requestError);
+      setError(true);
+      setIsStale(false);
+      setStaleTimestamp(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchIndicadores = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`${API_BASE_URL}/indicadores`);
-        if (!response.ok) {
-          throw new Error('Erro ao buscar indicadores');
-        }
-        const data = await response.json();
-        setIndicadores(data);
-      } catch (err) {
-        setError('Não foi possível carregar os indicadores. Tente novamente mais tarde.');
-        console.error('Erro ao buscar indicadores:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchIndicadores();
-  }, []);
+    void fetchIndicadores();
+  }, [fetchIndicadores]);
 
   if (loading) {
     return (
@@ -66,6 +64,7 @@ const Indicators = () => {
           <h2 className="text-3xl font-bold tracking-tight">{t('indicators.title') || 'Indicadores Econômicos'}</h2>
           <p className="text-muted-foreground">{t('indicators.description') || 'Dados oficiais em tempo real'}</p>
         </div>
+        <SlowLoadingNotice loading />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
@@ -85,23 +84,12 @@ const Indicators = () => {
 
   const renderBrasilTab = () => {
     if (error || !indicadores) {
-      return (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error || 'Erro desconhecido ao carregar indicadores.'}</AlertDescription>
-        </Alert>
-      );
+      return <DataUnavailable onRetry={() => void fetchIndicadores(true)} retrying={loading} />;
     }
 
     return (
       <div className="space-y-6">
-        {/* Aviso se houver erro parcial */}
-        {indicadores.erro && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{indicadores.erro}</AlertDescription>
-          </Alert>
-        )}
+        {isStale ? <StaleDataNotice timestamp={staleTimestamp} /> : null}
 
         {/* Cards dos Indicadores */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

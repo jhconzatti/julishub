@@ -1,6 +1,7 @@
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
 import httpx
 import asyncio
+import math
 from datetime import datetime, timedelta
 from typing import Optional
 import logging
@@ -38,6 +39,7 @@ _cache_cotacao     = {"data": None, "timestamp": None}
 _cache_indexes     = {"data": None, "timestamp": None}
 
 CACHE_DURATION = timedelta(hours=1)
+SERVICE_UNAVAILABLE_DETAIL = "Dados temporariamente indisponíveis."
 
 
 def is_cache_valid(cache_timestamp: Optional[datetime]) -> bool:
@@ -45,6 +47,24 @@ def is_cache_valid(cache_timestamp: Optional[datetime]) -> bool:
     if cache_timestamp is None:
         return False
     return datetime.now() - cache_timestamp < CACHE_DURATION
+
+
+def set_stale_headers(response: Response, timestamp: Optional[datetime]) -> None:
+    response.headers["X-Data-Stale"] = "true"
+    if timestamp is not None:
+        response.headers["X-Data-Timestamp"] = timestamp.isoformat()
+
+
+def is_numeric_value(value: object) -> bool:
+    """Aceita zero como dado, mas rejeita ausência, vazio, NaN e infinito."""
+    if value is None or isinstance(value, bool):
+        return False
+    if isinstance(value, str) and not value.strip():
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (TypeError, ValueError):
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -63,13 +83,21 @@ async def fetch_awesomeapi() -> Optional[dict]:
             return None
 
         data = resp.json()
+        required = ("USDBRL", "EURBRL", "BTCUSD")
+        if not all(
+            key in data
+            and is_numeric_value(data[key].get("bid"))
+            and is_numeric_value(data[key].get("pctChange"))
+            for key in required
+        ):
+            logger.error("❌ AwesomeAPI retornou payload inválido ou incompleto")
+            return None
         logger.info("✅ Dados da AwesomeAPI obtidos com sucesso")
 
         return {
             "dolar":    {"valor": data["USDBRL"]["bid"],  "var": data["USDBRL"]["pctChange"]},
             "euro":     {"valor": data["EURBRL"]["bid"],  "var": data["EURBRL"]["pctChange"]},
             "bitcoin":  {"valor": data["BTCUSD"]["bid"],  "var": data["BTCUSD"]["pctChange"]},
-            "ibovespa": {"valor": "0.00", "var": "0.00"},  # AwesomeAPI não tem IBOV
         }
     except httpx.TimeoutException:
         logger.error("❌ Timeout ao acessar AwesomeAPI")
@@ -93,6 +121,16 @@ async def fetch_hgbrasil() -> Optional[dict]:
         data = resp.json()["results"]
         currencies = data["currencies"]
         stocks = data["stocks"]
+
+        values = (
+            currencies["USD"]["buy"], currencies["USD"]["variation"],
+            currencies["EUR"]["buy"], currencies["EUR"]["variation"],
+            currencies["BTC"]["buy"], currencies["BTC"]["variation"],
+            stocks["IBOVESPA"]["points"], stocks["IBOVESPA"]["variation"],
+        )
+        if not all(is_numeric_value(value) for value in values):
+            logger.error("❌ HG Brasil retornou payload inválido ou incompleto")
+            return None
 
         logger.info("✅ Dados da HG Brasil obtidos com sucesso")
 
@@ -177,7 +215,7 @@ async def get_indicadores() -> Optional[dict]:
 # Cotação (cache + stale-while-revalidate)
 # ---------------------------------------------------------------------------
 
-async def _refresh_cotacao() -> None:
+async def _refresh_cotacao() -> bool:
     """Busca cotações das APIs externas e atualiza o cache interno."""
     global _cache_cotacao
 
@@ -189,41 +227,45 @@ async def _refresh_cotacao() -> None:
 
     if not data:
         logger.error("❌ Todas as APIs falharam ao atualizar cotação")
-        return
+        return False
 
-    # Complementa IBOVESPA via HG Brasil, se necessário
-    if data["ibovespa"]["valor"] == "0.00":
+    # A AwesomeAPI não fornece IBOVESPA; o contrato só é atualizado quando
+    # o complemento real do HG Brasil também está disponível.
+    if "ibovespa" not in data:
         logger.info("🔄 Buscando IBOVESPA complementar da HG Brasil...")
         hg_data = await fetch_hgbrasil()
         if hg_data:
             data["ibovespa"] = hg_data["ibovespa"]
             logger.info("✅ IBOVESPA complementado com sucesso")
+        else:
+            logger.error("❌ Cotação incompleta: IBOVESPA indisponível")
+            return False
 
     _cache_cotacao["data"]      = data
     _cache_cotacao["timestamp"] = datetime.now()
     logger.info("✅ Cache de cotação atualizado")
+    return True
 
 
 @router.get("/indicadores")
-async def route_indicadores():
+async def route_indicadores(response: Response):
     """Rota para retornar indicadores econômicos oficiais do Banco Central"""
     logger.info("📊 Requisição recebida: /indicadores")
     indicadores = await get_indicadores()
 
     if not indicadores:
-        logger.warning("⚠️ Retornando valores zerados (fallback)")
-        return {
-            "selic": {"valor": "0.00", "data": datetime.now().strftime("%d/%m/%Y"), "descricao": "Taxa SELIC Meta (% a.a.)"},
-            "ipca":  {"valor": "0.00", "data": datetime.now().strftime("%d/%m/%Y"), "descricao": "IPCA - 12 meses (% a.a.)"},
-            "cdi":   {"valor": "0.00", "descricao": "CDI Estimado (% a.a.)"},
-            "erro":  "Não foi possível buscar dados do Banco Central no momento",
-        }
+        if _cache_indicadores["data"] is not None:
+            logger.warning("♻️ Retornando indicadores stale após falha de atualização")
+            set_stale_headers(response, _cache_indicadores["timestamp"])
+            return _cache_indicadores["data"]
+        logger.error("❌ Indicadores indisponíveis e sem cache válido")
+        raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
     return indicadores
 
 
 @router.get("/cotacao")
-async def get_cotacao(background_tasks: BackgroundTasks):
+async def get_cotacao(background_tasks: BackgroundTasks, response: Response):
     """
     Cotações com cache + stale-while-revalidate:
     - Cache válido  → retorna imediatamente (sem bater em API externa)
@@ -238,23 +280,19 @@ async def get_cotacao(background_tasks: BackgroundTasks):
 
     if _cache_cotacao["data"] is not None:
         logger.info("♻️  Retornando cotação stale, disparando refresh em background")
+        set_stale_headers(response, _cache_cotacao["timestamp"])
         background_tasks.add_task(_refresh_cotacao)
         return _cache_cotacao["data"]
 
     # Cold start: não há nenhum dado em cache — aguarda fetch completo
     logger.info("🆕 Cold start: buscando cotação pela primeira vez")
-    await _refresh_cotacao()
+    refreshed = await _refresh_cotacao()
 
-    if _cache_cotacao["data"]:
+    if refreshed and _cache_cotacao["data"]:
         return _cache_cotacao["data"]
 
-    logger.error("❌ Todas as APIs falharam! Retornando valores zerados")
-    return {
-        "dolar":    {"valor": "0.00", "var": "0.00"},
-        "euro":     {"valor": "0.00", "var": "0.00"},
-        "bitcoin":  {"valor": "0.00", "var": "0.00"},
-        "ibovespa": {"valor": "0.00", "var": "0.00"},
-    }
+    logger.error("❌ Cotações indisponíveis e sem cache válido")
+    raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
 
 @router.get("/historico/{moeda}")
@@ -295,7 +333,7 @@ async def get_historico(moeda: str):
 
 
 @router.get("/exchange-rates")
-async def get_exchange_rates():
+async def get_exchange_rates(response: Response):
     """
     Taxas de câmbio expandidas (USD, EUR, BRL, ARS, CLP, MXN, BTC).
     AwesomeAPI + CoinGecko disparados em paralelo com asyncio.gather.
@@ -332,34 +370,42 @@ async def get_exchange_rates():
             raise Exception(f"AwesomeAPI status {awesome_result.status_code}")
 
         data = awesome_result.json()
-        btc_data = (
-            btc_result.json()
-            if not isinstance(btc_result, Exception) and btc_result.status_code == 200
-            else {"bitcoin": {"usd": 0, "brl": 0}}
-        )
+        if isinstance(btc_result, Exception) or btc_result.status_code != 200:
+            raise Exception("CoinGecko indisponível")
+        btc_data = btc_result.json()
 
-        def safe_float(value, default=0.0):
-            try:
-                return float(value) if value else default
-            except (ValueError, TypeError):
-                return default
+        awesome_keys = ("USDBRL", "EURBRL", "EURUSD", "USDARS", "ARSBRL", "USDCLP", "CLPBRL", "USDMXN", "MXNBRL")
+        if not all(
+            key in data
+            and is_numeric_value(data[key].get("bid"))
+            and is_numeric_value(data[key].get("pctChange"))
+            for key in awesome_keys
+        ):
+            raise ValueError("AwesomeAPI retornou payload incompleto")
 
-        ars_brl = safe_float(data.get("ARSBRL", {}).get("bid"))
-        brl_ars = 1 / ars_brl if ars_brl > 0 else 0
+        bitcoin = btc_data.get("bitcoin", {})
+        if not is_numeric_value(bitcoin.get("usd")) or not is_numeric_value(bitcoin.get("brl")):
+            raise ValueError("CoinGecko retornou payload incompleto")
+
+        ars_brl = float(data["ARSBRL"]["bid"])
+        if ars_brl == 0:
+            raise ValueError("Não é possível calcular BRL/ARS a partir de ARS/BRL igual a zero")
+        brl_ars = 1 / ars_brl
+        ars_variation = float(data["ARSBRL"]["pctChange"])
 
         result = {
-            "USD_BRL": {"valor": data.get("USDBRL", {}).get("bid", "0"),  "var": data.get("USDBRL", {}).get("pctChange", "0"),  "label": "Dólar Comercial → Real"},
-            "EUR_BRL": {"valor": data.get("EURBRL", {}).get("bid", "0"),  "var": data.get("EURBRL", {}).get("pctChange", "0"),  "label": "Euro → Real"},
-            "EUR_USD": {"valor": data.get("EURUSD", {}).get("bid", "0"),  "var": data.get("EURUSD", {}).get("pctChange", "0"),  "label": "Euro → Dólar"},
-            "BTC_USD": {"valor": str(btc_data.get("bitcoin", {}).get("usd", 0)), "var": "0.00", "label": "Bitcoin → Dólar"},
-            "BTC_BRL": {"valor": str(btc_data.get("bitcoin", {}).get("brl", 0)), "var": "0.00", "label": "Bitcoin → Real"},
-            "USD_ARS": {"valor": data.get("USDARS", {}).get("bid", "0"),  "var": data.get("USDARS", {}).get("pctChange", "0"),  "label": "Dólar → Peso Argentino"},
-            "ARS_BRL": {"valor": data.get("ARSBRL", {}).get("bid", "0"),  "var": data.get("ARSBRL", {}).get("pctChange", "0"),  "label": "Peso Argentino → Real"},
-            "BRL_ARS": {"valor": f"{brl_ars:.4f}", "var": f"{-safe_float(data.get('ARSBRL', {}).get('pctChange')):.2f}", "label": "Real → Peso Argentino"},
-            "USD_CLP": {"valor": data.get("USDCLP", {}).get("bid", "0"),  "var": data.get("USDCLP", {}).get("pctChange", "0"),  "label": "Dólar → Peso Chileno"},
-            "CLP_BRL": {"valor": data.get("CLPBRL", {}).get("bid", "0"),  "var": data.get("CLPBRL", {}).get("pctChange", "0"),  "label": "Peso Chileno → Real"},
-            "USD_MXN": {"valor": data.get("USDMXN", {}).get("bid", "0"),  "var": data.get("USDMXN", {}).get("pctChange", "0"),  "label": "Dólar → Peso Mexicano"},
-            "MXN_BRL": {"valor": data.get("MXNBRL", {}).get("bid", "0"),  "var": data.get("MXNBRL", {}).get("pctChange", "0"),  "label": "Peso Mexicano → Real"},
+            "USD_BRL": {"valor": data["USDBRL"]["bid"],  "var": data["USDBRL"]["pctChange"],  "label": "Dólar Comercial → Real"},
+            "EUR_BRL": {"valor": data["EURBRL"]["bid"],  "var": data["EURBRL"]["pctChange"],  "label": "Euro → Real"},
+            "EUR_USD": {"valor": data["EURUSD"]["bid"],  "var": data["EURUSD"]["pctChange"],  "label": "Euro → Dólar"},
+            "BTC_USD": {"valor": str(bitcoin["usd"]), "var": None, "label": "Bitcoin → Dólar"},
+            "BTC_BRL": {"valor": str(bitcoin["brl"]), "var": None, "label": "Bitcoin → Real"},
+            "USD_ARS": {"valor": data["USDARS"]["bid"],  "var": data["USDARS"]["pctChange"],  "label": "Dólar → Peso Argentino"},
+            "ARS_BRL": {"valor": data["ARSBRL"]["bid"],  "var": data["ARSBRL"]["pctChange"],  "label": "Peso Argentino → Real"},
+            "BRL_ARS": {"valor": f"{brl_ars:.4f}", "var": f"{-ars_variation:.2f}", "label": "Real → Peso Argentino"},
+            "USD_CLP": {"valor": data["USDCLP"]["bid"],  "var": data["USDCLP"]["pctChange"],  "label": "Dólar → Peso Chileno"},
+            "CLP_BRL": {"valor": data["CLPBRL"]["bid"],  "var": data["CLPBRL"]["pctChange"],  "label": "Peso Chileno → Real"},
+            "USD_MXN": {"valor": data["USDMXN"]["bid"],  "var": data["USDMXN"]["pctChange"],  "label": "Dólar → Peso Mexicano"},
+            "MXN_BRL": {"valor": data["MXNBRL"]["bid"],  "var": data["MXNBRL"]["pctChange"],  "label": "Peso Mexicano → Real"},
         }
 
         _cache_exchange["data"]      = result
@@ -372,15 +418,19 @@ async def get_exchange_rates():
         # Retorna stale cache se disponível, evitando zeros desnecessários
         if _cache_exchange["data"]:
             logger.warning("♻️  Retornando exchange rates do cache stale")
+            set_stale_headers(response, _cache_exchange["timestamp"])
             return _cache_exchange["data"]
-        fallback_pairs = ["USD_BRL", "EUR_BRL", "EUR_USD", "BTC_USD", "BTC_BRL", "USD_ARS", "ARS_BRL", "BRL_ARS", "USD_CLP", "CLP_BRL", "USD_MXN", "MXN_BRL"]
-        return {pair: {"valor": "0.00", "var": "0.00", "label": pair.replace("_", " → ")} for pair in fallback_pairs}
+        raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
 
 @router.get("/indexes/brazil")
-async def get_brazil_indexes():
+async def get_brazil_indexes(response: Response):
     """Índices brasileiros da B3 via HG Brasil Finance API"""
     logger.info("📊 Requisição recebida: /indexes/brazil")
+
+    if is_cache_valid(_cache_indexes["timestamp"]):
+        logger.info("📦 Retornando índices brasileiros do cache")
+        return _cache_indexes["data"]
 
     try:
         url  = "https://api.hgbrasil.com/finance?format=json-cors&key=development"
@@ -391,18 +441,29 @@ async def get_brazil_indexes():
 
         data = resp.json()["results"]["stocks"]
 
-        logger.info("✅ Índices brasileiros obtidos")
-        return {
-            "IBOVESPA": {"name": "IBOVESPA", "label": "Ibovespa", "valor": str(data["IBOVESPA"]["points"]),            "var": str(data["IBOVESPA"]["variation"]),            "description": "Índice Bovespa - Principal índice da B3"},
-            "IFIX":     {"name": "IFIX",     "label": "IFIX",     "valor": str(data.get("IFIX", {}).get("points", "0")), "var": str(data.get("IFIX", {}).get("variation", "0.00")), "description": "Índice de Fundos Imobiliários"},
+        values = (
+            data["IBOVESPA"]["points"], data["IBOVESPA"]["variation"],
+            data["IFIX"]["points"], data["IFIX"]["variation"],
+        )
+        if not all(is_numeric_value(value) for value in values):
+            raise ValueError("HG Brasil retornou índices inválidos")
+
+        result = {
+            "IBOVESPA": {"name": "IBOVESPA", "label": "Ibovespa", "valor": str(data["IBOVESPA"]["points"]), "var": str(data["IBOVESPA"]["variation"]), "description": "Índice Bovespa - Principal índice da B3"},
+            "IFIX":     {"name": "IFIX",     "label": "IFIX",     "valor": str(data["IFIX"]["points"]),     "var": str(data["IFIX"]["variation"]),     "description": "Índice de Fundos Imobiliários"},
         }
+        _cache_indexes["data"] = result
+        _cache_indexes["timestamp"] = datetime.now()
+        logger.info("✅ Índices brasileiros obtidos")
+        return result
 
     except Exception as e:
         logger.error(f"❌ Erro ao buscar índices brasileiros: {e}")
-        return {
-            "IBOVESPA": {"name": "IBOVESPA", "label": "Ibovespa", "valor": "0", "var": "0.00", "description": "Índice Bovespa"},
-            "IFIX":     {"name": "IFIX",     "label": "IFIX",     "valor": "0", "var": "0.00", "description": "Índice de Fundos Imobiliários"},
-        }
+        if _cache_indexes["data"] is not None:
+            logger.warning("♻️ Retornando índices brasileiros stale")
+            set_stale_headers(response, _cache_indexes["timestamp"])
+            return _cache_indexes["data"]
+        raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
 
 @router.get("/indexes/argentina")

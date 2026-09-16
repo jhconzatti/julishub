@@ -150,6 +150,19 @@
       "Brokerage or transfer fees"
     ]
   },
+  "dataStates": {
+    "loading": "Loading data...",
+    "slow": "The connection is taking longer than usual.",
+    "unavailable": "Data is temporarily unavailable.",
+    "retry": "Try again",
+    "stale": "Showing earlier data. The latest update failed.",
+    "staleAt": "Last valid data: {{date}}.",
+    "refresh": "Refresh data (available every 5 minutes)",
+    "refreshSuccess": "Data updated successfully.",
+    "refreshFailed": "The data could not be updated right now.",
+    "cooldown": "Wait {{minutes}}m{{seconds}}s before refreshing again.",
+    "rateUnavailable": "No valid rate is available for this conversion."
+  },
   "common": {
     "price": "Price",
     "change": "Change",

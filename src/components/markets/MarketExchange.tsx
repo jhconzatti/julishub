@@ -5,7 +5,7 @@ interface ExchangeData {
   pair: string;
   label: string;
   valor: string;
-  var: string;
+  var: string | null;
   icon: React.ReactNode;
   color: string;
   group?: string;
@@ -15,8 +15,11 @@ interface MarketExchangeProps {
   exchangeData: ExchangeData[];
 }
 
-const VariationBadge = ({ value }: { value: string }) => {
-  const num = parseFloat(value) || 0;
+const VariationBadge = ({ value }: { value: string | null }) => {
+  if (value === null) {
+    return <span className="text-sm font-medium text-muted-foreground">—</span>;
+  }
+  const num = parseFloat(value);
   const isPositive = num >= 0;
   return (
     <span className={`flex items-center text-sm font-bold ${isPositive ? "text-green-500" : "text-red-500"}`}>

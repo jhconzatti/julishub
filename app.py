@@ -20,6 +20,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["X-Data-Stale", "X-Data-Timestamp"],
 )
 
 # Incluindo as rotas com o prefixo /api

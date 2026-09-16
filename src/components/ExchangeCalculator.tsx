@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowDownUp, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
+import { fetchWithCache } from "@/lib/apiCache";
+import { fetchJsonWithRetry } from "@/lib/apiRequest";
+import { isExchangeRatesResponse, type ExchangeRatesResponse } from "@/lib/apiValidators";
 
 const getApiUrl = () => {
   const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -15,11 +19,6 @@ const getApiUrl = () => {
   return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 };
 const API_BASE_URL = getApiUrl();
-
-interface ExchangeRate {
-  valor: string;
-  label: string;
-}
 
 const CURRENCIES = [
   // Principais - Moedas disponíveis na AwesomeAPI
@@ -36,74 +35,98 @@ const CURRENCIES = [
   { code: "MXN", symbol: "MXN$", name: "Peso Mexicano", flag: "🇲🇽" },
 ];
 
+function resolveRate(
+  exchangeRates: ExchangeRatesResponse,
+  from: string,
+  to: string,
+  visited = new Set<string>(),
+): number | null {
+  if (from === to) return 1;
+  const route = `${from}_${to}`;
+  if (visited.has(route)) return null;
+  visited.add(route);
+
+  const direct = exchangeRates[route];
+  if (direct) return Number(direct.valor);
+
+  const reverse = exchangeRates[`${to}_${from}`];
+  if (reverse) {
+    const reverseValue = Number(reverse.valor);
+    return reverseValue === 0 ? null : 1 / reverseValue;
+  }
+
+  for (const intermediate of ["USD", "BRL"]) {
+    if (intermediate === from || intermediate === to) continue;
+    const firstRate = resolveRate(exchangeRates, from, intermediate, new Set(visited));
+    const secondRate = resolveRate(exchangeRates, intermediate, to, new Set(visited));
+    if (firstRate !== null && secondRate !== null) return firstRate * secondRate;
+  }
+
+  return null;
+}
+
 export default function ExchangeCalculator() {
   const [amount, setAmount] = useState<number>(100);
   const [fromCurrency, setFromCurrency] = useState<string>("USD");
   const [toCurrency, setToCurrency] = useState<string>("BRL");
   const [result, setResult] = useState<number | null>(null);
-  const [exchangeRates, setExchangeRates] = useState<Record<string, ExchangeRate>>({});
-  const [loading, setLoading] = useState(false);
+  const [usedRate, setUsedRate] = useState<number | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRatesResponse | null>(null);
+  const [ratesLoading, setRatesLoading] = useState(true);
+  const [ratesError, setRatesError] = useState(false);
+  const [conversionError, setConversionError] = useState(false);
+  const [isStale, setIsStale] = useState(false);
+  const [staleTimestamp, setStaleTimestamp] = useState<number | null>(null);
   const { t } = useTranslation();
 
-  useEffect(() => {
-    fetchExchangeRates();
+  const fetchExchangeRates = useCallback(async (forceRefresh = false) => {
+    setRatesLoading(true);
+    setRatesError(false);
+    try {
+      const response = await fetchWithCache<ExchangeRatesResponse>(
+        "exchange_rates",
+        () => fetchJsonWithRetry(`${API_BASE_URL}/exchange-rates`, isExchangeRatesResponse),
+        isExchangeRatesResponse,
+        forceRefresh,
+      );
+      setExchangeRates(response.data);
+      setIsStale(response.isStale);
+      setStaleTimestamp(response.isStale ? response.timestamp : null);
+    } catch (requestError) {
+      console.error("Erro ao buscar taxas de câmbio:", requestError);
+      setExchangeRates(null);
+      setRatesError(true);
+      setIsStale(false);
+      setStaleTimestamp(null);
+    } finally {
+      setRatesLoading(false);
+    }
   }, []);
 
-  const fetchExchangeRates = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/exchange-rates`);
-      const data = await response.json();
-      setExchangeRates(data);
-    } catch (error) {
-      console.error("Erro ao buscar taxas de câmbio:", error);
-    }
-  };
-
-  const getRate = (from: string, to: string): number => {
-    if (from === to) return 1;
-
-    const pair = `${from}_${to}`;
-    const reversePair = `${to}_${from}`;
-
-    if (exchangeRates[pair]) {
-      return parseFloat(exchangeRates[pair].valor);
-    }
-
-    if (exchangeRates[reversePair]) {
-      return 1 / parseFloat(exchangeRates[reversePair].valor);
-    }
-
-    // Conversão via USD como moeda intermediária
-    if (from !== "USD" && to !== "USD") {
-      const fromToUsd = getRate(from, "USD");
-      const usdToTo = getRate("USD", to);
-      return fromToUsd * usdToTo;
-    }
-
-    // Conversão via BRL como moeda intermediária
-    if (from !== "BRL" && to !== "BRL") {
-      const fromToBrl = getRate(from, "BRL");
-      const brlToTo = getRate("BRL", to);
-      return fromToBrl * brlToTo;
-    }
-
-    return 0;
-  };
+  useEffect(() => {
+    void fetchExchangeRates();
+  }, [fetchExchangeRates]);
 
   const handleConvert = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const rate = getRate(fromCurrency, toCurrency);
-      const convertedAmount = amount * rate;
-      setResult(convertedAmount);
-      setLoading(false);
-    }, 300);
+    if (!exchangeRates) return;
+    const rate = resolveRate(exchangeRates, fromCurrency, toCurrency);
+    if (rate === null) {
+      setResult(null);
+      setUsedRate(null);
+      setConversionError(true);
+      return;
+    }
+    setConversionError(false);
+    setUsedRate(rate);
+    setResult(amount * rate);
   };
 
   const handleSwapCurrencies = () => {
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
     setResult(null);
+    setUsedRate(null);
+    setConversionError(false);
   };
 
   const fromCurrencyData = CURRENCIES.find(c => c.code === fromCurrency);
@@ -125,6 +148,11 @@ export default function ExchangeCalculator() {
         </AlertDescription>
       </Alert>
 
+      {ratesLoading ? <p className="text-sm text-muted-foreground" role="status">{t('dataStates.loading')}</p> : null}
+      <SlowLoadingNotice loading={ratesLoading} />
+      {ratesError ? <DataUnavailable onRetry={() => void fetchExchangeRates(true)} retrying={ratesLoading} /> : null}
+      {isStale ? <StaleDataNotice timestamp={staleTimestamp} /> : null}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -145,6 +173,8 @@ export default function ExchangeCalculator() {
                 onChange={(e) => {
                   setAmount(parseFloat(e.target.value) || 0);
                   setResult(null);
+                  setUsedRate(null);
+                  setConversionError(false);
                 }}
                 placeholder="100.00"
               />
@@ -202,10 +232,13 @@ export default function ExchangeCalculator() {
             <Button
               className="w-full"
               onClick={handleConvert}
-              disabled={loading || !amount}
+              disabled={ratesLoading || ratesError || exchangeRates === null}
             >
-              {loading ? "Convertendo..." : "Converter"}
+              {t('calculators.calculate')}
             </Button>
+            {conversionError ? (
+              <p className="text-sm text-destructive" role="alert">{t('dataStates.rateUnavailable')}</p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -229,9 +262,11 @@ export default function ExchangeCalculator() {
 
                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border">
                   <div className="text-sm text-muted-foreground mb-1">Taxa de Câmbio</div>
-                  <div className="text-lg font-semibold">
-                    1 {fromCurrency} = {getRate(fromCurrency, toCurrency).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {toCurrency}
-                  </div>
+                  {usedRate !== null ? (
+                    <div className="text-lg font-semibold">
+                      1 {fromCurrency} = {usedRate.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {toCurrency}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="text-xs text-muted-foreground pt-2 border-t">
@@ -256,7 +291,7 @@ export default function ExchangeCalculator() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(exchangeRates).slice(0, 6).map(([pair, data]) => (
+            {Object.entries(exchangeRates ?? {}).slice(0, 6).map(([pair, data]) => (
               <div key={pair} className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border">
                 <div className="text-xs text-muted-foreground">{data.label}</div>
                 <div className="text-lg font-bold mt-1">

@@ -1,18 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, ExternalLink, Newspaper } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { fetchWithCache, canManualRefresh, getRemainingCooldown, updateManualRefreshTimestamp } from "@/lib/apiCache";
+import { DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
+import { fetchWithCache, canManualRefresh, getLastManualRefresh, getRemainingCooldown, updateManualRefreshTimestamp } from "@/lib/apiCache";
+import { fetchJsonWithRetry } from "@/lib/apiRequest";
+import { isNewsResponse, type NewsItem } from "@/lib/apiValidators";
 import { toast } from "sonner";
-
-interface Noticia {
-  titulo: string;
-  link: string;
-  fonte: string;
-  data_publicacao: string;
-  imagem: string;
-}
 
 const getApiUrl = () => {
   const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -25,60 +20,57 @@ const API_BASE_URL = getApiUrl();
 export default function News() {
   const { t } = useTranslation();
   
-  const [noticias, setNoticias] = useState<Noticia[]>([]);
+  const [noticias, setNoticias] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState(false);
+  const [isStale, setIsStale] = useState(false);
+  const [staleTimestamp, setStaleTimestamp] = useState<number | null>(null);
 
-  const fetchNoticias = async (forceRefresh: boolean = false) => {
+  const fetchNoticias = useCallback(async (forceRefresh = false): Promise<boolean> => {
     setLoading(true);
+    setError(false);
     try {
-      const data = await fetchWithCache<Noticia[]>(
+      const result = await fetchWithCache<NewsItem[]>(
         'noticias',
-        async () => {
-          const response = await fetch(`${API_BASE_URL}/noticias`);
-          if (!response.ok) {
-            // Se API não tem o endpoint ainda, não quebra o app
-            console.warn(`⚠️ Notícias não disponíveis (${response.status}). Aguardando deploy...`);
-            return [];
-          }
-          return response.json();
-        },
-        forceRefresh
+        () => fetchJsonWithRetry(`${API_BASE_URL}/noticias`, isNewsResponse),
+        isNewsResponse,
+        forceRefresh,
       );
-      
-      setNoticias(data || []);
-    } catch (error) {
-      console.warn("⚠️ Erro ao buscar notícias:", error);
+      setNoticias(result.data);
+      setIsStale(result.isStale);
+      setStaleTimestamp(result.isStale ? result.timestamp : null);
+      return !result.refreshFailed;
+    } catch (requestError) {
+      console.warn("Erro ao buscar notícias:", requestError);
       setNoticias([]);
+      setError(true);
+      setIsStale(false);
+      setStaleTimestamp(null);
+      return false;
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchNoticias();
   }, []);
 
+  useEffect(() => {
+    void fetchNoticias();
+  }, [fetchNoticias]);
+
   const handleManualRefresh = async () => {
-    if (!canManualRefresh(null)) {
-      const remaining = getRemainingCooldown(null);
-      toast.error(`Aguarde ${Math.floor(remaining / 60)}m${remaining % 60}s para atualizar novamente`);
+    const lastRefresh = getLastManualRefresh('news_refresh');
+    if (!canManualRefresh(lastRefresh)) {
+      const remaining = getRemainingCooldown(lastRefresh);
+      toast.error(t('dataStates.cooldown', { minutes: Math.floor(remaining / 60), seconds: remaining % 60 }));
       return;
     }
 
+    updateManualRefreshTimestamp('news_refresh');
     setIsRefreshing(true);
-    try {
-      await fetchNoticias(true);
-      updateManualRefreshTimestamp('news_refresh');
-      // Só mostra sucesso se realmente carregou notícias
-      if (noticias.length > 0) {
-        toast.success("Notícias atualizadas!");
-      }
-    } catch (error) {
-      console.warn("⚠️ Erro ao atualizar notícias:", error);
-    } finally {
-      setIsRefreshing(false);
-    }
+    const succeeded = await fetchNoticias(true);
+    if (succeeded) toast.success(t('dataStates.refreshSuccess'));
+    else toast.error(t('dataStates.refreshFailed'));
+    setIsRefreshing(false);
   };
 
   const handleNoticiaClick = (link: string) => {
@@ -107,18 +99,25 @@ export default function News() {
         </button>
       </div>
 
+      {!loading && !error && isStale ? <StaleDataNotice timestamp={staleTimestamp} /> : null}
+
       {loading ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
-            <Card key={i} className="overflow-hidden">
-              <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse" />
-              <CardHeader>
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3" />
-              </CardHeader>
-            </Card>
-          ))}
+        <div className="space-y-4">
+          <SlowLoadingNotice loading />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
+              <Card key={i} className="overflow-hidden">
+                <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                <CardHeader>
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3" />
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
         </div>
+      ) : error ? (
+        <DataUnavailable onRetry={() => void fetchNoticias(true)} />
       ) : noticias.length === 0 ? (
         <Card className="p-12 text-center">
           <Newspaper className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />

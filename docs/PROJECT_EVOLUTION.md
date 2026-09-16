@@ -14,25 +14,25 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 0A concluída localmente. O build de produção é gerado e o backend compila/importa, mas lint e verificação TypeScript têm falhas. A produção está acessível; durante a auditoria, o endpoint de câmbio respondeu HTTP 200 com todos os valores zerados. Não há suíte automatizada configurada.
+Sprint 0B implementada localmente, com validação de produção pendente. O backend agora diferencia dado real, dado stale e indisponibilidade; o frontend aplica timeout, retry transitório limitado, cache validado e estados explícitos. O build passa, o backend compila/importa e nove testes focados de confiabilidade passam. As falhas estáticas preexistentes permanecem no baseline.
 
 ## Known Issues
 
 | ID | Priority | Category | Issue | Evidence | Status |
 |---|---|---|---|---|---|
-| JH-001 | P1 | Production | Falhas de providers podem virar HTTP 200 com valores zero e ser exibidas/cacheadas como dados válidos. | Fallbacks de `markets.py`; validação do cache considera textos/labels; `/api/exchange-rates` em produção retornou todos os campos numéricos zerados. | Open |
+| JH-001 | P1 | Production | Falhas de providers podem virar HTTP 200 com valores zero e ser exibidas/cacheadas como dados válidos. | Fallbacks numéricos removidos; sem cache, falha total retorna 503; payloads recebem validação por contrato. | Resolved locally — production validation pending |
 | JH-002 | P1 | Product/Data Correctness | Índices de Argentina e EUA são valores fixos, embora a interface os apresente no contexto de mercado em tempo real. | Endpoints `/api/indexes/argentina` e `/api/indexes/usa`. | Open |
 | JH-003 | P1 | Product/Data Correctness | Calculadora de salário usa tabelas de INSS/IRRF explicitamente rotuladas como 2024. | `routers/calculators.py`. | Open |
-| JH-004 | P1 | Production | Primeiras chamadas ao backend de produção excederam 30 s; após aquecimento, responderam em menos de 1,1 s. | Smoke test HTTP do backend Render em 2026-09-16. | Open |
-| JH-005 | P1 | API/Integration | Não há retries; o RSS não possui timeout explícito e há caminhos sequenciais de provider/fallback que acumulam latência. | `routers/markets.py` e `routers/news.py`. | Open |
-| JH-006 | P2 | Error Handling | Estados de erro/indisponibilidade são inconsistentes; algumas telas convertem falha em vazio, zero ou apenas console. | Markets, News, Blog e ExchangeCalculator. | Open |
+| JH-004 | P1 | Production | Primeiras chamadas ao backend de produção excederam 30 s; após aquecimento, responderam em menos de 1,1 s. | Frontend limitado a 20 s por tentativa e uma segunda tentativa transitória; cold start da hospedagem não foi alterado. | Partially resolved — post-deploy validation pending |
+| JH-005 | P1 | API/Integration | Não há retries; o RSS não possui timeout explícito e há caminhos sequenciais de provider/fallback que acumulam latência. | Retry do cliente limitado a uma tentativa adicional; RSS usa timeout de conexão/leitura; fallback real sequencial foi preservado. | Resolved locally — production validation pending |
+| JH-006 | P2 | Error Handling | Estados de erro/indisponibilidade são inconsistentes; algumas telas convertem falha em vazio, zero ou apenas console. | Markets, Indicators, News e ExchangeCalculator agora distinguem loading, stale e indisponibilidade; Blog não pertenceu ao escopo da Sprint 0B. | Partially resolved |
 | JH-007 | P2 | Technical Debt | Baseline estático falha: ESLint reporta 22 erros/9 warnings e TypeScript reporta 2 erros. | Execuções da Sprint 0A. | Open |
-| JH-008 | P2 | Reliability | Nenhuma suíte automatizada configurada no projeto. | Ausência de script/framework/arquivos de teste. | Open |
+| JH-008 | P2 | Reliability | Não existe uma suíte automatizada abrangente para o produto. | Sprint 0B adicionou apenas nove testes backend focados na semântica de providers/cache; cobertura ampla continua pendente. | Open |
 | JH-009 | P2 | Documentation | README e documentos históricos divergem do código/deploy atual e contêm conteúdo duplicado ou truncado. | README descreve backend Vercel, mock inexistente e timeouts divergentes; produção usa Render. | Open |
 | JH-010 | P2 | Performance | Bundle principal excede o limite de aviso do Vite. | JS minificado de 1.121,55 kB (330,27 kB gzip). | Open |
 | JH-011 | P3 | Repository Hygiene | Há backup e artefatos legados/mortos, além de dois lockfiles. | `MarketsOld.tsx.bak`, `marketService.ts`, `MarketCard.tsx`, `package-lock.json` e `bun.lockb`. | Open |
 | JH-012 | P3 | Portfolio Readiness | Metadados residuais referenciam `@FinHubPro` e ativos hospedados em `gpt-engineer-file-uploads`; nome do pacote ainda é genérico. | `index.html` e `package.json`. | Open |
-| JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp só é atualizado se uma chave de cache que não é criada já existir. | Open |
+| JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
 
 ## Technical Baseline
 
@@ -40,7 +40,7 @@ Sprint 0A concluída localmente. O build de produção é gerado e o backend com
 
 - Node esperado: não definido no repositório; ambiente auditado: Node 24.11.0 e npm 11.6.1.
 - Lockfiles presentes: npm e Bun; scripts: `dev`, `build`, `build:dev`, `lint`, `preview`, `backend:start` e `start`.
-- ESLint: 22 erros e 9 warnings.
+- ESLint após Sprint 0B: 14 erros e 8 warnings; nenhuma falha nova nos arquivos tocados.
 - TypeScript (`tsc -b`): 2 erros.
 
 ### Backend
@@ -53,7 +53,8 @@ Sprint 0A concluída localmente. O build de produção é gerado e o backend com
 
 ### Tests
 
-Nenhuma suíte automatizada configurada no projeto.
+- Nove testes `unittest` focados em provider válido, fallback real, falha total, 503, zero legítimo, stale cache e News.
+- A suíte abrangente de produto permanece pendente em JH-008.
 
 ### Build
 
@@ -74,6 +75,10 @@ Nenhuma suíte automatizada configurada no projeto.
 - Não será convertido em site de Solution Architecture.
 - Projetos de arquitetura poderão existir separadamente.
 - Confiabilidade e correção precedem refinamento visual.
+- Indisponibilidade operacional nunca é representada por zero.
+- Requests do frontend usam timeout de 20 segundos por tentativa e no máximo um retry após 1 segundo, somente para rede/timeout/502/503/504.
+- Somente payload aprovado por validador específico substitui o last-known-good.
+- Falha de atualização preserva cache anterior como stale; ausência de cache resulta em indisponibilidade explícita.
 
 ## Sprint History
 
@@ -88,9 +93,22 @@ Entregas:
 - análise de produção;
 - backlog priorizado.
 
+### Sprint 0B — Production & API Reliability
+
+Status:
+Implementada localmente — validação de produção pendente.
+
+Entregas:
+- HTTP 503 sem zeros fabricados quando providers falham e não há cache;
+- timeout e retry transitório limitado no frontend;
+- cache versionado, validado e preservado como stale;
+- estados traduzidos de loading, indisponibilidade e stale;
+- cooldown persistente de refresh manual;
+- testes backend focados em confiabilidade.
+
 ## Roadmap
 
-1. Production & API Reliability — JH-001, JH-004, JH-005, JH-006 e JH-013.
+1. Post-deploy Reliability Validation — JH-001, JH-004 e JH-005.
 2. Functional & Data Correctness — JH-002 e JH-003.
 3. Quality Baseline & Tests — JH-007 e JH-008.
 4. Documentation & Repository Hygiene — JH-009 e JH-011.
@@ -99,4 +117,4 @@ Entregas:
 
 ## Next Sprint
 
-**Sprint 0B — Production & API Reliability:** tornar indisponibilidade, timeout e fallback semanticamente distintos de zero; validar o comportamento de cold start e estabelecer respostas observáveis sem alterar dados silenciosamente.
+**Functional & Data Correctness:** resolver JH-002 e JH-003 após a validação pós-deploy da Sprint 0B.

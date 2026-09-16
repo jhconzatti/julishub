@@ -150,6 +150,19 @@
       "Taxas de corretagem ou transferência"
     ]
   },
+  "dataStates": {
+    "loading": "Carregando dados...",
+    "slow": "A conexão está levando mais tempo que o normal.",
+    "unavailable": "Dados temporariamente indisponíveis.",
+    "retry": "Tentar novamente",
+    "stale": "Exibindo dados anteriores. A atualização mais recente falhou.",
+    "staleAt": "Últimos dados válidos: {{date}}.",
+    "refresh": "Atualizar dados (disponível a cada 5 minutos)",
+    "refreshSuccess": "Dados atualizados com sucesso.",
+    "refreshFailed": "Não foi possível atualizar os dados agora.",
+    "cooldown": "Aguarde {{minutes}}m{{seconds}}s para atualizar novamente.",
+    "rateUnavailable": "Não há uma taxa válida disponível para esta conversão."
+  },
   "common": {
     "price": "Preço",
     "change": "Variação",

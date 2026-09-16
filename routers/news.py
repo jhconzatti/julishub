@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 import feedparser
 import requests
 from datetime import datetime, timedelta
@@ -19,6 +19,8 @@ _cache_news = {
 }
 
 CACHE_DURATION = timedelta(hours=1)
+SERVICE_UNAVAILABLE_DETAIL = "Dados temporariamente indisponíveis."
+NEWS_REQUEST_TIMEOUT = (5, 10)
 
 
 def is_cache_valid(cache_timestamp: Optional[datetime]) -> bool:
@@ -118,15 +120,27 @@ def format_relative_time(pub_date_str: str) -> str:
         return "Data desconhecida"
 
 
-def fetch_google_news() -> List[Dict[str, Any]]:
+def set_stale_headers(response: Response, timestamp: Optional[datetime]) -> None:
+    response.headers["X-Data-Stale"] = "true"
+    if timestamp is not None:
+        response.headers["X-Data-Timestamp"] = timestamp.isoformat()
+
+
+def fetch_google_news() -> Optional[List[Dict[str, Any]]]:
     """Busca notícias do RSS do Google News (Economia Brasil)"""
     try:
         logger.info("🔄 Buscando notícias do Google News...")
         
         rss_url = "https://news.google.com/rss/search?q=economia+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419"
         
-        # Parse do RSS feed
-        feed = feedparser.parse(rss_url)
+        # O download explícito garante timeout controlado. O feedparser recebe
+        # apenas o conteúdo já obtido e não mantém conexão externa indefinida.
+        rss_response = requests.get(rss_url, timeout=NEWS_REQUEST_TIMEOUT)
+        rss_response.raise_for_status()
+        feed = feedparser.parse(rss_response.content)
+
+        if getattr(feed, "bozo", False) and not feed.entries:
+            raise ValueError("Feed RSS inválido")
         
         if not feed.entries:
             logger.warning("⚠️ Nenhuma notícia encontrada no feed")
@@ -174,37 +188,32 @@ def fetch_google_news() -> List[Dict[str, Any]]:
     
     except Exception as e:
         logger.error(f"❌ Erro ao buscar notícias do Google News: {e}")
-        return []
+        return None
 
 
 @router.get("/noticias")
-async def get_noticias():
+async def get_noticias(response: Response):
     """
     Retorna lista de notícias financeiras do Google News (Economia Brasil)
     
     Cache de 1 hora para evitar sobrecarga no feed do Google
     """
-    try:
-        # Verifica cache
-        if is_cache_valid(_cache_news["timestamp"]):
-            logger.info("📦 Retornando notícias do cache")
+    if is_cache_valid(_cache_news["timestamp"]):
+        logger.info("📦 Retornando notícias do cache")
+        return _cache_news["data"]
+
+    noticias = fetch_google_news()
+
+    if noticias is None:
+        if _cache_news["data"] is not None:
+            logger.warning("♻️ Retornando notícias stale após falha do provider")
+            set_stale_headers(response, _cache_news["timestamp"])
             return _cache_news["data"]
-        
-        # Busca notícias frescas
-        noticias = fetch_google_news()
-        
-        if not noticias:
-            # Retorna lista vazia ao invés de erro para não quebrar o frontend
-            logger.warning("⚠️ Nenhuma notícia disponível, retornando lista vazia")
-            return []
-        
-        # Atualiza cache
-        _cache_news["data"] = noticias
-        _cache_news["timestamp"] = datetime.now()
-        
-        return noticias
-    
-    except Exception as e:
-        logger.error(f"❌ Erro crítico no endpoint /noticias: {e}")
-        # Retorna lista vazia ao invés de HTTPException para não quebrar o frontend
-        return []
+        logger.error("❌ Notícias indisponíveis e sem cache válido")
+        raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
+
+    # Uma lista vazia recebida de um feed válido é um estado de domínio
+    # permitido. Falha operacional é representada por None e nunca por [].
+    _cache_news["data"] = noticias
+    _cache_news["timestamp"] = datetime.now()
+    return noticias
