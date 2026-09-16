@@ -14,7 +14,7 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 0F concluída localmente. O README reflete a arquitetura e o deploy atuais, npm é o package manager oficial e os três artefatos legados previamente identificados foram removidos após confirmação de ausência de referências.
+Sprint 0G concluída localmente. As views de Markets, Calculators, Indicators, News, Blog e Privacy são carregadas sob demanda por rota; o entry JavaScript caiu de 1.124,48 kB para 450,95 kB minificados.
 
 ## Known Issues
 
@@ -29,7 +29,7 @@ Sprint 0F concluída localmente. O README reflete a arquitetura e o deploy atuai
 | JH-007 | P2 | Technical Debt | Baseline estático falhava com erros e warnings de ESLint e dois erros TypeScript. | Sprint 0E: ESLint 0 erros/0 warnings, TypeScript 0 erros e build aprovado. | Resolved |
 | JH-008 | P2 | Reliability | Não existe uma suíte automatizada abrangente para o produto. | Há 27 testes backend focados em confiabilidade, mercados e salário CLT; cobertura ampla de frontend e dos demais domínios continua pendente. | Open |
 | JH-009 | P2 | Documentation | README e documentos históricos divergiam do código/deploy atual e continham conteúdo duplicado ou truncado. | README reestruturado com arquitetura React/Vercel + FastAPI/Render, providers atuais, execução local, qualidade e política de confiabilidade. | Resolved |
-| JH-010 | P2 | Performance | Bundle principal excede o limite de aviso do Vite. | JS minificado de 1.121,55 kB (330,27 kB gzip). | Open |
+| JH-010 | P2 | Performance | Bundle principal excedia o limite de aviso do Vite e carregava antecipadamente views independentes. | Lazy loading por rota reduziu o entry de 1.124,48 kB (331,52 kB gzip) para 450,95 kB (142,74 kB gzip); o aviso de chunk acima de 500 kB deixou de ocorrer. | Resolved |
 | JH-011 | P3 | Repository Hygiene | Havia backup e artefatos legados sem uso, além de dois lockfiles. | `MarketsOld.tsx.bak`, `marketService.ts`, `MarketCard.tsx` e `bun.lockb` removidos após busca sem referências; `package-lock.json` preservado para npm. | Resolved |
 | JH-012 | P3 | Portfolio Readiness | Metadados residuais referenciam `@FinHubPro` e ativos hospedados em `gpt-engineer-file-uploads`; nome do pacote ainda é genérico. | `index.html` e `package.json`. | Open |
 | JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
@@ -59,7 +59,8 @@ Sprint 0F concluída localmente. O README reflete a arquitetura e o deploy atuai
 ### Build
 
 - `npm run build`: concluído com sucesso.
-- Avisos: bundle principal acima de 500 kB e base Browserslist com nove meses.
+- Entry JavaScript após Sprint 0G: 450,95 kB minificados e 142,74 kB gzip.
+- Aviso restante: base Browserslist com nove meses; nenhum chunk excede 500 kB.
 
 ### Deployment
 
@@ -85,6 +86,7 @@ Sprint 0F concluída localmente. O README reflete a arquitetura e o deploy atuai
 - A base do IRRF usa a maior dedução entre INSS mais dependentes e o desconto simplificado mensal; outros descontos são aplicados somente ao líquido.
 - A redução mensal de IRRF segue a Lei 15.270/2025 e utiliza o salário bruto para definir e calcular a redução.
 - npm é o package manager oficial; backups de código pertencem ao histórico do Git, não à árvore versionada.
+- Views não essenciais à Home são carregadas sob demanda por rota, mantendo a Home no entry inicial.
 
 ## Sprint History
 
@@ -168,11 +170,23 @@ Entregas:
 - npm definido como package manager oficial, com remoção de `bun.lockb`;
 - remoção de `MarketsOld.tsx.bak`, `marketService.ts` e `MarketCard.tsx`, todos sem referências na aplicação atual.
 
+### Sprint 0G — Frontend Performance Baseline
+
+Status:
+Concluída localmente.
+
+Entregas:
+- lazy loading para Markets, Calculators, Indicators, News, BlogList, BlogPost e PrivacyPolicy;
+- boundary de Suspense no nível das rotas com fallback acessível e traduzido;
+- redução do entry de 1.124,48 kB para 450,95 kB minificados e de 331,52 kB para 142,74 kB gzip;
+- geração de chunks independentes por área, sem `manualChunks` e sem novas dependências;
+- remoção do aviso de chunk acima de 500 kB no build.
+
 ## Roadmap
 
 1. Post-deploy Reliability Validation — JH-001, JH-004 e JH-005.
 2. Quality Baseline & Tests — JH-008.
-3. Performance & UX Cleanup — JH-006 e JH-010.
+3. UX Cleanup — JH-006.
 4. Visual Polish & Portfolio Readiness — JH-012.
 
 ## Next Sprint

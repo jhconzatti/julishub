@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { useTranslation } from "react-i18next";
@@ -18,13 +18,14 @@ import { SUPPORTED_LANGS } from "./hooks/use-lang";
 // Importação das Páginas
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Markets from "./views/Markets";
-import Calculators from "./views/Calculators";
-import Indicators from "./views/Indicators";
-import News from "./views/News";
-import BlogList from "./views/BlogList";
-import BlogPost from "./views/BlogPost";
-import PrivacyPolicy from "./views/PrivacyPolicy";
+
+const Markets = lazy(() => import("./views/Markets"));
+const Calculators = lazy(() => import("./views/Calculators"));
+const Indicators = lazy(() => import("./views/Indicators"));
+const News = lazy(() => import("./views/News"));
+const BlogList = lazy(() => import("./views/BlogList"));
+const BlogPost = lazy(() => import("./views/BlogPost"));
+const PrivacyPolicy = lazy(() => import("./views/PrivacyPolicy"));
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,20 @@ const ConsentAwareAnalytics = () => {
   return <Analytics />;
 };
 
+const RouteLoading = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div
+      className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground"
+      role="status"
+      aria-live="polite"
+    >
+      {t("dataStates.loading")}
+    </div>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -101,32 +116,34 @@ const App = () => (
           <Header />
 
           <main className="flex-1 container mx-auto px-4 py-8">
-            <Routes>
-              {/* Root: redirect to browser-detected or default language */}
-              <Route path="/" element={<DefaultLangRedirect />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
+                {/* Root: redirect to browser-detected or default language */}
+                <Route path="/" element={<DefaultLangRedirect />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
 
-              {/* Language-prefixed routes — the SEO gold standard */}
-              <Route path="/:lang" element={<LanguageRouter />}>
-                <Route index element={<Index />} />
-                <Route path="markets" element={<Markets />} />
-                <Route path="calculators" element={<Calculators />} />
-                <Route path="indicators" element={<Indicators />} />
-                <Route path="news" element={<News />} />
-                <Route path="blog" element={<BlogList />} />
-                <Route path="blog/:slug" element={<BlogPost />} />
-                <Route path="privacy" element={<PrivacyPolicy />} />
-              </Route>
+                {/* Language-prefixed routes — the SEO gold standard */}
+                <Route path="/:lang" element={<LanguageRouter />}>
+                  <Route index element={<Index />} />
+                  <Route path="markets" element={<Markets />} />
+                  <Route path="calculators" element={<Calculators />} />
+                  <Route path="indicators" element={<Indicators />} />
+                  <Route path="news" element={<News />} />
+                  <Route path="blog" element={<BlogList />} />
+                  <Route path="blog/:slug" element={<BlogPost />} />
+                  <Route path="privacy" element={<PrivacyPolicy />} />
+                </Route>
 
-              {/* Legacy redirects: /markets → /pt-BR/markets, etc. */}
-              <Route path="/markets" element={<LegacyRedirect />} />
-              <Route path="/calculators" element={<LegacyRedirect />} />
-              <Route path="/indicators" element={<LegacyRedirect />} />
-              <Route path="/news" element={<LegacyRedirect />} />
-              <Route path="/blog/*" element={<LegacyRedirect />} />
+                {/* Legacy redirects: /markets → /pt-BR/markets, etc. */}
+                <Route path="/markets" element={<LegacyRedirect />} />
+                <Route path="/calculators" element={<LegacyRedirect />} />
+                <Route path="/indicators" element={<LegacyRedirect />} />
+                <Route path="/news" element={<LegacyRedirect />} />
+                <Route path="/blog/*" element={<LegacyRedirect />} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </main>
 
           {/* Footer */}
