@@ -1,295 +1,199 @@
-# 🚀 JulisHub - Financial & Technical Portfolio
+# JulisHub
 
-Bem-vindo ao **JulisHub**, uma aplicação Fullstack moderna desenvolvida para centralizar ferramentas financeiras, indicadores de mercado e demonstrar capacidades técnicas de desenvolvimento web e arquitetura de software.
+JulisHub is a multilingual full-stack personal finance application that brings together market data, economic indicators, calculators, news, and educational content.
 
-O projeto utiliza uma abordagem desacoplada, separando uma interface rica e responsiva de um backend robusto em Python, com integração de múltiplas APIs públicas confiáveis.
+## About
 
-## 🛠️ Tech Stack
+The project is maintained as a working financial product and portfolio project. Its current priorities are data correctness, graceful handling of external-provider failures, maintainable code, and clear documentation.
 
-### Frontend (Client-Side)
-* **Core:** React (Vite), TypeScript
-* **Estilização:** Tailwind CSS, Shadcn/ui
-* **Gerenciamento de Estado/Dados:** React Hooks, Context API
-* **Visualização de Dados:** Recharts
-* **Internacionalização:** i18next (Suporte PT, EN, ES)
-* **Deploy:** Vercel (Frontend)
+Production frontend: [julishub.vercel.app](https://julishub.vercel.app)
 
-### Backend (Server-Side)
-* **Core:** Python 3.12+
-* **Framework:** FastAPI (Alta performance e documentação automática)
-* **Servidor:** Uvicorn
-* **Validação de Dados:** Pydantic
-* **Integrações:** 
-  - AwesomeAPI (Cotações de moedas)
-  - CoinGecko (Criptomoedas)
-  - HG Brasil Finance (Índices brasileiros)
-  - Banco Central do Brasil (SELIC, IPCA, CDI)
-* **Cache:** Sistema de cache em memória (1 hora)
-* **Logging:** Sistema estruturado com emojis para debug
+## Features
 
----
+- Market dashboard for currencies and indexes from Brazil, Argentina, and the United States.
+- Economic indicators including SELIC, IPCA, and estimated CDI.
+- Compound-interest, financing, CLT net-salary, and currency-conversion calculators.
+- Financial news aggregated from Google News RSS.
+- Educational blog content.
+- Portuguese (Brazil), English, and Spanish locales.
+- Light and dark themes.
+- Cookie consent controlling optional analytics.
+- Explicit loading, unavailable, retry, and stale-data states for external data.
 
-## 📂 Estrutura do Projeto
+## Architecture
 
-O projeto segue uma organização modular:
+```text
+Browser
+  └─ React frontend (Vercel)
+       └─ FastAPI backend /api/* (Render)
+            └─ External financial and news providers
+```
+
+The frontend calls the FastAPI backend through `VITE_API_URL`. The backend exposes domain routers for markets, calculators, news, and blog content.
+
+External integrations currently used are:
+
+- AwesomeAPI for exchange rates and currency history.
+- CoinGecko for Bitcoin prices.
+- HG Brasil Finance for Brazilian market data and provider fallback.
+- Banco Central do Brasil for SELIC and IPCA.
+- Yahoo Finance for MERVAL, S&P 500, Dow Jones, and Nasdaq Composite.
+- Google News RSS for financial news.
+
+The frontend keeps validated last-known-good responses in versioned `localStorage` entries. The backend also uses in-process memory caches for selected endpoints. Real provider fallbacks are retained where available.
+
+## Tech Stack
+
+### Frontend
+
+- React 18 and TypeScript
+- Vite 5
+- Tailwind CSS and shadcn/ui
+- React Router and TanStack Query
+- i18next
+- Recharts
+
+### Backend
+
+- Python and FastAPI
+- Uvicorn
+- Pydantic
+- HTTPX, Requests, and Feedparser
+
+### Infrastructure
+
+- Vercel for the frontend
+- Render for the backend
+- npm as the Node.js package manager
+
+## Project Structure
 
 ```text
 julishub/
-├── src/                  # Frontend (React)
-│   ├── components/       # Componentes reutilizáveis (Header, Cards, UI)
-│   ├── views/            # Telas principais (Markets, Calculators, Indicators)
-│   ├── contexts/         # Contextos globais (Tema)
-│   ├── lib/              # Configurações (i18n, utils)
-│   └── hooks/            # Hooks personalizados
-├── routers/              # Backend (Rotas Modularizadas)
-│   ├── markets.py        # Lógica de cotação e histórico
-│   └── calculators.py    # Lógica de juros compostos
-├── app.py                # Ponto de entrada da API Python
-└── requirements.txt      # Dependências do Python
+├── public/locales/       # PT-BR, EN, and ES translations
+├── routers/              # FastAPI routers by domain
+├── src/
+│   ├── components/       # Product and UI components
+│   ├── contexts/         # Shared React contexts
+│   ├── hooks/            # Reusable hooks
+│   ├── lib/              # API, cache, i18n, and utility code
+│   └── views/            # Route-level views
+├── tests/                # Backend unittest suite
+├── app.py                # FastAPI application entry point
+├── package.json          # Frontend scripts and dependencies
+└── requirements.txt      # Backend dependencies
 ```
 
----
+## Running Locally
 
-## ⚡ Como Rodar o Projeto
+### Requirements
 
-Este é um projeto Fullstack, então você precisará de **dois terminais** rodando simultaneamente.
-
-### 1. Configurando o Backend (Python)
-
-```bash
-# Crie um ambiente virtual (apenas na primeira vez)
-python -m venv .venv
-
-# Ative o ambiente
-# Windows:
-.\.venv\Scripts\Activate
-# Linux/Mac:
-source .venv/bin/activate
-
-# Instale as dependências
-pip install fastapi uvicorn requests
-
-# Rode o servidor
-uvicorn app:app --reload
-```
-*O Backend estará rodando em: `http://127.0.0.1:8000`*
-*Documentação da API (Swagger): `http://127.0.0.1:8000/docs`*
-
-### 2. Configurando o Frontend (React)
-
-Abra um **novo terminal** na raiz do projeto:
-
-```bash
-# Instale as dependências do Node
-npm install
-
-# Rode o servidor de desenvolvimento
-npm run dev
-```
-*O Fron📊 Mercados Financeiros (`/markets`)
-Sistema completo de monitoramento de mercados com **4 abas especializadas**:
-
-#### **Câmbio (Exchange)**
-- USD/BRL, EUR/BRL, BTC/USD (pares principais)
-- USD/ARS, ARS/BRL, BRL/ARS (América Latina)
-- EUR/USD, EUR/ARS (Europa)
-- Gráficos históricos de 30 dias para pares principais
-- Atualização automática a cada 1 minuto
-
-#### **Brasil**
-- IBOVESPA - Índice Bovespa (B3)
-- IFIX - Índice de Fundos Imobiliários
-- Dados em tempo real via HG Brasil Finance API
-
-#### **Argentina**
-- MERVAL - S&P Merval (BYMA)
-- BURCAP - Índice de Capitalização
-
-#### **EUA**
-- S&P 500 - Standard & Poor's 500
-- Dow Jones Industrial Average
-- N🔌 Integrações com APIs Públicas
-
-| API | Uso | Limite Gratuito | Requer API Key? |
-|-----|-----|-----------------|-----------------|
-| [AwesomeAPI](https://economia.awesomeapi.com.br) | Moedas fiat | Ilimitado | ❌ Não |
-| [CoinGecko](https://api.coingecko.com) | Criptomoedas | 50 req/min | ❌ Não |
-| [HG Brasil](https://hgbrasil.com) | Índices BR | 1000 req/dia (free) | ✅ Sim* |
-| [Banco Central BR](https://api.bcb.gov.br) | SELIC, IPCA | Ilimitado | ❌ Não |
-
-*Usa chave `development` para testes. Para produção, registre em [HG Brasil](https://hgbrasil.com).
-
-### 🔐 Sistema de Cache e Fallback
-- **Cache de 1 hora** para indicadores econômicos
-- **Fallback em cascata**: Se API principal falhar, tenta secundária
-- **Retorno seguro**: Valores zerados ao invés de erro 500
-- **Logging estruturado**: Rastreamento com emojis (🔄✅❌⚠️📦)
-
----
-
-## 📱 Responsividade Mobile
-
-O projeto foi desenvolvido **mobile-first** e é totalmente responsivo:
-
-✅ Menu hamburger em telas pequenas  
-✅ Tabs scrolláveis  
-✅ Grids adaptativos: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`  
-✅ Touch targets de 40px+ (acessibilidade)  
-✅ Gráficos responsivos com `ResponsiveContainer`  
-✅ Diálogos com altura máxima (90vh)
-
-Testado em: iPhone SE, iPhone 12 Pro, iPad Mini, iPad Pro, Desktop (1280px+)
-
----
-
-## 🌐 Modo Offline (Mock Mode)
-
-Para facilitar o desenvolvimento de interface sem depender da API Python (ou para trabalhar sem internet), o projeto suporta um modo Mock.
-
-1. Crie um arquivo `.env` na raiz do projeto.
-2. Adicione a configuração:
-```properties
-VITE_USE_MOCK=true
-```
-3. O Frontend passará a usar dados fictícios instantaneamente, permitindo trabalhar no layout sem o backend rodando.
-
----
-
-## 🚀 Deploy na Vercel
+- Node.js with npm
+- Python 3.12 or later
 
 ### Frontend
+
 ```bash
-npm i -g vercel
-vercel --prod
+npm ci
+npm run dev
 ```
 
-### Backend (FastAPI)
-Adicione `vercel.json` na raiz:
-```json
-{
-  "builds": [{"src": "app.py", "use": "@vercel/python"}],
-  "routes": [{"src": "/api/(.*)", "dest": "app.py"}]
-}
+Vite prints the local frontend URL when the development server starts.
+
+### Backend
+
+Create and activate a virtual environment, then install the declared dependencies:
+
+```bash
+python -m venv .venv
 ```
 
-### Variáveis de Ambiente
-```bash
-VITE_API_URL=https://seu-backend.vercel.app/api
-VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
-```
+Windows PowerShell:
 
-O Google Analytics 4 só é carregado quando o usuário aceita cookies não essenciais no banner de consentimento. O Vercel Web Analytics segue o mesmo gate de consentimento.
-
----
-
-## 📊 Estrutura de Componentes
-
-### Componentes Reutilizáveis
-- **Header**: Logo, navegação, seletor de idioma/tema
-- **Footer**: Informações de copyright
-- **Navigation**: Menu desktop com links ativos
-- **MobileNav**: Menu hamburger com drawer lateral
-- **LanguageToggle**: Bandeiras SVG para seleção de idioma
-- **ExchangeCalculator**: Conversor de moedas standalone
-
-### Componentes de Mercado
-- **MarketExchange**: Cards de pares de câmbio com gráficos
-- **MarketBrazil**: Índices brasileiros (IBOVESPA, IFIX)
-- **MarketArgentina**: Índices argentinos (MERVAL, BURCAP)
-- **MarketUSA**: Índices americanos (S&P 500, Dow, Nasdaq)
-
----
-
-## 🐛 Troubleshooting
-
-### Backend não inicia
-```bash
-# Verifique se o ambiente virtual está ativo
-.\.venv\Scripts\Activate  # Windows
-source .venv/bin/activate  # Linux/Mac
-
-# Reinstale dependências
+```powershell
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# Tente porta alternativa
-uvicorn app:app --host 0.0.0.0 --port 5000 --reload
+uvicorn app:app --reload
 ```
 
-### Frontend não conecta ao backend
-1. Verifique se `VITE_API_URL` está configurado corretamente
-2. Certifique-se de que o backend está rodando (teste `curl http://localhost:5000/api/indicadores`)
-3. Verifique CORS no backend (FastAPI já configurado)
+macOS or Linux:
 
-### Gráficos não aparecem
-- Apenas USD/BRL, EUR/BRL e BTC/USD têm histórico disponível
-- Outros pares não suportam gráficos históricos pela API
-
-### Índices zerados
-- **HG Brasil**: Limite de 1000 req/dia na versão free. Registre para obter API key própria
-- **USA/Argentina**: Dados aproximados. Para produção, integre APIs pagas
-
----
-
-## 📈 Roadmap Futuro
-
-- [ ] Sistema de alertas de preço
-- [ ] Portfólio tracker pessoal
-- [ ] Exportação de relatórios (PDF/CSV)
-- [ ] PWA (Progressive Web App)
-- [ ] Notificações push
-- [ ] Integração com mais APIs de mercado
-- Persistência de dados em localStorage
-
-#### **Empréstimos/Financiamentos**
-- Cálculo de parcelas
-- Visualização de amortização
-- Total de juros pagos
-
-#### **Salário Líquido CLT**
-- Cálculo de INSS e IRRF
-- Descontos detalhados
-- Salário líquido final
-
-#### **Conversor de Câmbio** ⭐ NOVO
-- Conversão entre BTC, USD, EUR, ARS, BRL
-- Cálculo bidirecional instantâneo
-- Tabela de referência de taxas
-- ⚠️ Aviso sobre câmbio comercial vs. turismo
-
-### 3. 📈 Indicadores Econômicos (`/indicators`)
-- **SELIC Meta** - Taxa oficial do Banco Central
-- **IPCA (12 meses)** - Inflação oficial
-- **CDI** - Taxa de referência para investimentos
-- Dados oficiais com atualização horária
-- Sistema de fallback robusto
-
-### 4. 🌍 Internacionalização
-- **3 idiomas completos**: Português (BR), Inglês (US), Espanhol (AR)
-- Seletor com bandeiras SVG
-- Traduções contextuais em todas as telas
-- Alternância Dark Mode / Light Mode.
-* Cálculo processado no Backend (Python) garantindo precisão.
-* Gráfico de evolução patrimonial (Total Investido vs. Juros).
-
-### 3. Internacionalização e Temas
-* Alternância completa entre **Dark Mode** (Padrão) e **Light Mode**.
-* Suporte a Português, Inglês e Espanhol.
-
----
-
-## 🌍 Modo Offline (Mock Mode)
-
-Para facilitar o desenvolvimento de interface sem depender da API Python (ou para trabalhar sem internet), o projeto suporta um modo Mock.
-
-1. Crie um arquivo `.env` na raiz do projeto.
-2. Adicione a configuração:
-```properties
-VITE_USE_MOCK=true
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app:app --reload
 ```
-3. O Frontend passará a usar dados fictícios instantaneamente, permitindo trabalhar no layout sem o backend rodando.
 
----
+The API is available at `http://127.0.0.1:8000`, with OpenAPI documentation at `http://127.0.0.1:8000/docs`.
 
-## 📝 Licença
+### Environment Variables
 
-Desenvolvido por **Juliano Conzatti**.
+Copy `.env.example` to `.env` for local frontend development:
+
+```dotenv
+VITE_API_URL="http://127.0.0.1:8000/api"
+VITE_GA_MEASUREMENT_ID=""
+```
+
+- `VITE_API_URL` selects the FastAPI base URL. The frontend accepts the base with or without a trailing `/api`.
+- `VITE_GA_MEASUREMENT_ID` is optional and enables Google Analytics only after the applicable cookie consent.
+
+No additional backend environment variable is currently required for local startup. Do not place secrets in frontend `VITE_*` variables.
+
+## Testing and Quality
+
+```bash
+npm run lint
+npx tsc -b --pretty false
+npm run build
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Current baseline:
+
+- ESLint: 0 errors and 0 warnings
+- TypeScript: 0 errors
+- Production build: passing
+- Backend tests: 27 passing
+
+On macOS or Linux, use `.venv/bin/python` for the unittest command.
+
+## Deployment
+
+- Frontend: Vercel serves the Vite application and applies the SPA rewrite in `vercel.json`.
+- Backend: Render serves the FastAPI application.
+- Production frontend configuration points `VITE_API_URL` to the Render backend.
+
+Deployment and remote environment changes are managed outside the application runtime.
+
+## Data Reliability
+
+Market and news data depend on external providers and may be delayed or temporarily unavailable. The application distinguishes current data, stale last-known-good data, and unavailable data.
+
+- Only validated responses replace cached data.
+- A working secondary provider may supply a real fallback.
+- Failed refreshes may preserve previous data with a stale indication.
+- When no valid data exists, the API returns an unavailable response and the interface offers retry behavior.
+- Provider failures are not represented as fabricated financial zeroes.
+
+## Internationalization
+
+The application includes locale resources for:
+
+- Portuguese — Brazil (`pt-BR`)
+- English (`en`)
+- Spanish (`es`)
+
+Language-prefixed routes and the locale selector are handled by the frontend.
+
+## Privacy and Analytics
+
+The application includes a cookie-consent interface. Optional Google Analytics and Vercel Web Analytics are loaded only after the relevant consent is granted.
+
+## Project Evolution
+
+Technical baselines, resolved issues, decisions, and sprint history are maintained in [docs/PROJECT_EVOLUTION.md](docs/PROJECT_EVOLUTION.md).
+
+## Author
+
+Juliano Conzatti

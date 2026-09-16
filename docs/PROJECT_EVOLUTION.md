@@ -8,13 +8,13 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 - Frontend: React 18, TypeScript, Vite 5, Tailwind, shadcn/ui, React Router, i18next e Recharts.
 - Backend: FastAPI com routers por domínio (`markets`, `calculators`, `news` e `blog`).
-- Integrações: AwesomeAPI, CoinGecko, HG Brasil, Banco Central do Brasil e Google News RSS.
+- Integrações: AwesomeAPI, CoinGecko, HG Brasil, Banco Central do Brasil, Yahoo Finance e Google News RSS.
 - Estado/cache: `localStorage` no frontend e caches globais em memória no backend.
 - Deploy identificado: frontend na Vercel e backend configurado no frontend para Render.
 
 ## Current Status
 
-Sprint 0E concluída localmente. O baseline estático está saudável: ESLint sem erros ou warnings, TypeScript sem erros e build aprovado. As correções preservaram o comportamento funcional e os 27 testes continuam aprovados.
+Sprint 0F concluída localmente. O README reflete a arquitetura e o deploy atuais, npm é o package manager oficial e os três artefatos legados previamente identificados foram removidos após confirmação de ausência de referências.
 
 ## Known Issues
 
@@ -28,9 +28,9 @@ Sprint 0E concluída localmente. O baseline estático está saudável: ESLint se
 | JH-006 | P2 | Error Handling | Estados de erro/indisponibilidade são inconsistentes; algumas telas convertem falha em vazio, zero ou apenas console. | Markets, Indicators, News e ExchangeCalculator agora distinguem loading, stale e indisponibilidade; Blog não pertenceu ao escopo da Sprint 0B. | Partially resolved |
 | JH-007 | P2 | Technical Debt | Baseline estático falhava com erros e warnings de ESLint e dois erros TypeScript. | Sprint 0E: ESLint 0 erros/0 warnings, TypeScript 0 erros e build aprovado. | Resolved |
 | JH-008 | P2 | Reliability | Não existe uma suíte automatizada abrangente para o produto. | Há 27 testes backend focados em confiabilidade, mercados e salário CLT; cobertura ampla de frontend e dos demais domínios continua pendente. | Open |
-| JH-009 | P2 | Documentation | README e documentos históricos divergem do código/deploy atual e contêm conteúdo duplicado ou truncado. | README descreve backend Vercel, mock inexistente e timeouts divergentes; produção usa Render. | Open |
+| JH-009 | P2 | Documentation | README e documentos históricos divergiam do código/deploy atual e continham conteúdo duplicado ou truncado. | README reestruturado com arquitetura React/Vercel + FastAPI/Render, providers atuais, execução local, qualidade e política de confiabilidade. | Resolved |
 | JH-010 | P2 | Performance | Bundle principal excede o limite de aviso do Vite. | JS minificado de 1.121,55 kB (330,27 kB gzip). | Open |
-| JH-011 | P3 | Repository Hygiene | Há backup e artefatos legados/mortos, além de dois lockfiles. | `MarketsOld.tsx.bak`, `marketService.ts`, `MarketCard.tsx`, `package-lock.json` e `bun.lockb`. | Open |
+| JH-011 | P3 | Repository Hygiene | Havia backup e artefatos legados sem uso, além de dois lockfiles. | `MarketsOld.tsx.bak`, `marketService.ts`, `MarketCard.tsx` e `bun.lockb` removidos após busca sem referências; `package-lock.json` preservado para npm. | Resolved |
 | JH-012 | P3 | Portfolio Readiness | Metadados residuais referenciam `@FinHubPro` e ativos hospedados em `gpt-engineer-file-uploads`; nome do pacote ainda é genérico. | `index.html` e `package.json`. | Open |
 | JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
 
@@ -39,7 +39,7 @@ Sprint 0E concluída localmente. O baseline estático está saudável: ESLint se
 ### Frontend
 
 - Node esperado: não definido no repositório; ambiente auditado: Node 24.11.0 e npm 11.6.1.
-- Lockfiles presentes: npm e Bun; scripts: `dev`, `build`, `build:dev`, `lint`, `preview`, `backend:start` e `start`.
+- Package manager oficial: npm; `package-lock.json` é o único lockfile. Scripts: `dev`, `build`, `build:dev`, `lint`, `preview`, `backend:start` e `start`.
 - ESLint após Sprint 0E: 0 erros e 0 warnings.
 - TypeScript (`tsc -b`) após Sprint 0E: 0 erros.
 
@@ -84,6 +84,7 @@ Sprint 0E concluída localmente. O baseline estático está saudável: ESLint se
 - A calculadora CLT usa as faixas progressivas de INSS vigentes desde janeiro de 2026; os exemplos previdenciários de 2025 não são usados como referência.
 - A base do IRRF usa a maior dedução entre INSS mais dependentes e o desconto simplificado mensal; outros descontos são aplicados somente ao líquido.
 - A redução mensal de IRRF segue a Lei 15.270/2025 e utiliza o salário bruto para definir e calcular a redução.
+- npm é o package manager oficial; backups de código pertencem ao histórico do Git, não à árvore versionada.
 
 ## Sprint History
 
@@ -155,13 +156,24 @@ Entregas:
 - configuração Tailwind convertida para imports tipados;
 - build e 27 testes aprovados.
 
+### Sprint 0F — Documentation & Repository Hygiene
+
+Status:
+Concluída localmente.
+
+Entregas:
+- README reestruturado e alinhado ao produto, execução local e deploy atuais;
+- frontend documentado na Vercel e backend no Render;
+- providers e comportamento de cache/fallback documentados sem promessas absolutas de tempo real;
+- npm definido como package manager oficial, com remoção de `bun.lockb`;
+- remoção de `MarketsOld.tsx.bak`, `marketService.ts` e `MarketCard.tsx`, todos sem referências na aplicação atual.
+
 ## Roadmap
 
 1. Post-deploy Reliability Validation — JH-001, JH-004 e JH-005.
 2. Quality Baseline & Tests — JH-008.
-3. Documentation & Repository Hygiene — JH-009 e JH-011.
-4. Performance & UX Cleanup — JH-006 e JH-010.
-5. Visual Polish & Portfolio Readiness — JH-012.
+3. Performance & UX Cleanup — JH-006 e JH-010.
+4. Visual Polish & Portfolio Readiness — JH-012.
 
 ## Next Sprint
 
