@@ -14,14 +14,14 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 0B implementada localmente, com validação de produção pendente. O backend agora diferencia dado real, dado stale e indisponibilidade; o frontend aplica timeout, retry transitório limitado, cache validado e estados explícitos. O build passa, o backend compila/importa e nove testes focados de confiabilidade passam. As falhas estáticas preexistentes permanecem no baseline.
+Sprint 0C implementada localmente, com validação de produção pendente. MERVAL, S&P 500, Dow Jones e Nasdaq Composite agora usam dados estruturados do Yahoo Finance; os números fixos foram removidos. O BURCAP permanece explicitamente indisponível por não haver fonte simples e confiável dentro das restrições da sprint.
 
 ## Known Issues
 
 | ID | Priority | Category | Issue | Evidence | Status |
 |---|---|---|---|---|---|
 | JH-001 | P1 | Production | Falhas de providers podem virar HTTP 200 com valores zero e ser exibidas/cacheadas como dados válidos. | Fallbacks numéricos removidos; sem cache, falha total retorna 503; payloads recebem validação por contrato. | Resolved locally — production validation pending |
-| JH-002 | P1 | Product/Data Correctness | Índices de Argentina e EUA são valores fixos, embora a interface os apresente no contexto de mercado em tempo real. | Endpoints `/api/indexes/argentina` e `/api/indexes/usa`. | Open |
+| JH-002 | P1 | Product/Data Correctness | Índices de Argentina e EUA eram valores fixos, embora a interface os apresentasse no contexto de mercado em tempo real. | MERVAL (`^MERV`), S&P 500 (`^GSPC`), Dow Jones (`^DJI`) e Nasdaq Composite (`^IXIC`) usam Yahoo Finance; BURCAP fica explicitamente indisponível e nenhum hardcode permanece como fallback. | Resolved locally — production validation pending |
 | JH-003 | P1 | Product/Data Correctness | Calculadora de salário usa tabelas de INSS/IRRF explicitamente rotuladas como 2024. | `routers/calculators.py`. | Open |
 | JH-004 | P1 | Production | Primeiras chamadas ao backend de produção excederam 30 s; após aquecimento, responderam em menos de 1,1 s. | Frontend limitado a 20 s por tentativa e uma segunda tentativa transitória; cold start da hospedagem não foi alterado. | Partially resolved — post-deploy validation pending |
 | JH-005 | P1 | API/Integration | Não há retries; o RSS não possui timeout explícito e há caminhos sequenciais de provider/fallback que acumulam latência. | Retry do cliente limitado a uma tentativa adicional; RSS usa timeout de conexão/leitura; fallback real sequencial foi preservado. | Resolved locally — production validation pending |
@@ -53,7 +53,7 @@ Sprint 0B implementada localmente, com validação de produção pendente. O bac
 
 ### Tests
 
-- Nove testes `unittest` focados em provider válido, fallback real, falha total, 503, zero legítimo, stale cache e News.
+- Quinze testes `unittest` focados em provider válido, fallback real, falha total, 503, zero legítimo, stale cache, News e integridade dos índices de Argentina/EUA.
 - A suíte abrangente de produto permanece pendente em JH-008.
 
 ### Build
@@ -79,6 +79,8 @@ Sprint 0B implementada localmente, com validação de produção pendente. O bac
 - Requests do frontend usam timeout de 20 segundos por tentativa e no máximo um retry após 1 segundo, somente para rede/timeout/502/503/504.
 - Somente payload aprovado por validador específico substitui o last-known-good.
 - Falha de atualização preserva cache anterior como stale; ausência de cache resulta em indisponibilidade explícita.
+- MERVAL, S&P 500, Dow Jones e Nasdaq Composite usam o endpoint estruturado de gráficos do Yahoo Finance, sem credencial ou nova dependência.
+- BURCAP não é substituído por outro índice nem recebe valor fictício; permanece explicitamente indisponível até existir fonte adequada.
 
 ## Sprint History
 
@@ -106,10 +108,22 @@ Entregas:
 - cooldown persistente de refresh manual;
 - testes backend focados em confiabilidade.
 
+### Sprint 0C — Market Index Data Integrity
+
+Status:
+Implementada localmente — validação de produção pendente.
+
+Entregas:
+- remoção dos valores hardcoded de Argentina e Estados Unidos;
+- MERVAL, S&P 500, Dow Jones e Nasdaq Composite integrados ao Yahoo Finance;
+- BURCAP explicitamente indisponível, sem substituição por outro índice;
+- cache separado e stale por mercado;
+- testes focados em valor real, falha, stale, payload inválido e zero legítimo.
+
 ## Roadmap
 
 1. Post-deploy Reliability Validation — JH-001, JH-004 e JH-005.
-2. Functional & Data Correctness — JH-002 e JH-003.
+2. Functional & Data Correctness — JH-003.
 3. Quality Baseline & Tests — JH-007 e JH-008.
 4. Documentation & Repository Hygiene — JH-009 e JH-011.
 5. Performance & UX Cleanup — JH-006 e JH-010.
@@ -117,4 +131,4 @@ Entregas:
 
 ## Next Sprint
 
-**Functional & Data Correctness:** resolver JH-002 e JH-003 após a validação pós-deploy da Sprint 0B.
+**Functional & Data Correctness:** resolver JH-003 após as validações pós-deploy pendentes.

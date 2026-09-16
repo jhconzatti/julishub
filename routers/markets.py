@@ -37,6 +37,8 @@ _cache_indicadores = {"data": None, "timestamp": None}
 _cache_exchange    = {"data": None, "timestamp": None}
 _cache_cotacao     = {"data": None, "timestamp": None}
 _cache_indexes     = {"data": None, "timestamp": None}
+_cache_argentina_indexes = {"data": None, "timestamp": None}
+_cache_usa_indexes       = {"data": None, "timestamp": None}
 
 CACHE_DURATION = timedelta(hours=1)
 SERVICE_UNAVAILABLE_DETAIL = "Dados temporariamente indisponíveis."
@@ -466,22 +468,89 @@ async def get_brazil_indexes(response: Response):
         raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
 
+YAHOO_INDEX_URL = "https://query1.finance.yahoo.com/v8/finance/chart"
+
+
+async def fetch_yahoo_index(symbol: str, name: str, label: str, description: str) -> Optional[dict]:
+    """Obtém um índice real no endpoint estruturado de gráficos do Yahoo Finance."""
+    try:
+        response = await get_client().get(
+            f"{YAHOO_INDEX_URL}/{symbol}?range=5d&interval=1d",
+            headers={"User-Agent": "Mozilla/5.0 (compatible; JulisHub/1.0)"},
+        )
+        if response.status_code != 200:
+            logger.warning("⚠️ Yahoo Finance retornou status %s para %s", response.status_code, name)
+            return None
+
+        chart = response.json().get("chart", {})
+        if chart.get("error") is not None:
+            logger.warning("⚠️ Yahoo Finance não possui dado disponível para %s", name)
+            return None
+
+        results = chart.get("result")
+        if not isinstance(results, list) or not results:
+            logger.error("❌ Yahoo Finance retornou payload vazio para %s", name)
+            return None
+
+        meta = results[0].get("meta", {})
+        value = meta.get("regularMarketPrice")
+        variation = meta.get("regularMarketChangePercent")
+        if not is_numeric_value(value) or not is_numeric_value(variation):
+            logger.error("❌ Yahoo Finance retornou payload inválido para %s", name)
+            return None
+
+        return {
+            "name": name,
+            "label": label,
+            "valor": str(value),
+            "var": str(variation),
+            "description": f"{description} · Fonte: Yahoo Finance",
+        }
+    except httpx.TimeoutException:
+        logger.error("❌ Timeout ao buscar %s no Yahoo Finance", name)
+        return None
+    except Exception as error:
+        logger.error("❌ Erro ao buscar %s no Yahoo Finance: %s", name, error)
+        return None
+
+
+async def get_yahoo_indexes(response: Response, cache: dict, market: str, specs: tuple[tuple[str, str, str, str], ...]) -> dict:
+    if is_cache_valid(cache["timestamp"]):
+        logger.info("📦 Retornando índices de %s do cache", market)
+        return cache["data"]
+
+    results = await asyncio.gather(*(fetch_yahoo_index(*spec) for spec in specs))
+    if all(result is not None for result in results):
+        payload = {result["name"]: result for result in results}
+        cache["data"] = payload
+        cache["timestamp"] = datetime.now()
+        logger.info("✅ Índices de %s obtidos no Yahoo Finance", market)
+        return payload
+
+    if cache["data"] is not None:
+        logger.warning("♻️ Retornando índices de %s stale", market)
+        set_stale_headers(response, cache["timestamp"])
+        return cache["data"]
+
+    logger.error("❌ Índices de %s indisponíveis e sem cache válido", market)
+    raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
+
+
 @router.get("/indexes/argentina")
-async def get_argentina_indexes():
-    """Índices argentinos (mock — APIs BYMA requerem autenticação paga)"""
+async def get_argentina_indexes(response: Response):
+    """S&P MERVAL via Yahoo Finance; BURCAP permanece indisponível sem fonte adequada."""
     logger.info("📊 Requisição recebida: /indexes/argentina")
-    return {
-        "MERVAL": {"name": "MERVAL", "label": "S&P Merval", "valor": "1250000", "var": "1.25", "description": "Índice Merval - Principal índice da Bolsa de Buenos Aires"},
-        "BURCAP": {"name": "BURCAP", "label": "BURCAP",     "valor": "850000",  "var": "0.85", "description": "Índice de Capitalização da BYMA"},
-    }
+    return await get_yahoo_indexes(response, _cache_argentina_indexes, "Argentina", (
+        ("%5EMERV", "MERVAL", "S&P Merval", "Principal índice da Bolsa de Buenos Aires"),
+    ))
 
 
 @router.get("/indexes/usa")
-async def get_usa_indexes():
-    """Índices americanos (aproximados — use finnhub.io/Alpha Vantage com API key em produção)"""
+async def get_usa_indexes(response: Response):
+    """S&P 500, Dow Jones e Nasdaq Composite via Yahoo Finance."""
     logger.info("📊 Requisição recebida: /indexes/usa")
-    return {
-        "SP500":  {"name": "SP500",  "label": "S&P 500",         "valor": "5000.00",  "var": "0.50", "description": "Standard & Poor's 500 - Índice das 500 maiores empresas dos EUA"},
-        "DOW":    {"name": "DOW",    "label": "Dow Jones",        "valor": "38000.00", "var": "0.35", "description": "Dow Jones Industrial Average - 30 empresas blue-chip"},
-        "NASDAQ": {"name": "NASDAQ", "label": "Nasdaq Composite", "valor": "16000.00", "var": "0.75", "description": "Nasdaq Composite - Índice focado em tecnologia"},
-    }
+    return await get_yahoo_indexes(response, _cache_usa_indexes, "Estados Unidos", (
+        ("%5EGSPC", "SP500", "S&P 500", "Índice das 500 maiores empresas dos EUA"),
+        ("%5EDJI", "DOW", "Dow Jones", "Dow Jones Industrial Average"),
+        ("%5EIXIC", "NASDAQ", "Nasdaq Composite", "Índice amplo da Nasdaq"),
+    ))

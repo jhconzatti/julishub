@@ -36,16 +36,52 @@ class ExchangeClient:
 
 
 class FailingClient:
-    async def get(self, _url):
+    async def get(self, _url, **_kwargs):
         raise httpx.TimeoutException("provider timeout")
 
 
 class IncompleteExchangeClient(ExchangeClient):
-    async def get(self, url):
+    async def get(self, url, **_kwargs):
         response = await super().get(url)
         if "coingecko" not in url:
             response._payload.pop("MXNBRL")
         return response
+
+
+class YahooIndexesClient:
+    values = {
+        "%5EMERV": (2345678.9, 1.23),
+        "%5EGSPC": (6123.45, 0.42),
+        "%5EDJI": (42123.67, -0.31),
+        "%5EIXIC": (19876.54, 0.18),
+    }
+
+    async def get(self, url, **_kwargs):
+        symbol = next((candidate for candidate in self.values if candidate in url), None)
+        if symbol is None:
+            return FakeResponse({"chart": {"result": None, "error": {"description": "unknown symbol"}}}, 404)
+        value, variation = self.values[symbol]
+        return FakeResponse({
+            "chart": {
+                "result": [{"meta": {
+                    "regularMarketPrice": value,
+                    "regularMarketChangePercent": variation,
+                }}],
+                "error": None,
+            },
+        })
+
+
+class InvalidYahooIndexesClient(YahooIndexesClient):
+    async def get(self, url, **kwargs):
+        response = await super().get(url, **kwargs)
+        if "%5EMERV" in url:
+            response._payload["chart"]["result"][0]["meta"].pop("regularMarketChangePercent")
+        return response
+
+
+class ZeroYahooIndexesClient(YahooIndexesClient):
+    values = {**YahooIndexesClient.values, "%5EGSPC": (0, 0)}
 
 
 class ApiReliabilityTests(unittest.TestCase):
@@ -59,6 +95,8 @@ class ApiReliabilityTests(unittest.TestCase):
             markets._cache_exchange,
             markets._cache_cotacao,
             markets._cache_indexes,
+            markets._cache_argentina_indexes,
+            markets._cache_usa_indexes,
             news._cache_news,
         ):
             cache["data"] = None
@@ -150,6 +188,67 @@ class ApiReliabilityTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
+
+    def test_argentina_returns_real_provider_value_without_hardcoded_burcap(self):
+        with patch("routers.markets.get_client", return_value=YahooIndexesClient()):
+            response = self.client.get("/api/indexes/argentina")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["MERVAL"]["valor"], "2345678.9")
+        self.assertNotIn("BURCAP", response.json())
+        self.assertNotIn("1250000", response.text)
+        self.assertNotIn("850000", response.text)
+
+    def test_usa_returns_real_provider_values(self):
+        with patch("routers.markets.get_client", return_value=YahooIndexesClient()):
+            response = self.client.get("/api/indexes/usa")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["SP500"]["valor"], "6123.45")
+        self.assertEqual(response.json()["DOW"]["valor"], "42123.67")
+        self.assertEqual(response.json()["NASDAQ"]["valor"], "19876.54")
+        for old_value in ("5000.00", "38000.00", "16000.00"):
+            self.assertNotIn(old_value, response.text)
+
+    def test_index_provider_failure_without_cache_returns_503(self):
+        with patch("routers.markets.get_client", return_value=FailingClient()):
+            argentina = self.client.get("/api/indexes/argentina")
+            usa = self.client.get("/api/indexes/usa")
+
+        self.assertEqual(argentina.status_code, 503)
+        self.assertEqual(usa.status_code, 503)
+
+    def test_index_provider_failure_preserves_stale_cache(self):
+        cached = {
+            "MERVAL": {
+                "name": "MERVAL", "label": "S&P Merval", "valor": "2222222",
+                "var": "0.5", "description": "Fonte: Yahoo Finance",
+            },
+        }
+        markets._cache_argentina_indexes["data"] = cached
+        markets._cache_argentina_indexes["timestamp"] = datetime.now() - timedelta(hours=2)
+
+        with patch("routers.markets.get_client", return_value=FailingClient()):
+            response = self.client.get("/api/indexes/argentina")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["X-Data-Stale"], "true")
+        self.assertEqual(response.json(), cached)
+
+    def test_invalid_index_payload_is_not_accepted(self):
+        with patch("routers.markets.get_client", return_value=InvalidYahooIndexesClient()):
+            response = self.client.get("/api/indexes/argentina")
+
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("MERVAL", response.text)
+
+    def test_legitimate_zero_from_index_provider_is_valid(self):
+        with patch("routers.markets.get_client", return_value=ZeroYahooIndexesClient()):
+            response = self.client.get("/api/indexes/usa")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["SP500"]["valor"], "0")
+        self.assertEqual(response.json()["SP500"]["var"], "0")
 
 
 if __name__ == "__main__":

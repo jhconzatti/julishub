@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUp, ArrowDown, BarChart3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ArgentinaIndex {
   name: string;
@@ -25,6 +26,8 @@ const VariationBadge = ({ value }: { value: string }) => {
 };
 
 export default function MarketArgentina({ indexes }: MarketArgentinaProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       <div className="bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 rounded-lg p-4">
@@ -62,6 +65,18 @@ export default function MarketArgentina({ indexes }: MarketArgentinaProps) {
             </CardContent>
           </Card>
         ))}
+        <Card className="border-dashed">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">BURCAP</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-muted-foreground">—</div>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">
+              {t("dataStates.unavailable")}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

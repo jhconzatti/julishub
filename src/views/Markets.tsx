@@ -32,7 +32,7 @@ const getApiUrl = () => {
 
 const API_BASE_URL = getApiUrl();
 const BRAZIL_KEYS = ["IBOVESPA", "IFIX"] as const;
-const ARGENTINA_KEYS = ["MERVAL", "BURCAP"] as const;
+const ARGENTINA_KEYS = ["MERVAL"] as const;
 const USA_KEYS = ["SP500", "DOW", "NASDAQ"] as const;
 
 type TabKey = "exchange" | "brazil" | "argentina" | "usa";
