@@ -78,6 +78,10 @@ export default function ExchangeCalculator() {
   const [isStale, setIsStale] = useState(false);
   const [staleTimestamp, setStaleTimestamp] = useState<number | null>(null);
   const { t } = useTranslation();
+  const warningItemsValue = t("calculators.warning_items", { returnObjects: true });
+  const warningItems = Array.isArray(warningItemsValue)
+    ? warningItemsValue.filter((item): item is string => typeof item === "string")
+    : [];
 
   const fetchExchangeRates = useCallback(async (forceRefresh = false) => {
     setRatesLoading(true);
@@ -139,9 +143,7 @@ export default function ExchangeCalculator() {
         <AlertDescription className="text-yellow-800 dark:text-yellow-200">
           <strong>{t('calculators.warning_title')}</strong>
           <ul className="list-disc ml-5 mt-2 text-sm">
-            {(Array.isArray(t('calculators.warning_items', { returnObjects: true }))
-              ? t('calculators.warning_items', { returnObjects: true })
-              : []).map((item: string, idx: number) => (
+            {warningItems.map((item, idx) => (
               <li key={idx}>{item}</li>
             ))}
           </ul>

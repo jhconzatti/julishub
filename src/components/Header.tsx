@@ -1,7 +1,7 @@
 import Navigation from "./Navigation"; 
 import MobileNav from "./MobileNav";
 import { LanguageToggle } from "./LanguageToggle";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/theme-context";
 import { Moon, Sun, Wallet, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";

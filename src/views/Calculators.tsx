@@ -52,6 +52,44 @@ interface FormSalary {
   outros_descontos: number;
 }
 
+interface InvestmentPoint {
+  mes: number;
+  ano: number;
+  investido: number;
+  juros: number;
+  total: number;
+}
+
+interface InvestmentResult {
+  grafico: InvestmentPoint[];
+  resumo: {
+    total_investido: number;
+    total_juros: number;
+    total_final: number;
+  };
+}
+
+interface LoanResult {
+  valor_prestacao: number;
+  total_pago: number;
+  total_juros: number;
+  resumo_texto: string;
+}
+
+interface SalaryResult {
+  salario_bruto: number;
+  inss: number;
+  irrf: number;
+  outros_descontos: number;
+  salario_liquido: number;
+  total_descontos: number;
+}
+
+interface ComparisonResult extends InvestmentResult {
+  nome: string;
+  cor: string;
+}
+
 // --- CHAVES DO LOCALSTORAGE ---
 const STORAGE_KEYS = {
   INVEST: 'julishub_form_invest',
@@ -66,7 +104,7 @@ interface HistoryItem {
   id: string;
   timestamp: number;
   form: FormInvest;
-  resultado: any;
+  resultado: InvestmentResult;
   nome?: string;
 }
 
@@ -125,21 +163,21 @@ export default function Calculators() {
   const [formInvest, setFormInvest] = useState<FormInvest>(() =>
     loadFromStorage(STORAGE_KEYS.INVEST, DEFAULT_FORM_INVEST)
   );
-  const [resultadoInvest, setResultadoInvest] = useState<any>(null);
+  const [resultadoInvest, setResultadoInvest] = useState<InvestmentResult | null>(null);
   const [loadingInvest, setLoadingInvest] = useState(false);
 
   // --- ESTADOS: FINANCIAMENTO ---
   const [formLoan, setFormLoan] = useState<FormLoan>(() =>
     loadFromStorage(STORAGE_KEYS.LOAN, DEFAULT_FORM_LOAN)
   );
-  const [resultadoLoan, setResultadoLoan] = useState<any>(null);
+  const [resultadoLoan, setResultadoLoan] = useState<LoanResult | null>(null);
   const [loadingLoan, setLoadingLoan] = useState(false);
 
   // --- ESTADOS: SALÁRIO LÍQUIDO ---
   const [formSalary, setFormSalary] = useState<FormSalary>(() =>
     loadFromStorage(STORAGE_KEYS.SALARY, DEFAULT_FORM_SALARY)
   );
-  const [resultadoSalary, setResultadoSalary] = useState<any>(null);
+  const [resultadoSalary, setResultadoSalary] = useState<SalaryResult | null>(null);
   const [loadingSalary, setLoadingSalary] = useState(false);
 
   // --- ESTADOS: HISTÓRICO E COMPARAÇÃO ---
@@ -149,7 +187,7 @@ export default function Calculators() {
   const [cenarios, setCenarios] = useState<CompareScenario[]>(() =>
     loadFromStorage(STORAGE_KEYS.COMPARE_SCENARIOS, [])
   );
-  const [comparacaoResultados, setComparacaoResultados] = useState<any[]>([]);
+  const [comparacaoResultados, setComparacaoResultados] = useState<ComparisonResult[]>([]);
   const [loadingComparacao, setLoadingComparacao] = useState(false);
 
   // --- EFEITOS DE PERSISTÊNCIA ---
@@ -199,7 +237,7 @@ export default function Calculators() {
       if (!response.ok) {
         throw new Error(`Erro API: ${response.status}`);
       }
-      const data = await response.json();
+      const data = (await response.json()) as InvestmentResult;
       setResultadoInvest(data);
       
       // Salvar no histórico
@@ -215,7 +253,7 @@ export default function Calculators() {
   };
 
   // --- FUNÇÕES DE HISTÓRICO ---
-  const salvarNoHistorico = (form: FormInvest, resultado: any) => {
+  const salvarNoHistorico = (form: FormInvest, resultado: InvestmentResult) => {
     const novoItem: HistoryItem = {
       id: Date.now().toString(),
       timestamp: Date.now(),
@@ -272,7 +310,7 @@ export default function Calculators() {
     }
 
     setLoadingComparacao(true);
-    const resultados: any[] = [];
+    const resultados: ComparisonResult[] = [];
 
     try {
       for (const cenario of cenarios) {
@@ -282,7 +320,7 @@ export default function Calculators() {
           body: JSON.stringify(cenario.form),
         });
         if (response.ok) {
-          const data = await response.json();
+          const data = (await response.json()) as InvestmentResult;
           resultados.push({ ...data, nome: cenario.nome, cor: cenario.cor });
         }
       }
@@ -308,7 +346,7 @@ export default function Calculators() {
       if (!response.ok) {
         throw new Error(`Erro API: ${response.status}`);
       }
-      const data = await response.json();
+      const data = (await response.json()) as LoanResult;
       setResultadoLoan(data);
       toast.success("Financiamento calculado com sucesso!");
     } catch (error) {
@@ -332,7 +370,7 @@ export default function Calculators() {
       if (!response.ok) {
         throw new Error(`Erro API: ${response.status}`);
       }
-      const data = await response.json();
+      const data = (await response.json()) as SalaryResult;
       setResultadoSalary(data);
       toast.success("Salário calculado com sucesso!");
     } catch (error) {

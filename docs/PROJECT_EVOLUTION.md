@@ -14,7 +14,7 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 0D implementada localmente, com validação de produção pendente. A calculadora de salário líquido usa as faixas progressivas de INSS e as regras mensais de IRRF vigentes desde janeiro de 2026, incluindo a escolha da dedução mais vantajosa e a redução prevista pela Lei 15.270/2025.
+Sprint 0E concluída localmente. O baseline estático está saudável: ESLint sem erros ou warnings, TypeScript sem erros e build aprovado. As correções preservaram o comportamento funcional e os 27 testes continuam aprovados.
 
 ## Known Issues
 
@@ -26,7 +26,7 @@ Sprint 0D implementada localmente, com validação de produção pendente. A cal
 | JH-004 | P1 | Production | Primeiras chamadas ao backend de produção excederam 30 s; após aquecimento, responderam em menos de 1,1 s. | Frontend limitado a 20 s por tentativa e uma segunda tentativa transitória; cold start da hospedagem não foi alterado. | Partially resolved — post-deploy validation pending |
 | JH-005 | P1 | API/Integration | Não há retries; o RSS não possui timeout explícito e há caminhos sequenciais de provider/fallback que acumulam latência. | Retry do cliente limitado a uma tentativa adicional; RSS usa timeout de conexão/leitura; fallback real sequencial foi preservado. | Resolved locally — production validation pending |
 | JH-006 | P2 | Error Handling | Estados de erro/indisponibilidade são inconsistentes; algumas telas convertem falha em vazio, zero ou apenas console. | Markets, Indicators, News e ExchangeCalculator agora distinguem loading, stale e indisponibilidade; Blog não pertenceu ao escopo da Sprint 0B. | Partially resolved |
-| JH-007 | P2 | Technical Debt | Baseline estático falha: ESLint reporta 22 erros/9 warnings e TypeScript reporta 2 erros. | Execuções da Sprint 0A. | Open |
+| JH-007 | P2 | Technical Debt | Baseline estático falhava com erros e warnings de ESLint e dois erros TypeScript. | Sprint 0E: ESLint 0 erros/0 warnings, TypeScript 0 erros e build aprovado. | Resolved |
 | JH-008 | P2 | Reliability | Não existe uma suíte automatizada abrangente para o produto. | Há 27 testes backend focados em confiabilidade, mercados e salário CLT; cobertura ampla de frontend e dos demais domínios continua pendente. | Open |
 | JH-009 | P2 | Documentation | README e documentos históricos divergem do código/deploy atual e contêm conteúdo duplicado ou truncado. | README descreve backend Vercel, mock inexistente e timeouts divergentes; produção usa Render. | Open |
 | JH-010 | P2 | Performance | Bundle principal excede o limite de aviso do Vite. | JS minificado de 1.121,55 kB (330,27 kB gzip). | Open |
@@ -40,8 +40,8 @@ Sprint 0D implementada localmente, com validação de produção pendente. A cal
 
 - Node esperado: não definido no repositório; ambiente auditado: Node 24.11.0 e npm 11.6.1.
 - Lockfiles presentes: npm e Bun; scripts: `dev`, `build`, `build:dev`, `lint`, `preview`, `backend:start` e `start`.
-- ESLint após Sprint 0B: 14 erros e 8 warnings; nenhuma falha nova nos arquivos tocados.
-- TypeScript (`tsc -b`): 2 erros.
+- ESLint após Sprint 0E: 0 erros e 0 warnings.
+- TypeScript (`tsc -b`) após Sprint 0E: 0 erros.
 
 ### Backend
 
@@ -141,10 +141,24 @@ Casos de referência ajustados às faixas oficiais de INSS 2026:
 - R$ 5.000,00: INSS R$ 501,51; IRRF R$ 0,00; líquido R$ 4.498,49;
 - R$ 6.000,00: INSS R$ 641,51; IRRF R$ 385,10; líquido R$ 4.973,39.
 
+### Sprint 0E — Static Quality Baseline
+
+Status:
+Concluída localmente.
+
+Entregas:
+- ESLint reduzido de 14 erros/8 warnings para 0/0;
+- TypeScript reduzido de 2 erros para 0;
+- tipos explícitos nos resultados das calculadoras e artigos relacionados;
+- renderização de Markdown adaptada ao contrato atual do `react-markdown`;
+- exports não-componentes separados dos arquivos React necessários ao Fast Refresh;
+- configuração Tailwind convertida para imports tipados;
+- build e 27 testes aprovados.
+
 ## Roadmap
 
 1. Post-deploy Reliability Validation — JH-001, JH-004 e JH-005.
-2. Quality Baseline & Tests — JH-007 e JH-008.
+2. Quality Baseline & Tests — JH-008.
 3. Documentation & Repository Hygiene — JH-009 e JH-011.
 4. Performance & UX Cleanup — JH-006 e JH-010.
 5. Visual Polish & Portfolio Readiness — JH-012.

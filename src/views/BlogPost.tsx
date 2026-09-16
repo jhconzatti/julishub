@@ -21,6 +21,10 @@ interface Artigo {
   imagem_capa: string;
 }
 
+type ArtigoRelacionado = Artigo & {
+  tagsEmComum: number;
+};
+
 const getApiUrl = () => {
   const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
   const baseUrl = url.replace(/\/$/, ""); // Remove trailing slash
@@ -52,12 +56,12 @@ export default function BlogPost() {
       // Busca o artigo completo
       const response = await fetch(`${API_BASE_URL}/blog/${slug}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
+      const data = (await response.json()) as Artigo;
       setArtigo(data);
 
       // Busca todos os artigos para calcular relacionados
       const allResponse = await fetch(`${API_BASE_URL}/blog`);
-      const allArtigos = await allResponse.json();
+      const allArtigos = (await allResponse.json()) as Artigo[];
       
       // Filtra artigos relacionados por tags em comum
       const relacionados = allArtigos
@@ -66,8 +70,8 @@ export default function BlogPost() {
           ...a,
           tagsEmComum: a.tags.filter(tag => data.tags.includes(tag)).length
         }))
-        .filter((a: any) => a.tagsEmComum > 0) // Apenas com tags em comum
-        .sort((a: any, b: any) => b.tagsEmComum - a.tagsEmComum) // Ordena por relevância
+        .filter((a: ArtigoRelacionado) => a.tagsEmComum > 0) // Apenas com tags em comum
+        .sort((a: ArtigoRelacionado, b: ArtigoRelacionado) => b.tagsEmComum - a.tagsEmComum) // Ordena por relevância
         .slice(0, 2); // Pega os 2 mais relevantes
 
       setArtigosRelacionados(relacionados);
@@ -252,12 +256,9 @@ export default function BlogPost() {
               </blockquote>
             ),
             // Código inline destacado
-            code: ({node, inline, ...props}) => 
-              inline ? (
-                <code {...props} className="inline-code" />
-              ) : (
-                <code {...props} />
-              ),
+            code: ({className, ...props}) => (
+              <code {...props} className={className ?? "inline-code"} />
+            ),
           }}
         >
           {artigo.conteudo}
