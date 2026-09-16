@@ -14,7 +14,7 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 0G concluída localmente. As views de Markets, Calculators, Indicators, News, Blog e Privacy são carregadas sob demanda por rota; o entry JavaScript caiu de 1.124,48 kB para 450,95 kB minificados.
+Sprint 0H concluída localmente. A identidade técnica e os metadados públicos usam JulisHub, favicon local e descrições factuais; a fase Sprint 0 está encerrada com validação pós-deploy ainda pendente.
 
 ## Known Issues
 
@@ -31,7 +31,7 @@ Sprint 0G concluída localmente. As views de Markets, Calculators, Indicators, N
 | JH-009 | P2 | Documentation | README e documentos históricos divergiam do código/deploy atual e continham conteúdo duplicado ou truncado. | README reestruturado com arquitetura React/Vercel + FastAPI/Render, providers atuais, execução local, qualidade e política de confiabilidade. | Resolved |
 | JH-010 | P2 | Performance | Bundle principal excedia o limite de aviso do Vite e carregava antecipadamente views independentes. | Lazy loading por rota reduziu o entry de 1.124,48 kB (331,52 kB gzip) para 450,95 kB (142,74 kB gzip); o aviso de chunk acima de 500 kB deixou de ocorrer. | Resolved |
 | JH-011 | P3 | Repository Hygiene | Havia backup e artefatos legados sem uso, além de dois lockfiles. | `MarketsOld.tsx.bak`, `marketService.ts`, `MarketCard.tsx` e `bun.lockb` removidos após busca sem referências; `package-lock.json` preservado para npm. | Resolved |
-| JH-012 | P3 | Portfolio Readiness | Metadados residuais referenciam `@FinHubPro` e ativos hospedados em `gpt-engineer-file-uploads`; nome do pacote ainda é genérico. | `index.html` e `package.json`. | Open |
+| JH-012 | P3 | Portfolio Readiness | A identidade técnica, o favicon e os metadados públicos continham referências herdadas. | Package identificado como `julishub`; favicon local; title, description, Open Graph e Twitter alinhados ao produto, sem ativos sociais externos residuais. | Resolved |
 | JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
 
 ## Technical Baseline
@@ -87,6 +87,7 @@ Sprint 0G concluída localmente. As views de Markets, Calculators, Indicators, N
 - A redução mensal de IRRF segue a Lei 15.270/2025 e utiliza o salário bruto para definir e calcular a redução.
 - npm é o package manager oficial; backups de código pertencem ao histórico do Git, não à árvore versionada.
 - Views não essenciais à Home são carregadas sob demanda por rota, mantendo a Home no entry inicial.
+- A identidade técnica do package é `julishub`; sem imagem raster local adequada, os metadados sociais não declaram imagem.
 
 ## Sprint History
 
@@ -182,13 +183,50 @@ Entregas:
 - geração de chunks independentes por área, sem `manualChunks` e sem novas dependências;
 - remoção do aviso de chunk acima de 500 kB no build.
 
+### Sprint 0H — Product Identity & Portfolio Readiness
+
+Status:
+Concluída localmente.
+
+Entregas:
+- package renomeado para `julishub`, com lockfile raiz consistente;
+- favicon local configurado;
+- metadados base, Open Graph e Twitter alinhados à identidade atual;
+- remoção de handles e ativos externos herdados;
+- fallback estático de idioma ajustado para `pt-BR`, preservando a atualização dinâmica por rota.
+
+## Sprint 0 Closure
+
+Status:
+Technical & Product Health Assessment completed.
+
+Baseline:
+- ESLint: 0 errors / 0 warnings
+- TypeScript: 0 errors
+- Build: passing
+- Tests: 27+ passing
+
+Completed areas:
+- reliability;
+- data correctness;
+- static quality;
+- documentation;
+- repository hygiene;
+- frontend performance;
+- product metadata and identity.
+
+Operational validation pending:
+- post-deploy smoke for reliability/data changes from Sprints 0B–0D.
+
+Next phase:
+Sprint 1 — UX & Visual Assessment.
+
 ## Roadmap
 
 1. Post-deploy Reliability Validation — JH-001, JH-004 e JH-005.
 2. Quality Baseline & Tests — JH-008.
 3. UX Cleanup — JH-006.
-4. Visual Polish & Portfolio Readiness — JH-012.
 
-## Next Sprint
+## Next Phase
 
-**Post-deploy Reliability Validation:** validar em produção as entregas locais das Sprints 0B, 0C e 0D antes de avançar para melhorias de qualidade e manutenção.
+**Sprint 1 — UX & Visual Assessment.**
