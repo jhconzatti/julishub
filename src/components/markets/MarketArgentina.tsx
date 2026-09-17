@@ -30,11 +30,11 @@ export default function MarketArgentina({ indexes }: MarketArgentinaProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 mb-2">
+      <div className="rounded-xl border border-border/70 border-l-4 border-l-sky-500 bg-muted/30 p-4">
+        <h3 className="mb-1.5 text-lg font-semibold text-foreground">
           Mercado Argentino - BYMA
         </h3>
-        <p className="text-sm text-sky-700 dark:text-sky-300">
+        <p className="text-sm text-muted-foreground">
           Principais índices da Bolsa de Valores de Buenos Aires (BYMA - Bolsas y Mercados Argentinos)
         </p>
       </div>
@@ -43,9 +43,9 @@ export default function MarketArgentina({ indexes }: MarketArgentinaProps) {
         {indexes.map((index) => (
           <Card 
             key={index.name}
-            className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-sky-500/50"
+            className="border-border/70 bg-card transition-shadow duration-200 hover:shadow-md"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {index.label}
               </CardTitle>
@@ -65,8 +65,8 @@ export default function MarketArgentina({ indexes }: MarketArgentinaProps) {
             </CardContent>
           </Card>
         ))}
-        <Card className="border-dashed">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="border-border/70 border-dashed bg-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">BURCAP</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>

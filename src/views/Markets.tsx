@@ -87,7 +87,7 @@ function TabSkeleton({ count }: { count: number }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="h-32 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+        <div key={index} className="h-32 animate-pulse rounded-xl bg-muted" />
       ))}
     </div>
   );
@@ -218,7 +218,7 @@ export default function Markets() {
           disabled={isRefreshing}
           aria-label={t("dataStates.refresh")}
           aria-busy={isRefreshing}
-          className="rounded-full p-2 transition-all hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
+          className="rounded-full p-2 transition-all hover:bg-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           title={t("dataStates.refresh")}
         >
           <RefreshCw className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`} />

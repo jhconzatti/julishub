@@ -399,8 +399,8 @@ export default function Calculators() {
         {/* --- ABA DE INVESTIMENTOS --- */}
         <TabsContent value="investimento" className="space-y-4">
           <div className="grid gap-6 lg:grid-cols-3 mt-4">
-            <Card className="lg:col-span-1 h-fit">
-              <CardHeader>
+            <Card className="h-fit border-border/70 bg-card lg:col-span-1">
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-green-600" /> {t('calculators.compoundInterest')}
                 </CardTitle>
@@ -640,8 +640,8 @@ export default function Calculators() {
         {/* --- ABA DE FINANCIAMENTOS --- */}
         <TabsContent value="financiamento" className="space-y-4">
           <div className="grid gap-6 lg:grid-cols-3 mt-4">
-            <Card className="lg:col-span-1 h-fit">
-              <CardHeader>
+            <Card className="h-fit border-border/70 bg-card lg:col-span-1">
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Landmark className="w-5 h-5 text-red-500" /> {t('calculators.financing')}
                 </CardTitle>
@@ -703,8 +703,8 @@ export default function Calculators() {
         {/* --- ABA DE SALÁRIO LÍQUIDO (NOVA) --- */}
         <TabsContent value="salario" className="space-y-4">
           <div className="grid gap-6 lg:grid-cols-3 mt-4">
-            <Card className="lg:col-span-1 h-fit">
-              <CardHeader>
+            <Card className="h-fit border-border/70 bg-card lg:col-span-1">
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Wallet className="w-5 h-5 text-blue-500" /> {t('calculators.netSalary')}
                 </CardTitle>

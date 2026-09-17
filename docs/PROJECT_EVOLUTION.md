@@ -245,7 +245,7 @@ New findings:
 | JH-016 | P1 | Data Trust / Content | Afirmações de dados “em tempo real”, “oficiais” e “100%” são absolutas e entram em conflito com cache, providers externos e estados stale/indisponível. | Resolved locally — Sprint 1B removed scoped absolute claims and the Home quality statistic |
 | JH-017 | P1 | Content | Indicadores, conversor de câmbio e partes do blog/post têm texto fixo em português ou inglês, produzindo experiência híbrida em en/es. | Resolved locally — Sprint 1B localized scoped interface copy in pt-BR, en and es |
 | JH-018 | P2 | Data Trust | Origem, atualização e natureza derivada/estimada dos dados são comunicadas de formas diferentes entre mercados, indicadores, notícias e conversor. | Resolved locally — Sprint 1C applies shared current/stale/external-unavailable trust messaging to scoped data screens |
-| JH-019 | P2 | Visual System | Cards, cores semânticas, superfícies e tratamento de estados variam por tela em vez de derivarem de padrões compartilhados. | Open |
+| JH-019 | P2 | Visual System | Cards, cores semânticas, superfícies e tratamento de estados variam por tela em vez de derivarem de padrões compartilhados. | Resolved locally — Sprint 1E aligns primary workspace surfaces, spacing and restrained semantic accents |
 | JH-020 | P2 | Navigation / Responsive | Header desktop fica denso em larguras intermediárias; a troca para menu mobile acontece tarde para seis destinos, três idiomas e tema. | Resolved locally — Sprint 1D transitions to the existing mobile sheet before the desktop navigation becomes cramped |
 | JH-021 | P2 | Calculators / Responsive | As quatro abas de calculadoras ficam apertadas em 360 px e a hierarquia entre formulário, resultado e gráfico não é padronizada entre ferramentas. | Open |
 | JH-022 | P2 | Feedback States | Skeletons, aviso de lentidão, refresh e estados vazios existem, mas a ação de refresh depende de ícone/tooltip e o estado persistente de atualização não é consistente. | Resolved locally — Sprint 1C unifies freshness/degraded messaging and adds refresh accessible names |
@@ -304,3 +304,15 @@ Entregas:
 - grade de cinco cards ajustada para três colunas com segunda linha centralizada e anatomia de CTA alinhada;
 - navegação desktop passa a usar o menu lateral existente antes de larguras intermediárias ficarem comprimidas;
 - idiomas, tema, rotas e estado ativo foram preservados; não houve alteração de telas financeiras, APIs ou backend.
+
+### Sprint 1E — Shared Visual-System Consistency
+
+Status:
+Concluída localmente.
+
+Entregas:
+- baseline de workspaces: cabeçalhos existentes, superfícies `bg-card`, bordas neutras, ritmo de `CardHeader`/conteúdo e hover discreto;
+- Markets, Indicators, News, superfícies externas das Calculators e Exchange Calculator alinhados sem alterar dados, cálculos, estruturas de abas ou estados de confiança;
+- gradientes decorativos e superfícies regionais fortes reduzidos a cartões neutros com acentos contidos; variações positivas/negativas, alertas e distinções editoriais foram preservados;
+- `DataFreshness`, estados stale/indisponível/lento e comportamento de retry permanecem semanticamente inalterados;
+- a reestruturação responsiva e de hierarquia das Calculators continua em JH-021.

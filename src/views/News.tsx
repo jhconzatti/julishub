@@ -81,8 +81,8 @@ export default function News() {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Newspaper className="h-8 w-8" />
+          <h2 className="flex items-center gap-2 text-3xl font-bold tracking-tight">
+            <Newspaper className="h-7 w-7" />
             {t('news.title') || "Notícias Financeiras"}
           </h2>
           <p className="text-muted-foreground">
@@ -94,7 +94,7 @@ export default function News() {
           disabled={isRefreshing}
           aria-label={t('news.refresh')}
           aria-busy={isRefreshing}
-          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-full p-2 transition-all hover:bg-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           title={t('news.refresh') || "Atualizar notícias (disponível a cada 5 minutos)"}
         >
           <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -108,11 +108,11 @@ export default function News() {
           <SlowLoadingNotice loading />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
-              <Card key={i} className="overflow-hidden">
-                <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <Card key={i} className="overflow-hidden border-border/70 bg-card">
+                <div className="h-48 animate-pulse bg-muted" />
                 <CardHeader>
-                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3" />
+                  <div className="mb-2 h-6 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
                 </CardHeader>
               </Card>
             ))}
@@ -121,7 +121,7 @@ export default function News() {
       ) : error ? (
         <DataUnavailable onRetry={() => void fetchNoticias(true)} external />
       ) : noticias.length === 0 ? (
-        <Card className="p-12 text-center">
+        <Card className="border-border/70 bg-card p-12 text-center">
           <Newspaper className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-xl font-semibold mb-2">
             {t('news.empty') || "Nenhuma notícia disponível"}
@@ -135,10 +135,10 @@ export default function News() {
           {noticias.map((noticia, index) => (
             <Card 
               key={index} 
-              className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+              className="group flex h-full cursor-pointer flex-col overflow-hidden border-border/70 bg-card transition-shadow duration-200 hover:shadow-md"
               onClick={() => handleNoticiaClick(noticia.link)}
             >
-              <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800">
+              <div className="relative h-48 overflow-hidden bg-muted">
                 <img 
                   src={noticia.imagem} 
                   alt={noticia.titulo}
@@ -152,7 +152,7 @@ export default function News() {
                 </div>
               </div>
               
-              <CardHeader className="pb-3">
+              <CardHeader className="flex-1 pb-3">
                 <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
                   {noticia.titulo}
                 </CardTitle>

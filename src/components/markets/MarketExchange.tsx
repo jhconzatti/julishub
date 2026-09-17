@@ -46,18 +46,18 @@ export default function MarketExchange({
     <div className="space-y-8">
       {Object.entries(groupedData).map(([groupName, items]) => (
         <div key={groupName} className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground/80 border-b pb-2">
+          <h3 className="border-b border-border/70 pb-2 text-lg font-semibold text-foreground">
             {groupName}
           </h3>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => (
               <Card 
                 key={item.pair}
-                className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                className="border-border/70 bg-card transition-shadow duration-200 hover:shadow-md"
               >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">{item.label}</CardTitle>
-                  <div className={`text-${item.color}`}>{item.icon}</div>
+                  <div className="text-primary">{item.icon}</div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">

@@ -67,8 +67,8 @@ const Indicators = () => {
         <SlowLoadingNotice loading />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader>
+            <Card key={i} className="border-border/70 bg-card">
+              <CardHeader className="pb-3">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-6 w-32 mt-2" />
               </CardHeader>
@@ -94,9 +94,9 @@ const Indicators = () => {
         {/* Cards dos Indicadores */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* SELIC */}
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background dark:border-blue-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+          <Card className="border-border/70 border-l-4 border-l-blue-500 bg-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
                 <Landmark className="h-5 w-5" />
                 {t('indicators.selicTitle')}
               </CardTitle>
@@ -115,9 +115,9 @@ const Indicators = () => {
           </Card>
 
           {/* IPCA */}
-          <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background dark:border-red-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
+          <Card className="border-border/70 border-l-4 border-l-red-500 bg-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
                 {t('indicators.ipcaTitle')}
               </CardTitle>
@@ -136,9 +136,9 @@ const Indicators = () => {
           </Card>
 
           {/* CDI */}
-          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background dark:border-green-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+          <Card className="border-border/70 border-l-4 border-l-green-500 bg-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
                 {t('indicators.cdiTitle')}
               </CardTitle>
@@ -154,8 +154,8 @@ const Indicators = () => {
         </div>
 
         {/* Seção Educativa */}
-        <Card>
-          <CardHeader>
+        <Card className="border-border/70 bg-card">
+          <CardHeader className="pb-3">
             <CardTitle className="text-xl">💡 {t('indicators.howItAffects')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -208,7 +208,7 @@ const Indicators = () => {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {/* Cabeçalho */}
       <div>
         <h2 className="text-3xl font-bold tracking-tight">{t('indicators.title')}</h2>

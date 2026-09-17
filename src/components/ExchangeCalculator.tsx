@@ -160,10 +160,10 @@ export default function ExchangeCalculator() {
       {!ratesLoading && !ratesError && (isStale ? <StaleDataNotice timestamp={dataTimestamp} /> : <DataFreshness timestamp={dataTimestamp} />)}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
+        <Card className="border-border/70 bg-card">
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <ArrowDownUp className="w-5 h-5 text-blue-600" />
+              <ArrowDownUp className="h-5 w-5 text-primary" />
               {t('exchangeCalculator.title')}
             </CardTitle>
             <CardDescription>
@@ -248,15 +248,15 @@ export default function ExchangeCalculator() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="border-border/70 bg-card">
+          <CardHeader className="pb-3">
             <CardTitle>{t('exchangeCalculator.resultTitle')}</CardTitle>
             <CardDescription>{t('exchangeCalculator.resultDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             {result !== null ? (
               <div className="space-y-4">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-6">
                   <div className="text-sm text-muted-foreground mb-2">
                     {fromCurrencyData?.symbol} {amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {fromCurrency}
                   </div>
@@ -266,7 +266,7 @@ export default function ExchangeCalculator() {
                   <div className="text-sm text-muted-foreground mt-2">{toCurrency}</div>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border">
+                <div className="rounded-lg border border-border/70 bg-muted/30 p-4">
                   <div className="text-sm text-muted-foreground mb-1">{t('exchangeCalculator.rateLabel')}</div>
                   {usedRate !== null ? (
                     <div className="text-lg font-semibold">
@@ -289,15 +289,15 @@ export default function ExchangeCalculator() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="border-border/70 bg-card">
+        <CardHeader className="pb-3">
           <CardTitle>{t('exchangeCalculator.referenceTableTitle')}</CardTitle>
           <CardDescription>{t('exchangeCalculator.referenceTableDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(exchangeRates ?? {}).slice(0, 6).map(([pair, data]) => (
-              <div key={pair} className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border">
+              <div key={pair} className="rounded-lg border border-border/70 bg-muted/30 p-3">
                 <div className="text-xs text-muted-foreground">{data.label}</div>
                 <div className="text-lg font-bold mt-1">
                   {parseFloat(data.valor).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}

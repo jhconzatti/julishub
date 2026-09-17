@@ -27,11 +27,11 @@ const VariationBadge = ({ value }: { value: string }) => {
 export default function MarketBrazil({ indexes }: MarketBrazilProps) {
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+      <div className="rounded-xl border border-border/70 border-l-4 border-l-blue-500 bg-muted/30 p-4">
+        <h3 className="mb-1.5 text-lg font-semibold text-foreground">
           Mercado Brasileiro - B3
         </h3>
-        <p className="text-sm text-blue-700 dark:text-blue-300">
+        <p className="text-sm text-muted-foreground">
           Principais índices e ETFs da Bolsa de Valores do Brasil (B3 - Brasil, Bolsa, Balcão)
         </p>
       </div>
@@ -40,13 +40,13 @@ export default function MarketBrazil({ indexes }: MarketBrazilProps) {
         {indexes.map((index) => (
           <Card 
             key={index.name}
-            className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-purple-500/50"
+            className="border-border/70 bg-card transition-shadow duration-200 hover:shadow-md"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {index.label}
               </CardTitle>
-              <BarChart3 className="h-4 w-4 text-purple-500" />
+              <BarChart3 className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
