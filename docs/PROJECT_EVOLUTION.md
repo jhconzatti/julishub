@@ -20,7 +20,7 @@ Sprint 0H concluída localmente. A identidade técnica e os metadados públicos 
 
 | ID | Priority | Category | Issue | Evidence | Status |
 |---|---|---|---|---|---|
-| JH-001 | P1 | Production | Falhas de providers podem virar HTTP 200 com valores zero e ser exibidas/cacheadas como dados válidos. | Fallbacks numéricos removidos; sem cache, falha total retorna 503; payloads recebem validação por contrato. | Resolved locally — production validation pending |
+| JH-001 | P1 | Production | Falhas de providers podem virar HTTP 200 com valores zero e ser exibidas/cacheadas como dados válidos. | Fallbacks numéricos removidos; sem cache, falha total retorna 503; payloads recebem validação por contrato. Esse comportamento foi validado em produção. | Validated in production for zero/503 behavior |
 | JH-002 | P1 | Product/Data Correctness | Índices de Argentina e EUA eram valores fixos, embora a interface os apresentasse no contexto de mercado em tempo real. | MERVAL (`^MERV`), S&P 500 (`^GSPC`), Dow Jones (`^DJI`) e Nasdaq Composite (`^IXIC`) usam Yahoo Finance; BURCAP fica explicitamente indisponível e nenhum hardcode permanece como fallback. | Resolved locally — production validation pending |
 | JH-003 | P1 | Product/Data Correctness | Calculadora de salário usava tabelas de INSS/IRRF explicitamente rotuladas como 2024. | INSS progressivo, teto previdenciário, deduções e redução mensal de IRRF atualizados para 2026; casos de R$ 4.000, R$ 5.000 e R$ 6.000 cobertos por testes e smoke local. | Resolved locally — production validation pending |
 | JH-004 | P1 | Production | Primeiras chamadas ao backend de produção excederam 30 s; após aquecimento, responderam em menos de 1,1 s. | Frontend limitado a 20 s por tentativa e uma segunda tentativa transitória; cold start da hospedagem não foi alterado. | Partially resolved — post-deploy validation pending |
@@ -33,6 +33,7 @@ Sprint 0H concluída localmente. A identidade técnica e os metadados públicos 
 | JH-011 | P3 | Repository Hygiene | Havia backup e artefatos legados sem uso, além de dois lockfiles. | `MarketsOld.tsx.bak`, `marketService.ts`, `MarketCard.tsx` e `bun.lockb` removidos após busca sem referências; `package-lock.json` preservado para npm. | Resolved |
 | JH-012 | P3 | Portfolio Readiness | A identidade técnica, o favicon e os metadados públicos continham referências herdadas. | Package identificado como `julishub`; favicon local; title, description, Open Graph e Twitter alinhados ao produto, sem ativos sociais externos residuais. | Resolved |
 | JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
+| JH-014 | P1 | API/Integration | Exchange rates usam contrato all-or-nothing, permitindo que uma falha de provider ou par torne todos os dados indisponíveis. | Produção validou que dados cambiais indisponíveis retornam 503 em vez de HTTP 200 com zeros; JH-001 está validada em produção para esse comportamento. Hotfix local aceita disponibilidade parcial sem fabricar dados. | Resolved locally — production validation pending |
 
 ## Technical Baseline
 

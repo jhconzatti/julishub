@@ -9,7 +9,8 @@ export interface ExchangeRate {
   label: string;
 }
 
-export type ExchangeRatesResponse = Record<string, ExchangeRate>;
+export type ExchangePair = typeof EXCHANGE_PAIRS[number];
+export type ExchangeRatesResponse = Partial<Record<ExchangePair, ExchangeRate>>;
 
 export interface MarketIndex {
   name: string;
@@ -59,7 +60,11 @@ const isExchangeRate = (value: unknown): value is ExchangeRate =>
   && isNonEmptyString(value.label);
 
 export const isExchangeRatesResponse = (value: unknown): value is ExchangeRatesResponse =>
-  isRecord(value) && EXCHANGE_PAIRS.every((pair) => isExchangeRate(value[pair]));
+  isRecord(value)
+  && Object.keys(value).length > 0
+  && Object.keys(value).every(
+    (pair) => EXCHANGE_PAIRS.includes(pair as ExchangePair) && isExchangeRate(value[pair]),
+  );
 
 const isMarketIndex = (value: unknown): value is MarketIndex =>
   isRecord(value)

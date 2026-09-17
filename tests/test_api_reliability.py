@@ -48,6 +48,28 @@ class IncompleteExchangeClient(ExchangeClient):
         return response
 
 
+class CoinGeckoUnavailableClient(ExchangeClient):
+    async def get(self, url, **_kwargs):
+        if "coingecko" in url:
+            raise httpx.TimeoutException("CoinGecko timeout")
+        return await super().get(url)
+
+
+class AwesomeUnavailableClient(ExchangeClient):
+    async def get(self, url, **_kwargs):
+        if "coingecko" not in url:
+            raise httpx.TimeoutException("AwesomeAPI timeout")
+        return await super().get(url)
+
+
+class InvalidArsExchangeClient(ExchangeClient):
+    async def get(self, url, **_kwargs):
+        response = await super().get(url)
+        if "coingecko" not in url:
+            response._payload["ARSBRL"] = {"bid": "invalid", "pctChange": "0.40"}
+        return response
+
+
 class YahooIndexesClient:
     values = {
         "%5EMERV": (2345678.9, 1.23),
@@ -143,12 +165,38 @@ class ApiReliabilityTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertNotIn('"valor":"0', response.text)
 
-    def test_incomplete_exchange_payload_is_unavailable_without_cache(self):
+    def test_coin_gecko_failure_preserves_current_fiat_rates(self):
+        with patch("routers.markets.get_client", return_value=CoinGeckoUnavailableClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertNotIn("BTC_USD", response.json())
+        self.assertNotIn("BTC_BRL", response.json())
+
+    def test_awesomeapi_failure_preserves_current_bitcoin_rates(self):
+        with patch("routers.markets.get_client", return_value=AwesomeUnavailableClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.json()), {"BTC_USD", "BTC_BRL"})
+
+    def test_incomplete_exchange_payload_returns_valid_subset(self):
         with patch("routers.markets.get_client", return_value=IncompleteExchangeClient()):
             response = self.client.get("/api/exchange-rates")
 
-        self.assertEqual(response.status_code, 503)
-        self.assertNotIn("MXN_BRL", response.text)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertIn("BTC_USD", response.json())
+        self.assertNotIn("MXN_BRL", response.json())
+
+    def test_invalid_ars_brl_omits_derived_brl_ars(self):
+        with patch("routers.markets.get_client", return_value=InvalidArsExchangeClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("ARS_BRL", response.json())
+        self.assertNotIn("BRL_ARS", response.json())
 
     def test_exchange_failure_preserves_stale_cache(self):
         cached = {

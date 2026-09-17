@@ -62,20 +62,25 @@ const initialTabStates = (): Record<TabKey, TabState> => ({
 });
 
 function buildExchangeArray(exchange: ExchangeRatesResponse): ExchangeDisplay[] {
-  return [
-    { pair: "USD_BRL", label: exchange.USD_BRL.label, valor: `R$ ${Number(exchange.USD_BRL.valor).toFixed(2)}`, var: exchange.USD_BRL.var, icon: <DollarSign className="h-4 w-4" />, color: "emerald-500", group: "Principais" },
-    { pair: "EUR_BRL", label: exchange.EUR_BRL.label, valor: `R$ ${Number(exchange.EUR_BRL.valor).toFixed(2)}`, var: exchange.EUR_BRL.var, icon: <Euro className="h-4 w-4" />, color: "blue-500", group: "Principais" },
-    { pair: "EUR_USD", label: exchange.EUR_USD.label, valor: `US$ ${Number(exchange.EUR_USD.valor).toFixed(4)}`, var: exchange.EUR_USD.var, icon: <Euro className="h-4 w-4" />, color: "indigo-500", group: "Principais" },
-    { pair: "BTC_USD", label: exchange.BTC_USD.label, valor: `US$ ${Number(exchange.BTC_USD.valor).toLocaleString("pt-BR")}`, var: exchange.BTC_USD.var, icon: <span className="font-bold">₿</span>, color: "orange-500", group: "Principais" },
-    { pair: "BTC_BRL", label: exchange.BTC_BRL.label, valor: `R$ ${Number(exchange.BTC_BRL.valor).toLocaleString("pt-BR")}`, var: exchange.BTC_BRL.var, icon: <span className="font-bold">₿</span>, color: "amber-500", group: "Principais" },
-    { pair: "USD_ARS", label: exchange.USD_ARS.label, valor: `ARS$ ${Number(exchange.USD_ARS.valor).toFixed(2)}`, var: exchange.USD_ARS.var, icon: <span>🇦🇷</span>, color: "cyan-500", group: "América do Sul" },
-    { pair: "ARS_BRL", label: exchange.ARS_BRL.label, valor: `R$ ${Number(exchange.ARS_BRL.valor).toFixed(4)}`, var: exchange.ARS_BRL.var, icon: <span>🇦🇷→🇧🇷</span>, color: "sky-500", group: "América do Sul" },
-    { pair: "BRL_ARS", label: exchange.BRL_ARS.label, valor: `ARS$ ${Number(exchange.BRL_ARS.valor).toFixed(2)}`, var: exchange.BRL_ARS.var, icon: <span>🇧🇷→🇦🇷</span>, color: "teal-500", group: "América do Sul" },
-    { pair: "USD_CLP", label: exchange.USD_CLP.label, valor: `CLP$ ${Number(exchange.USD_CLP.valor).toFixed(2)}`, var: exchange.USD_CLP.var, icon: <span>🇨🇱</span>, color: "red-500", group: "América do Sul" },
-    { pair: "CLP_BRL", label: exchange.CLP_BRL.label, valor: `R$ ${Number(exchange.CLP_BRL.valor).toFixed(4)}`, var: exchange.CLP_BRL.var, icon: <span>🇨🇱→🇧🇷</span>, color: "red-400", group: "América do Sul" },
-    { pair: "USD_MXN", label: exchange.USD_MXN.label, valor: `MXN$ ${Number(exchange.USD_MXN.valor).toFixed(2)}`, var: exchange.USD_MXN.var, icon: <span>🇲🇽</span>, color: "pink-500", group: "América Central" },
-    { pair: "MXN_BRL", label: exchange.MXN_BRL.label, valor: `R$ ${Number(exchange.MXN_BRL.valor).toFixed(4)}`, var: exchange.MXN_BRL.var, icon: <span>🇲🇽→🇧🇷</span>, color: "pink-400", group: "América Central" },
-  ];
+  const displays = [
+    ["USD_BRL", (rate: NonNullable<typeof exchange.USD_BRL>) => `R$ ${Number(rate.valor).toFixed(2)}`, <DollarSign className="h-4 w-4" />, "emerald-500", "Principais"],
+    ["EUR_BRL", (rate: NonNullable<typeof exchange.EUR_BRL>) => `R$ ${Number(rate.valor).toFixed(2)}`, <Euro className="h-4 w-4" />, "blue-500", "Principais"],
+    ["EUR_USD", (rate: NonNullable<typeof exchange.EUR_USD>) => `US$ ${Number(rate.valor).toFixed(4)}`, <Euro className="h-4 w-4" />, "indigo-500", "Principais"],
+    ["BTC_USD", (rate: NonNullable<typeof exchange.BTC_USD>) => `US$ ${Number(rate.valor).toLocaleString("pt-BR")}`, <span className="font-bold">₿</span>, "orange-500", "Principais"],
+    ["BTC_BRL", (rate: NonNullable<typeof exchange.BTC_BRL>) => `R$ ${Number(rate.valor).toLocaleString("pt-BR")}`, <span className="font-bold">₿</span>, "amber-500", "Principais"],
+    ["USD_ARS", (rate: NonNullable<typeof exchange.USD_ARS>) => `ARS$ ${Number(rate.valor).toFixed(2)}`, <span>🇦🇷</span>, "cyan-500", "América do Sul"],
+    ["ARS_BRL", (rate: NonNullable<typeof exchange.ARS_BRL>) => `R$ ${Number(rate.valor).toFixed(4)}`, <span>🇦🇷→🇧🇷</span>, "sky-500", "América do Sul"],
+    ["BRL_ARS", (rate: NonNullable<typeof exchange.BRL_ARS>) => `ARS$ ${Number(rate.valor).toFixed(2)}`, <span>🇧🇷→🇦🇷</span>, "teal-500", "América do Sul"],
+    ["USD_CLP", (rate: NonNullable<typeof exchange.USD_CLP>) => `CLP$ ${Number(rate.valor).toFixed(2)}`, <span>🇨🇱</span>, "red-500", "América do Sul"],
+    ["CLP_BRL", (rate: NonNullable<typeof exchange.CLP_BRL>) => `R$ ${Number(rate.valor).toFixed(4)}`, <span>🇨🇱→🇧🇷</span>, "red-400", "América do Sul"],
+    ["USD_MXN", (rate: NonNullable<typeof exchange.USD_MXN>) => `MXN$ ${Number(rate.valor).toFixed(2)}`, <span>🇲🇽</span>, "pink-500", "América Central"],
+    ["MXN_BRL", (rate: NonNullable<typeof exchange.MXN_BRL>) => `R$ ${Number(rate.valor).toFixed(4)}`, <span>🇲🇽→🇧🇷</span>, "pink-400", "América Central"],
+  ] as const;
+
+  return displays.flatMap(([pair, format, icon, color, group]) => {
+    const rate = exchange[pair];
+    return rate ? [{ pair, label: rate.label, valor: format(rate), var: rate.var, icon, color, group }] : [];
+  });
 }
 
 function TabSkeleton({ count }: { count: number }) {

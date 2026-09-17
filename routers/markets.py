@@ -357,72 +357,77 @@ async def get_exchange_rates(response: Response):
     awesome_url = f"https://economia.awesomeapi.com.br/last/{','.join(all_pairs)}"
     btc_url     = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl"
 
-    try:
-        # AwesomeAPI + CoinGecko em paralelo — de ~2.5s para ~800ms
-        awesome_result, btc_result = await asyncio.gather(
-            get_client().get(awesome_url),
-            get_client().get(btc_url),
-            return_exceptions=True,
-        )
+    awesome_result, btc_result = await asyncio.gather(
+        get_client().get(awesome_url),
+        get_client().get(btc_url),
+        return_exceptions=True,
+    )
 
-        if isinstance(awesome_result, Exception):
-            raise awesome_result
+    result = {}
+    awesome_pairs = {
+        "USDBRL": ("USD_BRL", "Dólar Comercial → Real"),
+        "EURBRL": ("EUR_BRL", "Euro → Real"),
+        "EURUSD": ("EUR_USD", "Euro → Dólar"),
+        "USDARS": ("USD_ARS", "Dólar → Peso Argentino"),
+        "ARSBRL": ("ARS_BRL", "Peso Argentino → Real"),
+        "USDCLP": ("USD_CLP", "Dólar → Peso Chileno"),
+        "CLPBRL": ("CLP_BRL", "Peso Chileno → Real"),
+        "USDMXN": ("USD_MXN", "Dólar → Peso Mexicano"),
+        "MXNBRL": ("MXN_BRL", "Peso Mexicano → Real"),
+    }
 
-        if awesome_result.status_code != 200:
-            raise Exception(f"AwesomeAPI status {awesome_result.status_code}")
+    if isinstance(awesome_result, Exception):
+        logger.error(f"❌ Erro ao acessar AwesomeAPI: {awesome_result}")
+    elif awesome_result.status_code != 200:
+        logger.error(f"❌ AwesomeAPI retornou status {awesome_result.status_code}")
+    else:
+        try:
+            data = awesome_result.json()
+            for source_key, (pair, label) in awesome_pairs.items():
+                payload = data.get(source_key)
+                if not isinstance(payload, dict) or not (
+                    is_numeric_value(payload.get("bid")) and is_numeric_value(payload.get("pctChange"))
+                ):
+                    logger.warning(f"⚠️ AwesomeAPI sem taxa válida para {pair}")
+                    continue
+                result[pair] = {"valor": payload["bid"], "var": payload["pctChange"], "label": label}
 
-        data = awesome_result.json()
-        if isinstance(btc_result, Exception) or btc_result.status_code != 200:
-            raise Exception("CoinGecko indisponível")
-        btc_data = btc_result.json()
+            ars_brl = result.get("ARS_BRL")
+            if ars_brl is not None and float(ars_brl["valor"]) != 0:
+                result["BRL_ARS"] = {
+                    "valor": f"{1 / float(ars_brl['valor']):.4f}",
+                    "var": f"{-float(ars_brl['var']):.2f}",
+                    "label": "Real → Peso Argentino",
+                }
+        except Exception as e:
+            logger.error(f"❌ Payload inválido da AwesomeAPI: {e}")
 
-        awesome_keys = ("USDBRL", "EURBRL", "EURUSD", "USDARS", "ARSBRL", "USDCLP", "CLPBRL", "USDMXN", "MXNBRL")
-        if not all(
-            key in data
-            and is_numeric_value(data[key].get("bid"))
-            and is_numeric_value(data[key].get("pctChange"))
-            for key in awesome_keys
-        ):
-            raise ValueError("AwesomeAPI retornou payload incompleto")
+    if isinstance(btc_result, Exception):
+        logger.error(f"❌ Erro ao acessar CoinGecko: {btc_result}")
+    elif btc_result.status_code != 200:
+        logger.error(f"❌ CoinGecko retornou status {btc_result.status_code}")
+    else:
+        try:
+            bitcoin = btc_result.json().get("bitcoin", {})
+            if is_numeric_value(bitcoin.get("usd")) and is_numeric_value(bitcoin.get("brl")):
+                result["BTC_USD"] = {"valor": str(bitcoin["usd"]), "var": None, "label": "Bitcoin → Dólar"}
+                result["BTC_BRL"] = {"valor": str(bitcoin["brl"]), "var": None, "label": "Bitcoin → Real"}
+            else:
+                logger.error("❌ CoinGecko retornou payload inválido")
+        except Exception as e:
+            logger.error(f"❌ Payload inválido do CoinGecko: {e}")
 
-        bitcoin = btc_data.get("bitcoin", {})
-        if not is_numeric_value(bitcoin.get("usd")) or not is_numeric_value(bitcoin.get("brl")):
-            raise ValueError("CoinGecko retornou payload incompleto")
-
-        ars_brl = float(data["ARSBRL"]["bid"])
-        if ars_brl == 0:
-            raise ValueError("Não é possível calcular BRL/ARS a partir de ARS/BRL igual a zero")
-        brl_ars = 1 / ars_brl
-        ars_variation = float(data["ARSBRL"]["pctChange"])
-
-        result = {
-            "USD_BRL": {"valor": data["USDBRL"]["bid"],  "var": data["USDBRL"]["pctChange"],  "label": "Dólar Comercial → Real"},
-            "EUR_BRL": {"valor": data["EURBRL"]["bid"],  "var": data["EURBRL"]["pctChange"],  "label": "Euro → Real"},
-            "EUR_USD": {"valor": data["EURUSD"]["bid"],  "var": data["EURUSD"]["pctChange"],  "label": "Euro → Dólar"},
-            "BTC_USD": {"valor": str(bitcoin["usd"]), "var": None, "label": "Bitcoin → Dólar"},
-            "BTC_BRL": {"valor": str(bitcoin["brl"]), "var": None, "label": "Bitcoin → Real"},
-            "USD_ARS": {"valor": data["USDARS"]["bid"],  "var": data["USDARS"]["pctChange"],  "label": "Dólar → Peso Argentino"},
-            "ARS_BRL": {"valor": data["ARSBRL"]["bid"],  "var": data["ARSBRL"]["pctChange"],  "label": "Peso Argentino → Real"},
-            "BRL_ARS": {"valor": f"{brl_ars:.4f}", "var": f"{-ars_variation:.2f}", "label": "Real → Peso Argentino"},
-            "USD_CLP": {"valor": data["USDCLP"]["bid"],  "var": data["USDCLP"]["pctChange"],  "label": "Dólar → Peso Chileno"},
-            "CLP_BRL": {"valor": data["CLPBRL"]["bid"],  "var": data["CLPBRL"]["pctChange"],  "label": "Peso Chileno → Real"},
-            "USD_MXN": {"valor": data["USDMXN"]["bid"],  "var": data["USDMXN"]["pctChange"],  "label": "Dólar → Peso Mexicano"},
-            "MXN_BRL": {"valor": data["MXNBRL"]["bid"],  "var": data["MXNBRL"]["pctChange"],  "label": "Peso Mexicano → Real"},
-        }
-
-        _cache_exchange["data"]      = result
+    if result:
+        _cache_exchange["data"] = result
         _cache_exchange["timestamp"] = datetime.now()
         logger.info("✅ Exchange rates obtidos com sucesso")
         return result
 
-    except Exception as e:
-        logger.error(f"❌ Erro ao buscar exchange rates: {e}")
-        # Retorna stale cache se disponível, evitando zeros desnecessários
-        if _cache_exchange["data"]:
-            logger.warning("♻️  Retornando exchange rates do cache stale")
-            set_stale_headers(response, _cache_exchange["timestamp"])
-            return _cache_exchange["data"]
-        raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
+    if _cache_exchange["data"]:
+        logger.warning("♻️  Retornando exchange rates do cache stale")
+        set_stale_headers(response, _cache_exchange["timestamp"])
+        return _cache_exchange["data"]
+    raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
 
 @router.get("/indexes/brazil")
