@@ -135,8 +135,7 @@ export default function News() {
           {noticias.map((noticia, index) => (
             <Card 
               key={index} 
-              className="group flex h-full cursor-pointer flex-col overflow-hidden border-border/70 bg-card transition-shadow duration-200 hover:shadow-md"
-              onClick={() => handleNoticiaClick(noticia.link)}
+              className="group flex h-full flex-col overflow-hidden border-border/70 bg-card transition-shadow duration-200 hover:shadow-md"
             >
               <div className="relative h-48 overflow-hidden bg-muted">
                 <img 

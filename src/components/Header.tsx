@@ -66,7 +66,8 @@ const Header = () => {
                 console.log('[DEV] API cache limpo.');
               }}
               className="rounded-full w-10 h-10 sm:w-9 sm:h-9 text-muted-foreground hover:text-destructive"
-              title="[DEV] Limpar cache da API"
+              aria-label={t("common.clearApiCache")}
+              title={t("common.clearApiCache")}
             >
               <Trash2 className="h-5 w-5" />
             </Button>

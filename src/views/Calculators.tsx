@@ -473,6 +473,8 @@ export default function Calculators() {
                                       size="sm"
                                       variant="ghost"
                                       onClick={() => removerDoHistorico(item.id)}
+                                      aria-label={t('calculators.removeSavedSimulation')}
+                                      title={t('calculators.removeSavedSimulation')}
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </Button>
@@ -542,6 +544,8 @@ export default function Calculators() {
                                     variant="ghost"
                                     className="shrink-0"
                                     onClick={() => removerCenario(cenario.id)}
+                                    aria-label={t('calculators.removeScenario')}
+                                    title={t('calculators.removeScenario')}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </Button>

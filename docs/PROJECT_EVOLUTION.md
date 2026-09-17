@@ -249,9 +249,9 @@ New findings:
 | JH-020 | P2 | Navigation / Responsive | Header desktop fica denso em larguras intermediárias; a troca para menu mobile acontece tarde para seis destinos, três idiomas e tema. | Resolved locally — Sprint 1D transitions to the existing mobile sheet before the desktop navigation becomes cramped |
 | JH-021 | P2 | Calculators / Responsive | As quatro abas de calculadoras ficam apertadas em 360 px e a hierarquia entre formulário, resultado e gráfico não é padronizada entre ferramentas. | Resolved locally — Sprint 1F adds adaptive tabs and aligns calculator workspace hierarchy |
 | JH-022 | P2 | Feedback States | Skeletons, aviso de lentidão, refresh e estados vazios existem, mas a ação de refresh depende de ícone/tooltip e o estado persistente de atualização não é consistente. | Resolved locally — Sprint 1C unifies freshness/degraded messaging and adds refresh accessible names |
-| JH-023 | P2 | Blog | Falha de carregamento de artigo pode parecer “não encontrado”; credencial de autor, leitura e compartilhamento contêm cópia fixa e/ou não localizada. | Open |
+| JH-023 | P2 | Blog | Falha de carregamento de artigo pode parecer “não encontrado”; credencial de autor, leitura e compartilhamento contêm cópia fixa e/ou não localizada. | Resolved locally — Sprint 1G distinguishes explicit 404 from temporary article failures and preserves loaded articles when related content fails |
 | JH-024 | P2 | Home | Cinco cards formam uma grade 4+1 em desktop e a segunda CTA/estatísticas reiteram a mesma promessa antes de levar o usuário ao produto. | Resolved locally — Sprint 1B removed statistics; Sprint 1D removes the duplicate CTA and balances the product-entry grid |
-| JH-025 | P3 | Accessibility | Alguns controles somente com ícone dependem de `title`; contraste de textos em superfícies coloridas e indicação de foco precisam de checagem visual compartilhada. | Open |
+| JH-025 | P3 | Accessibility | Alguns controles somente com ícone dependem de `title`; contraste de textos em superfícies coloridas e indicação de foco precisam de checagem visual compartilhada. | Resolved locally — Sprint 1G adds scoped accessible names, native article links, and focus-visible treatment |
 
 Preserve decisions:
 
@@ -327,3 +327,23 @@ Entregas:
 - fluxo consistente de formulário, ação primária, resultado dominante e detalhes secundários para investimentos, financiamento, salário e câmbio;
 - resultados e estados vazios adaptados para largura estreita; gráfico de investimentos permanece responsivo;
 - histórico, comparação, persistência local, dados do gráfico, cálculos e os estados de confiança do conversor foram preservados.
+
+### Sprint 1G — Editorial Reliability & Accessibility Polish
+
+Status:
+Concluída localmente.
+
+Entregas:
+- Blog Post diferencia 404 explícito de indisponibilidade temporária/inesperada, com retry e retorno ao Blog; a falha de relacionados não invalida o artigo principal;
+- metadados editoriais e controles fixos permanecem localizados em pt-BR, en e es; tempo de leitura é apresentado como estimativa; tags são apresentacionais;
+- cards de artigos usam links nativos com foco visível; controles somente por ícone no escopo recebem nomes acessíveis;
+- esta é uma linha de base de acessibilidade do produto, não uma certificação WCAG.
+
+### Sprint 1 — Implementation Closure
+
+Status:
+Concluída localmente, com smoke pós-deploy e responsivo/acessível ainda pendente.
+
+Resumo:
+- cópia e localização do produto, confiança/feedback de dados, hierarquia de Home/navegação, consistência visual, responsividade das calculadoras, confiabilidade editorial e linha de base de acessibilidade foram refinadas;
+- não representa conformidade integral de acessibilidade, SLA de produção ou tradução de corpos de artigos.

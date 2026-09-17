@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowLeft, Calendar, Share2, Tag, Linkedin, Twitter, Clock } from "lucide-react";
+import { AlertCircle, ArrowLeft, Calendar, Clock, Linkedin, RefreshCw, Share2, Tag, Twitter } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLang } from "@/hooks/use-lang";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Artigo {
   slug: string;
@@ -24,6 +25,8 @@ interface Artigo {
 type ArtigoRelacionado = Artigo & {
   tagsEmComum: number;
 };
+
+type ArticleState = "loading" | "loaded" | "not-found" | "unavailable";
 
 const getApiUrl = () => {
   const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -41,7 +44,7 @@ export default function BlogPost() {
   
   const [artigo, setArtigo] = useState<Artigo | null>(null);
   const [artigosRelacionados, setArtigosRelacionados] = useState<Artigo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [articleState, setArticleState] = useState<ArticleState>("loading");
 
   useEffect(() => {
     if (slug) {
@@ -51,34 +54,45 @@ export default function BlogPost() {
   }, [slug]);
 
   const fetchArtigo = async (slug: string) => {
-    setLoading(true);
+    setArticleState("loading");
+    setArtigo(null);
+    setArtigosRelacionados([]);
     try {
-      // Busca o artigo completo
       const response = await fetch(`${API_BASE_URL}/blog/${slug}`);
+      if (response.status === 404) {
+        setArticleState("not-found");
+        return;
+      }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
       const data = (await response.json()) as Artigo;
       setArtigo(data);
+      setArticleState("loaded");
 
-      // Busca todos os artigos para calcular relacionados
-      const allResponse = await fetch(`${API_BASE_URL}/blog`);
-      const allArtigos = (await allResponse.json()) as Artigo[];
-      
-      // Filtra artigos relacionados por tags em comum
-      const relacionados = allArtigos
-        .filter((a: Artigo) => a.slug !== slug) // Exclui o artigo atual
-        .map((a: Artigo) => ({
-          ...a,
-          tagsEmComum: a.tags.filter(tag => data.tags.includes(tag)).length
-        }))
-        .filter((a: ArtigoRelacionado) => a.tagsEmComum > 0) // Apenas com tags em comum
-        .sort((a: ArtigoRelacionado, b: ArtigoRelacionado) => b.tagsEmComum - a.tagsEmComum) // Ordena por relevância
-        .slice(0, 2); // Pega os 2 mais relevantes
+      try {
+        const allResponse = await fetch(`${API_BASE_URL}/blog`);
+        if (!allResponse.ok) {
+          console.warn(`Não foi possível carregar artigos relacionados: HTTP ${allResponse.status}`);
+          return;
+        }
+        const allArtigos = (await allResponse.json()) as Artigo[];
+        const relacionados = allArtigos
+          .filter((a: Artigo) => a.slug !== slug)
+          .map((a: Artigo) => ({
+            ...a,
+            tagsEmComum: a.tags.filter(tag => data.tags.includes(tag)).length,
+          }))
+          .filter((a: ArtigoRelacionado) => a.tagsEmComum > 0)
+          .sort((a: ArtigoRelacionado, b: ArtigoRelacionado) => b.tagsEmComum - a.tagsEmComum)
+          .slice(0, 2);
 
-      setArtigosRelacionados(relacionados);
+        setArtigosRelacionados(relacionados);
+      } catch (relatedError) {
+        console.warn("Não foi possível carregar artigos relacionados:", relatedError);
+      }
     } catch (error) {
-      console.error("❌ Erro ao carregar artigo:", error);
-    } finally {
-      setLoading(false);
+      console.error("Erro ao carregar artigo:", error);
+      setArticleState("unavailable");
     }
   };
 
@@ -95,30 +109,30 @@ export default function BlogPost() {
     window.open(shareUrls[platform], '_blank', 'noopener,noreferrer');
   };
 
-  if (loading) {
+  if (articleState === "loading") {
     return (
       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
         {/* Header Skeleton */}
         <div className="space-y-4">
-          <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+          <div className="h-12 animate-pulse rounded bg-muted" />
+          <div className="h-6 w-48 animate-pulse rounded bg-muted" />
         </div>
         
         {/* Image Skeleton */}
-        <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+        <div className="h-96 animate-pulse rounded-xl bg-muted" />
         
         {/* Content Skeleton */}
         <div className="space-y-3">
           {[...Array(12)].map((_, i) => (
-            <div key={i} className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div key={i} className="h-4 animate-pulse rounded bg-muted" />
           ))}
         </div>
       </div>
     );
   }
 
-  if (!artigo) {
+  if (articleState === "not-found") {
     return (
       <div className="max-w-4xl mx-auto text-center py-20">
         <h2 className="text-2xl font-bold mb-4">{t('blog.notFound')}</h2>
@@ -130,6 +144,32 @@ export default function BlogPost() {
     );
   }
 
+  if (articleState === "unavailable") {
+    return (
+      <div className="mx-auto max-w-4xl space-y-4 py-20">
+        <Alert variant="destructive" className="items-start">
+          <AlertCircle className="mt-0.5 h-4 w-4" />
+          <div className="space-y-1">
+            <h2 className="font-semibold">{t('blog.unavailableTitle')}</h2>
+            <AlertDescription>{t('blog.unavailableDescription')}</AlertDescription>
+          </div>
+        </Alert>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => slug && void fetchArtigo(slug)}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {t('blog.retry')}
+          </Button>
+          <Button variant="outline" onClick={() => navigate(lp('/blog'))}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('blog.backToList')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!artigo) return null;
+
   return (
     <article className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
       {/* Breadcrumb / Voltar */}
@@ -139,7 +179,7 @@ export default function BlogPost() {
         className="group"
       >
         <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-        {t('blog.backToList') || "Voltar para o blog"}
+        {t('blog.backToList')}
       </Button>
 
       {/* Header do Artigo */}
@@ -187,7 +227,7 @@ export default function BlogPost() {
             <Badge 
               key={index} 
               variant="secondary" 
-              className="px-3 py-1.5 hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
+              className="px-3 py-1.5"
             >
               <Tag className="h-3 w-3 mr-1.5" />
               {tag}
@@ -272,10 +312,10 @@ export default function BlogPost() {
         <div className="text-center space-y-3">
           <Share2 className="h-8 w-8 mx-auto text-primary" />
           <h3 className="text-2xl font-bold">
-            {t('blog.share.title') || "Gostou deste artigo?"}
+            {t('blog.share.title')}
           </h3>
           <p className="text-muted-foreground">
-            {t('blog.share.description') || "Compartilhe com seus amigos e ajude mais pessoas a aprenderem sobre finanças!"}
+            {t('blog.share.description')}
           </p>
         </div>
 
@@ -315,16 +355,17 @@ export default function BlogPost() {
           
           <div className="space-y-6">
             <h3 className="text-3xl font-bold text-center">
-              {t('blog.related.title') || "Você também pode gostar"}
+              {t('blog.related.title')}
             </h3>
             
             <div className="grid md:grid-cols-2 gap-6">
               {artigosRelacionados.map((relacionado) => (
-                <Card 
+                <Link
                   key={relacionado.slug}
-                  className="cursor-pointer hover:shadow-xl transition-all duration-300 group overflow-hidden"
-                  onClick={() => navigate(`/blog/${relacionado.slug}`)}
+                  to={lp(`/blog/${relacionado.slug}`)}
+                  className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
+                <Card className="overflow-hidden transition-shadow duration-300 hover:shadow-xl">
                   <div className="relative h-40 overflow-hidden">
                     <img 
                       src={relacionado.imagem_capa}
@@ -353,6 +394,7 @@ export default function BlogPost() {
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               ))}
             </div>
           </div>

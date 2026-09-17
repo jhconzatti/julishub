@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Search, BookOpen, Calendar, Tag, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLang } from "@/hooks/use-lang";
@@ -27,7 +27,6 @@ const API_BASE_URL = getApiUrl();
 
 export default function BlogList() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { lp } = useLang();
   
   const [artigos, setArtigos] = useState<Artigo[]>([]);
@@ -71,10 +70,6 @@ export default function BlogList() {
     }
   };
 
-  const handleArtigoClick = (slug: string) => {
-    navigate(lp(`/blog/${slug}`));
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       {/* Header */}
@@ -82,11 +77,11 @@ export default function BlogList() {
         <div className="flex items-center justify-center gap-3">
           <BookOpen className="h-10 w-10 text-primary" />
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            {t('blog.title') || "Blog de Educação Financeira"}
+            {t('blog.title')}
           </h1>
         </div>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-          {t('blog.subtitle') || "Aprenda a gerenciar suas finanças, investir melhor e conquistar seus objetivos financeiros"}
+          {t('blog.subtitle')}
         </p>
       </div>
 
@@ -96,7 +91,7 @@ export default function BlogList() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder={t('blog.searchPlaceholder') || "Buscar artigos por título, tags ou conteúdo..."}
+            placeholder={t('blog.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 h-12 text-base"
@@ -109,14 +104,14 @@ export default function BlogList() {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map(i => (
             <Card key={i} className="overflow-hidden">
-              <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <div className="h-48 animate-pulse bg-muted" />
               <CardHeader>
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3" />
+                <div className="mb-2 h-6 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
               </CardHeader>
               <CardContent>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+                <div className="mb-2 h-4 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
               </CardContent>
             </Card>
           ))}
@@ -125,20 +120,20 @@ export default function BlogList() {
         <Card className="p-12 text-center">
           <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-xl font-semibold mb-2">
-            {t('blog.comingSoon') || "Blog em manutenção"}
+            {t('blog.comingSoon')}
           </h3>
           <p className="text-muted-foreground">
-            {t('blog.comingSoonDescription') || "Os artigos estarão disponíveis em breve. Aguarde enquanto atualizamos nosso servidor."}
+            {t('blog.comingSoonDescription')}
           </p>
         </Card>
       ) : filteredArtigos.length === 0 ? (
         <Card className="p-12 text-center">
           <Search className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-xl font-semibold mb-2">
-            {t('blog.noResults') || "Nenhum artigo encontrado"}
+            {t('blog.noResults')}
           </h3>
           <p className="text-muted-foreground">
-            {t('blog.noResultsDescription') || "Tente buscar por outros termos ou limpe a busca para ver todos os artigos."}
+            {t('blog.noResultsDescription')}
           </p>
           {searchTerm && (
             <Button 
@@ -146,18 +141,19 @@ export default function BlogList() {
               onClick={() => setSearchTerm("")}
               className="mt-4"
             >
-              Limpar busca
+              {t('blog.clearSearch')}
             </Button>
           )}
         </Card>
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {filteredArtigos.map((artigo) => (
-            <Card 
+            <Link
               key={artigo.slug}
-              className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col"
-              onClick={() => handleArtigoClick(artigo.slug)}
+              to={lp(`/blog/${artigo.slug}`)}
+              className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
+            <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl">
               {/* Imagem de Capa */}
               <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-blue-500/20">
                 <img 
@@ -203,19 +199,13 @@ export default function BlogList() {
                 </div>
 
                 {/* Botão Ler Mais */}
-                <Button 
-                  variant="ghost" 
-                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleArtigoClick(artigo.slug);
-                  }}
-                >
-                  {t('blog.readMore') || "Ler artigo completo"}
+                <span className="flex h-9 w-full items-center justify-center rounded-md px-3 text-sm font-medium transition-all group-hover:bg-primary group-hover:text-primary-foreground">
+                  {t('blog.readMore')}
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                </span>
               </CardContent>
             </Card>
+            </Link>
           ))}
         </div>
       )}
@@ -223,7 +213,7 @@ export default function BlogList() {
       {/* Footer da Lista */}
       {!loading && filteredArtigos.length > 0 && (
         <div className="text-center text-sm text-muted-foreground pt-8">
-          {t('blog.showing') || "Mostrando"} {filteredArtigos.length} {filteredArtigos.length === 1 ? 'artigo' : 'artigos'}
+          {t('blog.showingCount', { count: filteredArtigos.length })}
         </div>
       )}
     </div>
