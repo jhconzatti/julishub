@@ -232,3 +232,38 @@ Sprint 1 — UX & Visual Assessment.
 ## Next Phase
 
 **Sprint 1 — UX & Visual Assessment.**
+
+## Sprint 1A — UX & Visual Assessment
+
+Status:
+Concluída — avaliação da experiência renderizada em desktop e mobile, nos idiomas pt-BR, en e es; nenhum código de produto foi alterado.
+
+New findings:
+
+| ID | Priority | Category | Finding | Status |
+|---|---|---|---|---|
+| JH-016 | P1 | Data Trust / Content | Afirmações de dados “em tempo real”, “oficiais” e “100%” são absolutas e entram em conflito com cache, providers externos e estados stale/indisponível. | Open |
+| JH-017 | P1 | Content | Indicadores, conversor de câmbio e partes do blog/post têm texto fixo em português ou inglês, produzindo experiência híbrida em en/es. | Open |
+| JH-018 | P2 | Data Trust | Origem, atualização e natureza derivada/estimada dos dados são comunicadas de formas diferentes entre mercados, indicadores, notícias e conversor. | Open |
+| JH-019 | P2 | Visual System | Cards, cores semânticas, superfícies e tratamento de estados variam por tela em vez de derivarem de padrões compartilhados. | Open |
+| JH-020 | P2 | Navigation / Responsive | Header desktop fica denso em larguras intermediárias; a troca para menu mobile acontece tarde para seis destinos, três idiomas e tema. | Open |
+| JH-021 | P2 | Calculators / Responsive | As quatro abas de calculadoras ficam apertadas em 360 px e a hierarquia entre formulário, resultado e gráfico não é padronizada entre ferramentas. | Open |
+| JH-022 | P2 | Feedback States | Skeletons, aviso de lentidão, refresh e estados vazios existem, mas a ação de refresh depende de ícone/tooltip e o estado persistente de atualização não é consistente. | Open |
+| JH-023 | P2 | Blog | Falha de carregamento de artigo pode parecer “não encontrado”; credencial de autor, leitura e compartilhamento contêm cópia fixa e/ou não localizada. | Open |
+| JH-024 | P2 | Home | Cinco cards formam uma grade 4+1 em desktop e a segunda CTA/estatísticas reiteram a mesma promessa antes de levar o usuário ao produto. | Open |
+| JH-025 | P3 | Accessibility | Alguns controles somente com ícone dependem de `title`; contraste de textos em superfícies coloridas e indicação de foco precisam de checagem visual compartilhada. | Open |
+
+Preserve decisions:
+
+- Preservar a estrutura de produto atual: Home, mercados, indicadores, calculadoras, notícias e conteúdo educacional.
+- Preservar navegação por rotas, menu lateral mobile, tema claro/escuro e controle visível de idioma.
+- Preservar o padrão de cards, skeletons e avisos explícitos para loading, stale e indisponibilidade; a evolução é de consistência, não de substituição.
+- Preservar calculadoras por abas e resultados detalhados, gráficos responsivos e separação visual entre dados positivos, alerta e erro.
+- Preservar o Blog como experiência editorial com busca, cards, tags e artigo em leitura longa.
+
+Proposed Sprint 1 implementation roadmap:
+
+1. **Sprint 1B — Foundations, language and data trust**: consolidar tokens/padrões de cards e feedback, tornar a cópia PT-BR/en/es completa e substituir promessas absolutas por origem/atualização contextual. Findings: JH-016, JH-017, JH-018, JH-019, JH-022, JH-025. Areas: `index.css`, componentes UI/`DataState`, traduções, Markets, Indicators, News e `ExchangeCalculator`.
+2. **Sprint 1C — Entry point and navigation**: ajustar hierarquia/grade da Home e densidade/responsividade da navegação sem mudar a estrutura do produto. Findings: JH-020, JH-024. Areas: `Index`, `Header`, `Navigation`, `MobileNav`, `Footer`.
+3. **Sprint 1D — Financial workspaces**: padronizar abas, formulários, resultados, gráficos e ações de refresh das telas financeiras. Findings: JH-018, JH-021, JH-022. Areas: Markets, Indicators, Calculators e `ExchangeCalculator`.
+4. **Sprint 1E — Editorial and responsive polish**: corrigir feedback/cópia do Blog e validar os ajustes de conteúdo em mobile. Findings: JH-017, JH-023, JH-025. Areas: BlogList, BlogPost, PrivacyPolicy e traduções.
