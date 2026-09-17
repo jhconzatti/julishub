@@ -178,6 +178,7 @@
     "amount": "Amount",
     "from": "From",
     "to": "To",
+    "swapCurrencies": "Swap currencies",
     "resultTitle": "Result",
     "resultDescription": "Converted amount in the destination currency",
     "rateLabel": "Exchange rate",

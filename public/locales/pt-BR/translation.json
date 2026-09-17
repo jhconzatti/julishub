@@ -178,6 +178,7 @@
     "amount": "Valor",
     "from": "De",
     "to": "Para",
+    "swapCurrencies": "Inverter moedas",
     "resultTitle": "Resultado",
     "resultDescription": "Valor convertido na moeda de destino",
     "rateLabel": "Taxa de câmbio",

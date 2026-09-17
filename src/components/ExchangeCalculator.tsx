@@ -170,7 +170,7 @@ export default function ExchangeCalculator() {
               {t('exchangeCalculator.description')}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="space-y-2">
               <Label>{t('exchangeCalculator.amount')}</Label>
               <Input
@@ -189,7 +189,7 @@ export default function ExchangeCalculator() {
             <div className="space-y-2">
               <Label>{t('exchangeCalculator.from')}</Label>
               <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,7 +210,9 @@ export default function ExchangeCalculator() {
                 variant="outline"
                 size="icon"
                 onClick={handleSwapCurrencies}
-                className="rounded-full"
+                className="h-10 w-10 rounded-full"
+                aria-label={t('exchangeCalculator.swapCurrencies')}
+                title={t('exchangeCalculator.swapCurrencies')}
               >
                 <ArrowDownUp className="w-4 h-4" />
               </Button>
@@ -219,7 +221,7 @@ export default function ExchangeCalculator() {
             <div className="space-y-2">
               <Label>{t('exchangeCalculator.to')}</Label>
               <Select value={toCurrency} onValueChange={setToCurrency}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -236,7 +238,7 @@ export default function ExchangeCalculator() {
             </div>
 
             <Button
-              className="w-full"
+              className="h-10 w-full"
               onClick={handleConvert}
               disabled={ratesLoading || ratesError || exchangeRates === null}
             >
@@ -256,11 +258,11 @@ export default function ExchangeCalculator() {
           <CardContent>
             {result !== null ? (
               <div className="space-y-4">
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-6">
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-5 sm:p-6">
                   <div className="text-sm text-muted-foreground mb-2">
                     {fromCurrencyData?.symbol} {amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {fromCurrency}
                   </div>
-                  <div className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="break-words text-3xl font-bold text-blue-600 dark:text-blue-400 sm:text-4xl">
                     {toCurrencyData?.symbol} {result.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: toCurrency === "BTC" ? 8 : 2 })}
                   </div>
                   <div className="text-sm text-muted-foreground mt-2">{toCurrency}</div>
@@ -280,7 +282,7 @@ export default function ExchangeCalculator() {
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
+              <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-muted-foreground sm:min-h-[300px] sm:p-10">
                 <ArrowDownUp className="w-16 h-16 mb-4 opacity-20" />
                 <p>{t('exchangeCalculator.emptyResult')}</p>
               </div>

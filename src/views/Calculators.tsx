@@ -389,16 +389,16 @@ export default function Calculators() {
       </div>
 
       <Tabs defaultValue="investimento" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4">
-          <TabsTrigger value="investimento" className="text-xs sm:text-sm">{t('calculators.investments')}</TabsTrigger>
-          <TabsTrigger value="financiamento" className="text-xs sm:text-sm">{t('calculators.loans')}</TabsTrigger>
-          <TabsTrigger value="salario" className="text-xs sm:text-sm">{t('calculators.netSalary')}</TabsTrigger>
-          <TabsTrigger value="exchange" className="text-xs sm:text-sm">{t('calculators.exchange')}</TabsTrigger>
+        <TabsList className="mb-4 grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4">
+          <TabsTrigger value="investimento" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.investments')}</TabsTrigger>
+          <TabsTrigger value="financiamento" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.loans')}</TabsTrigger>
+          <TabsTrigger value="salario" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.netSalary')}</TabsTrigger>
+          <TabsTrigger value="exchange" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.exchange')}</TabsTrigger>
         </TabsList>
 
         {/* --- ABA DE INVESTIMENTOS --- */}
-        <TabsContent value="investimento" className="space-y-4">
-          <div className="grid gap-6 lg:grid-cols-3 mt-4">
+        <TabsContent value="investimento" className="mt-4 space-y-6">
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <Card className="h-fit border-border/70 bg-card lg:col-span-1">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
@@ -406,7 +406,7 @@ export default function Calculators() {
                 </CardTitle>
                 <CardDescription>{t('calculators.simulateGrowth')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 <div className="space-y-2">
                   <Label>{t('calculators.initialAmount')}</Label>
                   <Input type="number" name="aporte_inicial" value={formInvest.aporte_inicial} onChange={handleInvestChange} />
@@ -423,12 +423,12 @@ export default function Calculators() {
                   <Label>{t('calculators.years')}</Label>
                   <Input type="number" name="anos" value={formInvest.anos} onChange={handleInvestChange} />
                 </div>
-                <Button className="w-full mt-4" onClick={calcularInvestimento} disabled={loadingInvest}>
+                <Button className="mt-2 h-10 w-full" onClick={calcularInvestimento} disabled={loadingInvest}>
                   {loadingInvest ? t('calculators.calculating') : t('calculators.calculate')}
                 </Button>
                 
                 {/* Botões de Histórico e Comparação */}
-                <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="mt-4 grid grid-cols-1 gap-2 border-t border-border/70 pt-4 sm:grid-cols-2">
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm" className="w-full">
@@ -450,8 +450,8 @@ export default function Calculators() {
                           <div className="space-y-2 pr-4">
                             {historico.map((item) => (
                               <Card key={item.id} className="p-4">
-                                <div className="flex justify-between items-start">
-                                  <div className="space-y-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 space-y-1">
                                     <p className="text-sm font-semibold">{item.nome}</p>
                                     <p className="text-xs text-muted-foreground">
                                       R$ {item.form.aporte_inicial} inicial + R$ {item.form.aporte_mensal}/mês
@@ -461,7 +461,7 @@ export default function Calculators() {
                                       Resultado: R$ {item.resultado.resumo?.total_final?.toLocaleString()}
                                     </p>
                                   </div>
-                                  <div className="flex gap-1">
+                                  <div className="flex shrink-0 gap-1">
                                     <Button
                                       size="sm"
                                       variant="ghost"
@@ -507,13 +507,13 @@ export default function Calculators() {
                       </DialogHeader>
                       
                       <div className="space-y-4">
-                        <div className="flex gap-2">
-                          <Button onClick={adicionarCenario} disabled={cenarios.length >= 3}>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Button className="w-full sm:w-auto" onClick={adicionarCenario} disabled={cenarios.length >= 3}>
                             <Save className="w-4 h-4 mr-2" />
                             Adicionar Cenário Atual ({cenarios.length}/3)
                           </Button>
                           {cenarios.length > 0 && (
-                            <Button onClick={compararCenarios} disabled={loadingComparacao}>
+                            <Button className="w-full sm:w-auto" onClick={compararCenarios} disabled={loadingComparacao}>
                               {loadingComparacao ? "Comparando..." : "Comparar Cenários"}
                             </Button>
                           )}
@@ -523,13 +523,13 @@ export default function Calculators() {
                           <div className="grid gap-2">
                             {cenarios.map((cenario) => (
                               <Card key={cenario.id} className="p-3">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="flex min-w-0 items-center gap-2">
                                     <div
                                       className="w-3 h-3 rounded-full"
                                       style={{ backgroundColor: cenario.cor }}
                                     />
-                                    <div>
+                                    <div className="min-w-0">
                                       <p className="text-sm font-semibold">{cenario.nome}</p>
                                       <p className="text-xs text-muted-foreground">
                                         R$ {cenario.form.aporte_inicial} + R$ {cenario.form.aporte_mensal}/mês
@@ -540,6 +540,7 @@ export default function Calculators() {
                                   <Button
                                     size="sm"
                                     variant="ghost"
+                                    className="shrink-0"
                                     onClick={() => removerCenario(cenario.id)}
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -553,31 +554,33 @@ export default function Calculators() {
                         {comparacaoResultados.length > 0 && (
                           <Card className="p-4">
                             <h4 className="font-semibold mb-4">Gráfico Comparativo</h4>
-                            <ResponsiveContainer width="100%" height={300}>
-                              <LineChart>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="ano" />
-                                <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                                <Tooltip formatter={(v: number) => `R$ ${v.toLocaleString()}`} />
-                                <Legend />
-                                {comparacaoResultados.map((resultado, idx) => (
-                                  <Line
-                                    key={idx}
-                                    type="monotone"
-                                    data={resultado.grafico}
-                                    dataKey="total"
-                                    name={resultado.nome}
-                                    stroke={resultado.cor}
-                                    strokeWidth={2}
-                                  />
-                                ))}
-                              </LineChart>
-                            </ResponsiveContainer>
+                            <div className="h-[240px] sm:h-[300px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart>
+                                  <CartesianGrid strokeDasharray="3 3" />
+                                  <XAxis dataKey="ano" />
+                                  <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                                  <Tooltip formatter={(v: number) => `R$ ${v.toLocaleString()}`} />
+                                  <Legend />
+                                  {comparacaoResultados.map((resultado, idx) => (
+                                    <Line
+                                      key={idx}
+                                      type="monotone"
+                                      data={resultado.grafico}
+                                      dataKey="total"
+                                      name={resultado.nome}
+                                      stroke={resultado.cor}
+                                      strokeWidth={2}
+                                    />
+                                  ))}
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
                             
                             <div className="mt-4 space-y-2">
                               {comparacaoResultados.map((resultado, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-2 bg-muted rounded">
-                                  <span className="flex items-center gap-2">
+                                <div key={idx} className="flex flex-col items-start gap-2 rounded bg-muted p-2 sm:flex-row sm:items-center sm:justify-between">
+                                  <span className="flex min-w-0 items-center gap-2">
                                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: resultado.cor }} />
                                     {resultado.nome}
                                   </span>
@@ -594,25 +597,27 @@ export default function Calculators() {
               </CardContent>
             </Card>
 
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6 lg:col-span-2">
               {resultadoInvest && resultadoInvest.resumo ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="bg-slate-50 dark:bg-slate-900">
-                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">{t('calculators.totalInvested')}</CardTitle></CardHeader>
-                      <CardContent><div className="text-xl font-bold text-slate-600">R$ {resultadoInvest.resumo.total_investido?.toLocaleString()}</div></CardContent>
+                  <div className="space-y-4">
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-primary">{t('calculators.finalValue')}</CardTitle></CardHeader>
+                      <CardContent><div className="break-words text-2xl font-bold text-primary sm:text-3xl">R$ {resultadoInvest.resumo.total_final?.toLocaleString()}</div></CardContent>
                     </Card>
-                    <Card className="bg-green-50 dark:bg-green-950/30 border-green-200">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Card className="border-border/70 bg-muted/30">
+                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">{t('calculators.totalInvested')}</CardTitle></CardHeader>
+                      <CardContent><div className="text-xl font-bold">R$ {resultadoInvest.resumo.total_investido?.toLocaleString()}</div></CardContent>
+                    </Card>
+                    <Card className="border-green-200 bg-green-50/60 dark:border-green-900 dark:bg-green-950/20">
                       <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-green-600">{t('calculators.totalInterest')}</CardTitle></CardHeader>
                       <CardContent><div className="text-xl font-bold text-green-600">+ R$ {resultadoInvest.resumo.total_juros?.toLocaleString()}</div></CardContent>
                     </Card>
-                    <Card className="bg-primary/10 border-primary/20">
-                      <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-primary">{t('calculators.finalValue')}</CardTitle></CardHeader>
-                      <CardContent><div className="text-xl font-bold text-primary">R$ {resultadoInvest.resumo.total_final?.toLocaleString()}</div></CardContent>
-                    </Card>
+                    </div>
                   </div>
-                  <Card>
-                    <CardContent className="h-[300px] pt-6">
+                  <Card className="border-border/70 bg-card">
+                    <CardContent className="h-[240px] pt-6 sm:h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={resultadoInvest.grafico}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -628,7 +633,7 @@ export default function Calculators() {
                   </Card>
                 </>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
+                <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-muted-foreground sm:min-h-[300px] sm:p-10">
                   <TrendingUp className="w-16 h-16 mb-4 opacity-20" />
                   <p>{loadingInvest ? t('calculators.processing') : t('calculators.fillAndSimulate')}</p>
                 </div>
@@ -638,8 +643,8 @@ export default function Calculators() {
         </TabsContent>
 
         {/* --- ABA DE FINANCIAMENTOS --- */}
-        <TabsContent value="financiamento" className="space-y-4">
-          <div className="grid gap-6 lg:grid-cols-3 mt-4">
+        <TabsContent value="financiamento" className="mt-4 space-y-6">
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <Card className="h-fit border-border/70 bg-card lg:col-span-1">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
@@ -647,7 +652,7 @@ export default function Calculators() {
                 </CardTitle>
                 <CardDescription>{t('calculators.calculatePayment')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 <div className="space-y-2">
                   <Label>{t('calculators.financingAmount')}</Label>
                   <Input type="number" name="valor_financiamento" value={formLoan.valor_financiamento} onChange={handleLoanChange} />
@@ -660,38 +665,38 @@ export default function Calculators() {
                   <Label>{t('calculators.months')}</Label>
                   <Input type="number" name="meses" value={formLoan.meses} onChange={handleLoanChange} />
                 </div>
-                <Button className="w-full mt-4" variant="secondary" onClick={calcularFinanciamento} disabled={loadingLoan}>
+                <Button className="mt-2 h-10 w-full" onClick={calcularFinanciamento} disabled={loadingLoan}>
                   {loadingLoan ? t('calculators.calculating') : t('calculators.calculate')}
                 </Button>
               </CardContent>
             </Card>
 
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6 lg:col-span-2">
               {resultadoLoan ? (
                 <div className="grid gap-6 animate-in slide-in-from-bottom-4">
                   <Card className="bg-primary text-primary-foreground border-none shadow-lg">
-                    <CardHeader>
+                    <CardHeader className="pb-3">
                       <CardTitle>{t('calculators.monthlyPayment')}</CardTitle>
                       <CardDescription className="text-primary-foreground/80">{t('calculators.priceSystem')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-5xl font-extrabold">R$ {resultadoLoan.valor_prestacao?.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                      <div className="break-words text-3xl font-extrabold sm:text-5xl">R$ {resultadoLoan.valor_prestacao?.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                     </CardContent>
                   </Card>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card>
+                    <Card className="border-border/70 bg-card">
                       <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">{t('calculators.totalPaid')}</CardTitle></CardHeader>
                       <CardContent><div className="text-2xl font-bold text-red-600">R$ {resultadoLoan.total_pago?.toLocaleString()}</div></CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-border/70 bg-card">
                       <CardHeader className="pb-2"><CardTitle className="text-xs uppercase text-muted-foreground">{t('calculators.totalInterest')}</CardTitle></CardHeader>
                       <CardContent><div className="text-2xl font-bold text-orange-500">R$ {resultadoLoan.total_juros?.toLocaleString()}</div></CardContent>
                     </Card>
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
+                <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-muted-foreground sm:min-h-[300px] sm:p-10">
                   <Calculator className="w-16 h-16 mb-4 opacity-20" />
                   <p>{loadingLoan ? t('calculators.processing') : t('calculators.enterValueAndRate')}</p>
                 </div>
@@ -701,8 +706,8 @@ export default function Calculators() {
         </TabsContent>
 
         {/* --- ABA DE SALÁRIO LÍQUIDO (NOVA) --- */}
-        <TabsContent value="salario" className="space-y-4">
-          <div className="grid gap-6 lg:grid-cols-3 mt-4">
+        <TabsContent value="salario" className="mt-4 space-y-6">
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <Card className="h-fit border-border/70 bg-card lg:col-span-1">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
@@ -710,7 +715,7 @@ export default function Calculators() {
                 </CardTitle>
                 <CardDescription>{t('calculators.inssIrrfDeductions')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 <div className="space-y-2">
                   <Label>{t('calculators.grossSalary')}</Label>
                   <Input type="number" name="salario_bruto" value={formSalary.salario_bruto} onChange={handleSalaryChange} />
@@ -723,46 +728,46 @@ export default function Calculators() {
                   <Label>{t('calculators.otherDeductions')}</Label>
                   <Input type="number" name="outros_descontos" value={formSalary.outros_descontos} onChange={handleSalaryChange} />
                 </div>
-                <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700" onClick={calcularSalario} disabled={loadingSalary}>
+                <Button className="mt-2 h-10 w-full" onClick={calcularSalario} disabled={loadingSalary}>
                   {loadingSalary ? t('calculators.calculating') : t('calculators.calculate')}
                 </Button>
               </CardContent>
             </Card>
 
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6 lg:col-span-2">
               {resultadoSalary ? (
                 <div className="grid gap-6 animate-in slide-in-from-bottom-4">
                   {/* Card Principal */}
                   <Card className="bg-blue-600 text-white border-none shadow-lg">
-                    <CardHeader>
+                    <CardHeader className="pb-3">
                       <CardTitle>{t('calculators.netSalary')}</CardTitle>
                       <CardDescription className="text-blue-100">{t('calculators.availableAfterDeductions')}</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex items-center justify-between">
-                      <div className="text-5xl font-extrabold">R$ {resultadoSalary.salario_liquido?.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                      <Coins className="w-16 h-16 text-blue-400 opacity-50" />
+                    <CardContent className="flex items-center justify-between gap-4">
+                      <div className="break-words text-3xl font-extrabold sm:text-5xl">R$ {resultadoSalary.salario_liquido?.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                      <Coins className="hidden h-16 w-16 shrink-0 text-blue-400 opacity-50 sm:block" />
                     </CardContent>
                   </Card>
 
                   {/* Detalhamento */}
                   <div className="grid gap-4">
-                    <Card>
+                    <Card className="border-border/70 bg-card">
                       <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">{t('calculators.deductionsBreakdown')}</CardTitle></CardHeader>
                       <CardContent>
                         <div className="space-y-3">
-                          <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
+                          <div className="flex items-center justify-between gap-3 rounded bg-muted/50 p-2">
                             <span className="text-muted-foreground flex items-center"><ArrowRight className="w-4 h-4 mr-2" /> INSS</span>
                             <span className="font-bold text-red-500">- R$ {resultadoSalary.inss?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                           </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
+                          <div className="flex items-center justify-between gap-3 rounded bg-muted/50 p-2">
                             <span className="text-muted-foreground flex items-center"><ArrowRight className="w-4 h-4 mr-2" /> IRRF</span>
                             <span className="font-bold text-red-500">- R$ {resultadoSalary.irrf?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                           </div>
-                          <div className="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-900 rounded">
+                          <div className="flex items-center justify-between gap-3 rounded bg-muted/50 p-2">
                             <span className="text-muted-foreground flex items-center"><ArrowRight className="w-4 h-4 mr-2" /> {t('calculators.others')}</span>
                             <span className="font-bold text-red-500">- R$ {resultadoSalary.outros_descontos?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                           </div>
-                          <div className="border-t pt-2 flex justify-between items-center">
+                          <div className="flex items-center justify-between gap-3 border-t pt-2">
                              <span className="font-bold">{t('calculators.totalDeductions')}</span>
                              <span className="font-bold text-red-600">R$ {resultadoSalary.total_descontos?.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                           </div>
@@ -772,7 +777,7 @@ export default function Calculators() {
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
+                <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-muted-foreground sm:min-h-[300px] sm:p-10">
                   <Wallet className="w-16 h-16 mb-4 opacity-20" />
                   <p>{loadingSalary ? t('calculators.processing') : t('calculators.enterSalaryAndDependents')}</p>
                 </div>
@@ -782,7 +787,7 @@ export default function Calculators() {
         </TabsContent>
 
         {/* --- ABA DE CÂMBIO --- */}
-        <TabsContent value="exchange" className="space-y-4">
+        <TabsContent value="exchange" className="mt-4 space-y-6">
           <ExchangeCalculator />
         </TabsContent>
       </Tabs>

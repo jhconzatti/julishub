@@ -178,6 +178,7 @@
     "amount": "Valor",
     "from": "De",
     "to": "A",
+    "swapCurrencies": "Intercambiar monedas",
     "resultTitle": "Resultado",
     "resultDescription": "Valor convertido en la moneda de destino",
     "rateLabel": "Tipo de cambio",

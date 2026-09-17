@@ -247,7 +247,7 @@ New findings:
 | JH-018 | P2 | Data Trust | Origem, atualização e natureza derivada/estimada dos dados são comunicadas de formas diferentes entre mercados, indicadores, notícias e conversor. | Resolved locally — Sprint 1C applies shared current/stale/external-unavailable trust messaging to scoped data screens |
 | JH-019 | P2 | Visual System | Cards, cores semânticas, superfícies e tratamento de estados variam por tela em vez de derivarem de padrões compartilhados. | Resolved locally — Sprint 1E aligns primary workspace surfaces, spacing and restrained semantic accents |
 | JH-020 | P2 | Navigation / Responsive | Header desktop fica denso em larguras intermediárias; a troca para menu mobile acontece tarde para seis destinos, três idiomas e tema. | Resolved locally — Sprint 1D transitions to the existing mobile sheet before the desktop navigation becomes cramped |
-| JH-021 | P2 | Calculators / Responsive | As quatro abas de calculadoras ficam apertadas em 360 px e a hierarquia entre formulário, resultado e gráfico não é padronizada entre ferramentas. | Open |
+| JH-021 | P2 | Calculators / Responsive | As quatro abas de calculadoras ficam apertadas em 360 px e a hierarquia entre formulário, resultado e gráfico não é padronizada entre ferramentas. | Resolved locally — Sprint 1F adds adaptive tabs and aligns calculator workspace hierarchy |
 | JH-022 | P2 | Feedback States | Skeletons, aviso de lentidão, refresh e estados vazios existem, mas a ação de refresh depende de ícone/tooltip e o estado persistente de atualização não é consistente. | Resolved locally — Sprint 1C unifies freshness/degraded messaging and adds refresh accessible names |
 | JH-023 | P2 | Blog | Falha de carregamento de artigo pode parecer “não encontrado”; credencial de autor, leitura e compartilhamento contêm cópia fixa e/ou não localizada. | Open |
 | JH-024 | P2 | Home | Cinco cards formam uma grade 4+1 em desktop e a segunda CTA/estatísticas reiteram a mesma promessa antes de levar o usuário ao produto. | Resolved locally — Sprint 1B removed statistics; Sprint 1D removes the duplicate CTA and balances the product-entry grid |
@@ -316,3 +316,14 @@ Entregas:
 - gradientes decorativos e superfícies regionais fortes reduzidos a cartões neutros com acentos contidos; variações positivas/negativas, alertas e distinções editoriais foram preservados;
 - `DataFreshness`, estados stale/indisponível/lento e comportamento de retry permanecem semanticamente inalterados;
 - a reestruturação responsiva e de hierarquia das Calculators continua em JH-021.
+
+### Sprint 1F — Calculator Workspace Refinement
+
+Status:
+Concluída localmente.
+
+Entregas:
+- Tabs adaptativas em duas colunas em telas estreitas e quatro colunas a partir de `sm`, com alvos de toque e rótulos íntegros;
+- fluxo consistente de formulário, ação primária, resultado dominante e detalhes secundários para investimentos, financiamento, salário e câmbio;
+- resultados e estados vazios adaptados para largura estreita; gráfico de investimentos permanece responsivo;
+- histórico, comparação, persistência local, dados do gráfico, cálculos e os estados de confiança do conversor foram preservados.
