@@ -348,59 +348,52 @@ async def get_exchange_rates(response: Response):
 
     logger.info("💱 Buscando exchange rates em paralelo...")
 
-    all_pairs = [
-        "USD-BRL", "EUR-BRL", "EUR-USD",
-        "USD-ARS", "ARS-BRL",
-        "USD-CLP", "CLP-BRL",
-        "USD-MXN", "MXN-BRL",
-    ]
-    awesome_url = f"https://economia.awesomeapi.com.br/last/{','.join(all_pairs)}"
     btc_url     = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl"
+    awesome_pairs = (
+        ("USD-BRL", "USDBRL", "USD_BRL", "Dólar Comercial → Real"),
+        ("EUR-BRL", "EURBRL", "EUR_BRL", "Euro → Real"),
+        ("EUR-USD", "EURUSD", "EUR_USD", "Euro → Dólar"),
+        ("USD-ARS", "USDARS", "USD_ARS", "Dólar → Peso Argentino"),
+        ("ARS-BRL", "ARSBRL", "ARS_BRL", "Peso Argentino → Real"),
+        ("USD-CLP", "USDCLP", "USD_CLP", "Dólar → Peso Chileno"),
+        ("CLP-BRL", "CLPBRL", "CLP_BRL", "Peso Chileno → Real"),
+        ("USD-MXN", "USDMXN", "USD_MXN", "Dólar → Peso Mexicano"),
+        ("MXN-BRL", "MXNBRL", "MXN_BRL", "Peso Mexicano → Real"),
+    )
 
-    awesome_result, btc_result = await asyncio.gather(
-        get_client().get(awesome_url),
+    async def fetch_awesome_pair(external_pair: str, source_key: str, pair: str, label: str):
+        try:
+            response = await get_client().get(f"https://economia.awesomeapi.com.br/last/{external_pair}")
+            if response.status_code != 200:
+                logger.warning(f"⚠️ AwesomeAPI {external_pair} returned {response.status_code}")
+                return None
+            payload = response.json().get(source_key)
+            if not isinstance(payload, dict) or not (
+                is_numeric_value(payload.get("bid")) and is_numeric_value(payload.get("pctChange"))
+            ):
+                logger.warning(f"⚠️ AwesomeAPI {external_pair} returned an invalid payload")
+                return None
+            return pair, {"valor": payload["bid"], "var": payload["pctChange"], "label": label}
+        except httpx.TimeoutException:
+            logger.warning(f"⚠️ AwesomeAPI {external_pair} timed out")
+        except Exception as e:
+            logger.warning(f"⚠️ AwesomeAPI {external_pair} request failed: {type(e).__name__}")
+        return None
+
+    *fiat_results, btc_result = await asyncio.gather(
+        *(fetch_awesome_pair(*pair) for pair in awesome_pairs),
         get_client().get(btc_url),
         return_exceptions=True,
     )
 
-    result = {}
-    awesome_pairs = {
-        "USDBRL": ("USD_BRL", "Dólar Comercial → Real"),
-        "EURBRL": ("EUR_BRL", "Euro → Real"),
-        "EURUSD": ("EUR_USD", "Euro → Dólar"),
-        "USDARS": ("USD_ARS", "Dólar → Peso Argentino"),
-        "ARSBRL": ("ARS_BRL", "Peso Argentino → Real"),
-        "USDCLP": ("USD_CLP", "Dólar → Peso Chileno"),
-        "CLPBRL": ("CLP_BRL", "Peso Chileno → Real"),
-        "USDMXN": ("USD_MXN", "Dólar → Peso Mexicano"),
-        "MXNBRL": ("MXN_BRL", "Peso Mexicano → Real"),
-    }
-
-    if isinstance(awesome_result, Exception):
-        logger.error(f"❌ Erro ao acessar AwesomeAPI: {awesome_result}")
-    elif awesome_result.status_code != 200:
-        logger.error(f"❌ AwesomeAPI retornou status {awesome_result.status_code}")
-    else:
-        try:
-            data = awesome_result.json()
-            for source_key, (pair, label) in awesome_pairs.items():
-                payload = data.get(source_key)
-                if not isinstance(payload, dict) or not (
-                    is_numeric_value(payload.get("bid")) and is_numeric_value(payload.get("pctChange"))
-                ):
-                    logger.warning(f"⚠️ AwesomeAPI sem taxa válida para {pair}")
-                    continue
-                result[pair] = {"valor": payload["bid"], "var": payload["pctChange"], "label": label}
-
-            ars_brl = result.get("ARS_BRL")
-            if ars_brl is not None and float(ars_brl["valor"]) != 0:
-                result["BRL_ARS"] = {
-                    "valor": f"{1 / float(ars_brl['valor']):.4f}",
-                    "var": f"{-float(ars_brl['var']):.2f}",
-                    "label": "Real → Peso Argentino",
-                }
-        except Exception as e:
-            logger.error(f"❌ Payload inválido da AwesomeAPI: {e}")
+    result = {pair: rate for item in fiat_results if item is not None for pair, rate in (item,)}
+    ars_brl = result.get("ARS_BRL")
+    if ars_brl is not None and float(ars_brl["valor"]) != 0:
+        result["BRL_ARS"] = {
+            "valor": f"{1 / float(ars_brl['valor']):.4f}",
+            "var": f"{-float(ars_brl['var']):.2f}",
+            "label": "Real → Peso Argentino",
+        }
 
     if isinstance(btc_result, Exception):
         logger.error(f"❌ Erro ao acessar CoinGecko: {btc_result}")

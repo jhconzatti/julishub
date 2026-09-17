@@ -19,20 +19,23 @@ class FakeResponse:
 
 
 class ExchangeClient:
+    fiat_payloads = {
+        "USD-BRL": ("USDBRL", {"bid": "0", "pctChange": "0"}),
+        "EUR-BRL": ("EURBRL", {"bid": "6.20", "pctChange": "0.10"}),
+        "EUR-USD": ("EURUSD", {"bid": "1.10", "pctChange": "-0.20"}),
+        "USD-ARS": ("USDARS", {"bid": "1200", "pctChange": "0.30"}),
+        "ARS-BRL": ("ARSBRL", {"bid": "0.0045", "pctChange": "0.40"}),
+        "USD-CLP": ("USDCLP", {"bid": "950", "pctChange": "0.50"}),
+        "CLP-BRL": ("CLPBRL", {"bid": "0.0055", "pctChange": "0.60"}),
+        "USD-MXN": ("USDMXN", {"bid": "18", "pctChange": "0.70"}),
+        "MXN-BRL": ("MXNBRL", {"bid": "0.30", "pctChange": "0.80"}),
+    }
+
     async def get(self, url):
         if "coingecko" in url:
             return FakeResponse({"bitcoin": {"usd": 60000, "brl": 300000}})
-        return FakeResponse({
-            "USDBRL": {"bid": "0", "pctChange": "0"},
-            "EURBRL": {"bid": "6.20", "pctChange": "0.10"},
-            "EURUSD": {"bid": "1.10", "pctChange": "-0.20"},
-            "USDARS": {"bid": "1200", "pctChange": "0.30"},
-            "ARSBRL": {"bid": "0.0045", "pctChange": "0.40"},
-            "USDCLP": {"bid": "950", "pctChange": "0.50"},
-            "CLPBRL": {"bid": "0.0055", "pctChange": "0.60"},
-            "USDMXN": {"bid": "18", "pctChange": "0.70"},
-            "MXNBRL": {"bid": "0.30", "pctChange": "0.80"},
-        })
+        source_key, payload = self.fiat_payloads[url.rsplit("/", 1)[-1]]
+        return FakeResponse({source_key: payload.copy()})
 
 
 class FailingClient:
@@ -43,8 +46,8 @@ class FailingClient:
 class IncompleteExchangeClient(ExchangeClient):
     async def get(self, url, **_kwargs):
         response = await super().get(url)
-        if "coingecko" not in url:
-            response._payload.pop("MXNBRL")
+        if url.endswith("MXN-BRL"):
+            response._payload.clear()
         return response
 
 
@@ -65,9 +68,41 @@ class AwesomeUnavailableClient(ExchangeClient):
 class InvalidArsExchangeClient(ExchangeClient):
     async def get(self, url, **_kwargs):
         response = await super().get(url)
-        if "coingecko" not in url:
+        if url.endswith("ARS-BRL"):
             response._payload["ARSBRL"] = {"bid": "invalid", "pctChange": "0.40"}
         return response
+
+
+class PairFailureExchangeClient(ExchangeClient):
+    failures = {}
+
+    async def get(self, url, **_kwargs):
+        pair = url.rsplit("/", 1)[-1]
+        failure = self.failures.get(pair)
+        if isinstance(failure, Exception):
+            raise failure
+        if isinstance(failure, int):
+            return FakeResponse({}, failure)
+        if failure == "malformed":
+            source_key, _ = self.fiat_payloads[pair]
+            return FakeResponse({source_key: {"bid": "invalid", "pctChange": "0.10"}})
+        return await super().get(url)
+
+
+class OneNon200PairClient(PairFailureExchangeClient):
+    failures = {"USD-ARS": 404}
+
+
+class SeveralFailedPairsClient(PairFailureExchangeClient):
+    failures = {"EUR-USD": 404, "USD-CLP": 503, "MXN-BRL": 404}
+
+
+class TimedOutPairClient(PairFailureExchangeClient):
+    failures = {"EUR-BRL": httpx.TimeoutException("EUR-BRL timeout")}
+
+
+class MalformedPairClient(PairFailureExchangeClient):
+    failures = {"CLP-BRL": "malformed"}
 
 
 class YahooIndexesClient:
@@ -131,6 +166,50 @@ class ApiReliabilityTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["USD_BRL"]["valor"], "0")
         self.assertIsNone(response.json()["BTC_USD"]["var"])
+
+    def test_all_fiat_pairs_succeed_independently(self):
+        with patch("routers.markets.get_client", return_value=ExchangeClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue({
+            "USD_BRL", "EUR_BRL", "EUR_USD", "USD_ARS", "ARS_BRL", "BRL_ARS",
+            "USD_CLP", "CLP_BRL", "USD_MXN", "MXN_BRL",
+        }.issubset(response.json()))
+
+    def test_one_non_200_fiat_pair_does_not_remove_siblings(self):
+        with patch("routers.markets.get_client", return_value=OneNon200PairClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertNotIn("USD_ARS", response.json())
+
+    def test_several_failed_fiat_pairs_preserve_usd_brl(self):
+        with patch("routers.markets.get_client", return_value=SeveralFailedPairsClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertNotIn("EUR_USD", response.json())
+        self.assertNotIn("USD_CLP", response.json())
+        self.assertNotIn("MXN_BRL", response.json())
+
+    def test_timed_out_fiat_pair_does_not_remove_siblings(self):
+        with patch("routers.markets.get_client", return_value=TimedOutPairClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertNotIn("EUR_BRL", response.json())
+
+    def test_malformed_fiat_pair_does_not_remove_siblings(self):
+        with patch("routers.markets.get_client", return_value=MalformedPairClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertNotIn("CLP_BRL", response.json())
 
     def test_primary_provider_failure_uses_real_fallback(self):
         fallback = {
