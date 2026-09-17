@@ -84,7 +84,7 @@ export default function BlogPost() {
 
   const handleShare = (platform: 'whatsapp' | 'linkedin' | 'twitter') => {
     const url = window.location.href;
-    const text = artigo ? `${artigo.titulo} - JulisHub` : 'Artigo do JulisHub';
+    const text = artigo ? `${artigo.titulo} - JulisHub` : t('blog.articleFromJulishub');
 
     const shareUrls = {
       whatsapp: `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`,
@@ -121,10 +121,10 @@ export default function BlogPost() {
   if (!artigo) {
     return (
       <div className="max-w-4xl mx-auto text-center py-20">
-        <h2 className="text-2xl font-bold mb-4">Artigo não encontrado</h2>
+        <h2 className="text-2xl font-bold mb-4">{t('blog.notFound')}</h2>
         <Button onClick={() => navigate(lp('/blog'))}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar para o blog
+          {t('blog.backToList')}
         </Button>
       </div>
     );
@@ -162,7 +162,7 @@ export default function BlogPost() {
             </Avatar>
             <div>
               <p className="text-sm font-medium text-foreground">Juliano Heberhardt Conzatti</p>
-              <p className="text-xs">Especialista em Finanças</p>
+              <p className="text-xs">{t('blog.authorRole')}</p>
             </div>
           </div>
 
@@ -176,7 +176,7 @@ export default function BlogPost() {
           <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-full">
             <Clock className="h-4 w-4 text-blue-600" />
             <span className="text-sm font-medium text-blue-600">
-              {Math.max(1, Math.ceil(artigo.conteudo.split(' ').length / 200))} min de leitura
+              {t('blog.readingTime', { minutes: Math.max(1, Math.ceil(artigo.conteudo.split(' ').length / 200)) })}
             </span>
           </div>
         </div>

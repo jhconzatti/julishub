@@ -22,17 +22,17 @@ const API_BASE_URL = getApiUrl();
 
 const CURRENCIES = [
   // Principais - Moedas disponíveis na AwesomeAPI
-  { code: "BRL", symbol: "R$", name: "Real Brasileiro", flag: "🇧🇷" },
-  { code: "USD", symbol: "US$", name: "Dólar Americano", flag: "🇺🇸" },
-  { code: "EUR", symbol: "€", name: "Euro", flag: "🇪🇺" },
-  { code: "BTC", symbol: "₿", name: "Bitcoin", flag: "₿" },
+  { code: "BRL", symbol: "R$", flag: "🇧🇷" },
+  { code: "USD", symbol: "US$", flag: "🇺🇸" },
+  { code: "EUR", symbol: "€", flag: "🇪🇺" },
+  { code: "BTC", symbol: "₿", flag: "₿" },
   
   // América do Sul
-  { code: "ARS", symbol: "ARS$", name: "Peso Argentino", flag: "🇦🇷" },
-  { code: "CLP", symbol: "CLP$", name: "Peso Chileno", flag: "🇨🇱" },
+  { code: "ARS", symbol: "ARS$", flag: "🇦🇷" },
+  { code: "CLP", symbol: "CLP$", flag: "🇨🇱" },
   
   // América Central
-  { code: "MXN", symbol: "MXN$", name: "Peso Mexicano", flag: "🇲🇽" },
+  { code: "MXN", symbol: "MXN$", flag: "🇲🇽" },
 ];
 
 function resolveRate(
@@ -82,6 +82,10 @@ export default function ExchangeCalculator() {
   const warningItems = Array.isArray(warningItemsValue)
     ? warningItemsValue.filter((item): item is string => typeof item === "string")
     : [];
+  const currencies = CURRENCIES.map((currency) => ({
+    ...currency,
+    name: t(`exchangeCalculator.currencies.${currency.code}`),
+  }));
 
   const fetchExchangeRates = useCallback(async (forceRefresh = false) => {
     setRatesLoading(true);
@@ -133,8 +137,8 @@ export default function ExchangeCalculator() {
     setConversionError(false);
   };
 
-  const fromCurrencyData = CURRENCIES.find(c => c.code === fromCurrency);
-  const toCurrencyData = CURRENCIES.find(c => c.code === toCurrency);
+  const fromCurrencyData = currencies.find(c => c.code === fromCurrency);
+  const toCurrencyData = currencies.find(c => c.code === toCurrency);
 
   return (
     <div className="space-y-6">
@@ -160,15 +164,15 @@ export default function ExchangeCalculator() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ArrowDownUp className="w-5 h-5 text-blue-600" />
-              Conversor de Moedas
+              {t('exchangeCalculator.title')}
             </CardTitle>
             <CardDescription>
-              Simule a conversão entre diferentes moedas
+              {t('exchangeCalculator.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Valor</Label>
+              <Label>{t('exchangeCalculator.amount')}</Label>
               <Input
                 type="number"
                 value={amount}
@@ -183,13 +187,13 @@ export default function ExchangeCalculator() {
             </div>
 
             <div className="space-y-2">
-              <Label>De</Label>
+              <Label>{t('exchangeCalculator.from')}</Label>
               <Select value={fromCurrency} onValueChange={setFromCurrency}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((currency) => (
+                  {currencies.map((currency) => (
                     <SelectItem key={currency.code} value={currency.code}>
                       <span className="flex items-center gap-2">
                         <span>{currency.flag}</span>
@@ -213,13 +217,13 @@ export default function ExchangeCalculator() {
             </div>
 
             <div className="space-y-2">
-              <Label>Para</Label>
+              <Label>{t('exchangeCalculator.to')}</Label>
               <Select value={toCurrency} onValueChange={setToCurrency}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((currency) => (
+                  {currencies.map((currency) => (
                     <SelectItem key={currency.code} value={currency.code}>
                       <span className="flex items-center gap-2">
                         <span>{currency.flag}</span>
@@ -246,8 +250,8 @@ export default function ExchangeCalculator() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Resultado</CardTitle>
-            <CardDescription>Valor convertido na moeda de destino</CardDescription>
+            <CardTitle>{t('exchangeCalculator.resultTitle')}</CardTitle>
+            <CardDescription>{t('exchangeCalculator.resultDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             {result !== null ? (
@@ -263,7 +267,7 @@ export default function ExchangeCalculator() {
                 </div>
 
                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border">
-                  <div className="text-sm text-muted-foreground mb-1">Taxa de Câmbio</div>
+                  <div className="text-sm text-muted-foreground mb-1">{t('exchangeCalculator.rateLabel')}</div>
                   {usedRate !== null ? (
                     <div className="text-lg font-semibold">
                       1 {fromCurrency} = {usedRate.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {toCurrency}
@@ -272,14 +276,13 @@ export default function ExchangeCalculator() {
                 </div>
 
                 <div className="text-xs text-muted-foreground pt-2 border-t">
-                  <p>💡 Valores baseados em cotação comercial (interbancária)</p>
-                  <p className="mt-1">⏱️ Atualização automática a cada hora</p>
+                  <p>💡 {t('exchangeCalculator.marketReference')}</p>
                 </div>
               </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl p-10 min-h-[300px]">
                 <ArrowDownUp className="w-16 h-16 mb-4 opacity-20" />
-                <p>Preencha os campos e clique em "Converter"</p>
+                <p>{t('exchangeCalculator.emptyResult')}</p>
               </div>
             )}
           </CardContent>
@@ -288,8 +291,8 @@ export default function ExchangeCalculator() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Tabela de Referência</CardTitle>
-          <CardDescription>Principais taxas de câmbio em tempo real</CardDescription>
+          <CardTitle>{t('exchangeCalculator.referenceTableTitle')}</CardTitle>
+          <CardDescription>{t('exchangeCalculator.referenceTableDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

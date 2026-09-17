@@ -13,7 +13,7 @@
       "part1": "Master your",
       "part2": "Finances"
     },
-    "subtitle": "Track the financial market, simulate investments and make smarter decisions with real-time data.",
+    "subtitle": "Follow markets, simulate investments and make smarter decisions with updated financial data.",
     "cta": {
       "simulate": "Simulate Now",
       "quotes": "View Quotes",
@@ -26,7 +26,7 @@
       "subtitle": "Everything you need to manage your finances in one place",
       "markets": {
         "title": "Financial Market",
-        "description": "Real-time updated quotes for currencies, cryptocurrencies and indices",
+        "description": "Market quotes for currencies, cryptocurrencies and indices",
         "action": "Access"
       },
       "calculators": {
@@ -36,12 +36,12 @@
       },
       "indicators": {
         "title": "Economic Indicators",
-        "description": "SELIC, IPCA, CDI and other official Central Bank indicators",
+        "description": "SELIC, IPCA, CDI and other economic references",
         "action": "View"
       },
       "news": {
         "title": "Financial News",
-        "description": "Latest economy and business news from Brazil in real-time",
+        "description": "Recent economy and business news from Brazil",
         "action": "Read Now"
       },
       "blog": {
@@ -59,7 +59,7 @@
   },
   "markets": {
     "title": "Markets",
-    "description": "Real-time quotes and indices",
+    "description": "Market quotes and indices",
     "exchangeRates": "Exchange Rates",
     "topCryptos": "Top 10 Cryptocurrencies"
   },
@@ -81,6 +81,10 @@
     "readMore": "Read full article",
     "showing": "Showing",
     "backToList": "Back to blog",
+    "notFound": "Article not found",
+    "authorRole": "Finance specialist",
+    "readingTime": "{{minutes}} min read",
+    "articleFromJulishub": "JulisHub article",
     "share": {
       "title": "Did you like this article?",
       "description": "Share with your friends and help more people learn about finance!"
@@ -91,10 +95,26 @@
   },
   "indicators": {
     "title": "Economic Indicators",
-    "description": "Official data in real time",
+    "description": "Economic indicators and market references",
     "brazil": "Brazil",
     "usa": "United States",
-    "argentina": "Argentina"
+    "argentina": "Argentina",
+    "selicTitle": "SELIC target rate",
+    "ipcaTitle": "IPCA (12 months)",
+    "cdiTitle": "Estimated CDI",
+    "updatedAt": "Updated on {{date}}",
+    "cdiBasis": "Estimate based on SELIC minus 0.10 percentage points.",
+    "howItAffects": "How does this affect your finances?",
+    "selicExplanationTitle": "SELIC (base interest rate)",
+    "selicExplanation": "It is Brazil's base interest rate. When it rises, loans tend to become more expensive, while fixed-income investments may yield more. It directly affects credit and consumption.",
+    "ipcaExplanationTitle": "IPCA (official inflation index)",
+    "ipcaExplanation": "It measures changes in the prices of products and services. The higher the IPCA, the lower purchasing power tends to be. It is a reference for salary adjustments and contracts.",
+    "cdiExplanationTitle": "CDI (Interbank Deposit Certificate)",
+    "cdiExplanation": "It is a rate used between banks and a reference for fixed-income investments. It generally stays close to SELIC; many funds and CDBs use CDI as a reference.",
+    "argentinaUnavailableTitle": "Argentine indicators are in development.",
+    "argentinaUnavailableDescription": "Coming soon: interest rate (BCRA), inflation (IPC), and more.",
+    "usaUnavailableTitle": "United States indicators are in development.",
+    "usaUnavailableDescription": "Coming soon: Federal Funds Rate, CPI, Core Inflation, and more."
   },
   "calculators": {
     "title": "Financial Calculators",
@@ -149,6 +169,21 @@
       "IOF (Tax on Financial Operations)",
       "Brokerage or transfer fees"
     ]
+  },
+  "exchangeCalculator": {
+    "title": "Currency converter",
+    "description": "Simulate conversion between different currencies",
+    "amount": "Amount",
+    "from": "From",
+    "to": "To",
+    "resultTitle": "Result",
+    "resultDescription": "Converted amount in the destination currency",
+    "rateLabel": "Exchange rate",
+    "marketReference": "Values are calculated using available exchange-rate references.",
+    "emptyResult": "Fill in the fields and click \"Calculate\".",
+    "referenceTableTitle": "Reference table",
+    "referenceTableDescription": "Main available exchange-rate references",
+    "currencies": { "BRL": "Brazilian real", "USD": "US dollar", "EUR": "Euro", "BTC": "Bitcoin", "ARS": "Argentine peso", "CLP": "Chilean peso", "MXN": "Mexican peso" }
   },
   "dataStates": {
     "loading": "Loading data...",

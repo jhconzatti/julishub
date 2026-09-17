@@ -13,7 +13,7 @@
       "part1": "Dominá tus",
       "part2": "Finanzas"
     },
-    "subtitle": "Seguí el mercado financiero, simulá inversiones y tomá decisiones más inteligentes con datos en tiempo real.",
+    "subtitle": "Sigue los mercados, simula inversiones y toma decisiones más inteligentes con datos financieros actualizados.",
     "cta": {
       "simulate": "Simular Ahora",
       "quotes": "Ver Cotizaciones",
@@ -26,7 +26,7 @@
       "subtitle": "Todo lo que necesitás para gestionar tus finanzas en un solo lugar",
       "markets": {
         "title": "Mercado Financiero",
-        "description": "Cotizaciones de monedas, criptomonedas e índices actualizadas en tiempo real",
+        "description": "Cotizaciones de mercado de monedas, criptomonedas e índices",
         "action": "Acceder"
       },
       "calculators": {
@@ -36,12 +36,12 @@
       },
       "indicators": {
         "title": "Indicadores Económicos",
-        "description": "SELIC, IPCA, CDI y otros indicadores oficiales del Banco Central",
+        "description": "SELIC, IPCA, CDI y otras referencias económicas",
         "action": "Visualizar"
       },
       "news": {
         "title": "Noticias Financieras",
-        "description": "Últimas noticias de economía y negocios de Brasil en tiempo real",
+        "description": "Noticias recientes de economía y negocios de Brasil",
         "action": "Leer Ahora"
       },
       "blog": {
@@ -59,7 +59,7 @@
   },
   "markets": {
     "title": "Mercados",
-    "description": "Cotizaciones e índices en tiempo real",
+    "description": "Cotizaciones e índices de mercado",
     "exchangeRates": "Tipos de Cambio",
     "topCryptos": "Top 10 Criptomonedas"
   },
@@ -81,6 +81,10 @@
     "readMore": "Leer artículo completo",
     "showing": "Mostrando",
     "backToList": "Volver al blog",
+    "notFound": "Artículo no encontrado",
+    "authorRole": "Especialista en finanzas",
+    "readingTime": "{{minutes}} min de lectura",
+    "articleFromJulishub": "Artículo de JulisHub",
     "share": {
       "title": "¿Te gustó este artículo?",
       "description": "¡Compartilo con tus amigos y ayudá a más personas a aprender sobre finanzas!"
@@ -91,10 +95,26 @@
   },
   "indicators": {
     "title": "Indicadores Económicos",
-    "description": "Datos oficiales en tiempo real",
+    "description": "Indicadores económicos y referencias de mercado",
     "brazil": "Brasil",
     "usa": "Estados Unidos",
-    "argentina": "Argentina"
+    "argentina": "Argentina",
+    "selicTitle": "Meta SELIC",
+    "ipcaTitle": "IPCA (12 meses)",
+    "cdiTitle": "CDI estimado",
+    "updatedAt": "Actualizado el {{date}}",
+    "cdiBasis": "Estimación basada en la SELIC menos 0,10 puntos porcentuales.",
+    "howItAffects": "¿Cómo afecta a tus finanzas?",
+    "selicExplanationTitle": "SELIC (tasa de interés básica)",
+    "selicExplanation": "Es la tasa de interés básica de la economía brasileña. Cuando sube, los préstamos tienden a ser más caros, mientras que las inversiones de renta fija pueden rendir más. Afecta directamente al crédito y al consumo.",
+    "ipcaExplanationTitle": "IPCA (índice oficial de inflación)",
+    "ipcaExplanation": "Mide la variación de los precios de productos y servicios. Cuanto mayor es el IPCA, menor tiende a ser el poder de compra. Es una referencia para ajustes salariales y contratos.",
+    "cdiExplanationTitle": "CDI (Certificado de Depósito Interbancario)",
+    "cdiExplanation": "Es una tasa usada entre bancos y una referencia para inversiones de renta fija. Suele estar cerca de la SELIC; muchos fondos y CDB usan el CDI como referencia.",
+    "argentinaUnavailableTitle": "Los indicadores argentinos están en desarrollo.",
+    "argentinaUnavailableDescription": "Próximamente: tasa de interés (BCRA), inflación (IPC) y más.",
+    "usaUnavailableTitle": "Los indicadores de Estados Unidos están en desarrollo.",
+    "usaUnavailableDescription": "Próximamente: Federal Funds Rate, CPI, Core Inflation y más."
   },
   "calculators": {
     "title": "Calculadoras Financieras",
@@ -149,6 +169,21 @@
       "Impuesto sobre Operaciones Financieras (IOF)",
       "Comisiones de corretaje o transferencia"
     ]
+  },
+  "exchangeCalculator": {
+    "title": "Conversor de monedas",
+    "description": "Simula la conversión entre diferentes monedas",
+    "amount": "Valor",
+    "from": "De",
+    "to": "A",
+    "resultTitle": "Resultado",
+    "resultDescription": "Valor convertido en la moneda de destino",
+    "rateLabel": "Tipo de cambio",
+    "marketReference": "Los valores se calculan con las referencias de cambio disponibles.",
+    "emptyResult": "Completa los campos y haz clic en \"Calcular\".",
+    "referenceTableTitle": "Tabla de referencia",
+    "referenceTableDescription": "Principales referencias de cambio disponibles",
+    "currencies": { "BRL": "Real brasileño", "USD": "Dólar estadounidense", "EUR": "Euro", "BTC": "Bitcoin", "ARS": "Peso argentino", "CLP": "Peso chileno", "MXN": "Peso mexicano" }
   },
   "dataStates": {
     "loading": "Cargando datos...",

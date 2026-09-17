@@ -199,25 +199,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center animate-in slide-in-from-bottom-4 duration-500 delay-500">
-        <div className="space-y-2">
-          <div className="text-4xl font-bold text-primary">100%</div>
-          <p className="text-muted-foreground">{t('home.stats.realData')}</p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-4xl font-bold text-primary">4</div>
-          <p className="text-muted-foreground">{t('home.stats.calculators')}</p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-4xl font-bold text-primary">20+</div>
-          <p className="text-muted-foreground">{t('home.stats.news')}</p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-4xl font-bold text-primary">24/7</div>
-          <p className="text-muted-foreground">{t('home.stats.realtime')}</p>
-        </div>
-      </section>
     </div>
   );
 };

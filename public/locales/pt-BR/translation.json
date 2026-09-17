@@ -13,7 +13,7 @@
       "part1": "Domine suas",
       "part2": "Finanças"
     },
-    "subtitle": "Acompanhe o mercado financeiro, simule investimentos e tome decisões mais inteligentes com dados em tempo real.",
+    "subtitle": "Acompanhe mercados, simule investimentos e tome decisões mais inteligentes com dados financeiros atualizados.",
     "cta": {
       "simulate": "Simular Agora",
       "quotes": "Ver Cotações",
@@ -26,7 +26,7 @@
       "subtitle": "Tudo que você precisa para gerenciar suas finanças em um só lugar",
       "markets": {
         "title": "Mercado Financeiro",
-        "description": "Cotações de moedas, criptomoedas e índices atualizadas em tempo real",
+        "description": "Cotações de moedas, criptomoedas e índices de mercado",
         "action": "Acessar"
       },
       "calculators": {
@@ -36,12 +36,12 @@
       },
       "indicators": {
         "title": "Indicadores Econômicos",
-        "description": "SELIC, IPCA, CDI e outros indicadores oficiais do Banco Central",
+        "description": "SELIC, IPCA, CDI e outras referências econômicas",
         "action": "Visualizar"
       },
       "news": {
         "title": "Notícias Financeiras",
-        "description": "Últimas notícias de economia e negócios do Brasil em tempo real",
+        "description": "Notícias recentes de economia e negócios do Brasil",
         "action": "Ler Agora"
       },
       "blog": {
@@ -59,7 +59,7 @@
   },
   "markets": {
     "title": "Mercados",
-    "description": "Cotações e índices em tempo real",
+    "description": "Cotações e índices de mercado",
     "exchangeRates": "Taxas de Câmbio",
     "topCryptos": "Top 10 Criptomoedas"
   },
@@ -81,6 +81,10 @@
     "readMore": "Ler artigo completo",
     "showing": "Mostrando",
     "backToList": "Voltar para o blog",
+    "notFound": "Artigo não encontrado",
+    "authorRole": "Especialista em finanças",
+    "readingTime": "{{minutes}} min de leitura",
+    "articleFromJulishub": "Artigo do JulisHub",
     "share": {
       "title": "Gostou deste artigo?",
       "description": "Compartilhe com seus amigos e ajude mais pessoas a aprenderem sobre finanças!"
@@ -91,10 +95,26 @@
   },
   "indicators": {
     "title": "Indicadores Econômicos",
-    "description": "Dados oficiais em tempo real",
+    "description": "Indicadores econômicos e referências de mercado",
     "brazil": "Brasil",
     "usa": "Estados Unidos",
-    "argentina": "Argentina"
+    "argentina": "Argentina",
+    "selicTitle": "Meta SELIC",
+    "ipcaTitle": "IPCA (12 meses)",
+    "cdiTitle": "CDI estimado",
+    "updatedAt": "Atualizado em {{date}}",
+    "cdiBasis": "Estimativa baseada na SELIC menos 0,10 p.p.",
+    "howItAffects": "Como isso afeta seu bolso?",
+    "selicExplanationTitle": "SELIC (taxa básica de juros)",
+    "selicExplanation": "É a taxa básica de juros da economia brasileira. Quando sobe, empréstimos tendem a ficar mais caros, enquanto investimentos de renda fixa podem render mais. Afeta diretamente o crédito e o consumo.",
+    "ipcaExplanationTitle": "IPCA (inflação oficial)",
+    "ipcaExplanation": "Mede a variação de preços de produtos e serviços. Quanto maior o IPCA, menor tende a ser o poder de compra. É uma referência para reajustes salariais e contratos.",
+    "cdiExplanationTitle": "CDI (Certificado de Depósito Interbancário)",
+    "cdiExplanation": "É uma taxa praticada entre bancos e uma referência para investimentos de renda fixa. Geralmente fica próxima à SELIC; muitos fundos e CDBs usam o CDI como referência.",
+    "argentinaUnavailableTitle": "Indicadores argentinos em desenvolvimento.",
+    "argentinaUnavailableDescription": "Em breve: taxa de juros (BCRA), inflação (IPC) e outros.",
+    "usaUnavailableTitle": "Indicadores dos Estados Unidos em desenvolvimento.",
+    "usaUnavailableDescription": "Em breve: Federal Funds Rate, CPI, Core Inflation e outros."
   },
   "calculators": {
     "title": "Calculadoras Financeiras",
@@ -149,6 +169,21 @@
       "IOF (Imposto sobre Operações Financeiras)",
       "Taxas de corretagem ou transferência"
     ]
+  },
+  "exchangeCalculator": {
+    "title": "Conversor de moedas",
+    "description": "Simule a conversão entre diferentes moedas",
+    "amount": "Valor",
+    "from": "De",
+    "to": "Para",
+    "resultTitle": "Resultado",
+    "resultDescription": "Valor convertido na moeda de destino",
+    "rateLabel": "Taxa de câmbio",
+    "marketReference": "Valores calculados com as referências de câmbio disponíveis.",
+    "emptyResult": "Preencha os campos e clique em \"Calcular\".",
+    "referenceTableTitle": "Tabela de referência",
+    "referenceTableDescription": "Principais referências de câmbio disponíveis",
+    "currencies": { "BRL": "Real brasileiro", "USD": "Dólar americano", "EUR": "Euro", "BTC": "Bitcoin", "ARS": "Peso argentino", "CLP": "Peso chileno", "MXN": "Peso mexicano" }
   },
   "dataStates": {
     "loading": "Carregando dados...",

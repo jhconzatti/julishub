@@ -242,8 +242,8 @@ New findings:
 
 | ID | Priority | Category | Finding | Status |
 |---|---|---|---|---|
-| JH-016 | P1 | Data Trust / Content | Afirmações de dados “em tempo real”, “oficiais” e “100%” são absolutas e entram em conflito com cache, providers externos e estados stale/indisponível. | Open |
-| JH-017 | P1 | Content | Indicadores, conversor de câmbio e partes do blog/post têm texto fixo em português ou inglês, produzindo experiência híbrida em en/es. | Open |
+| JH-016 | P1 | Data Trust / Content | Afirmações de dados “em tempo real”, “oficiais” e “100%” são absolutas e entram em conflito com cache, providers externos e estados stale/indisponível. | Resolved locally — Sprint 1B removed scoped absolute claims and the Home quality statistic |
+| JH-017 | P1 | Content | Indicadores, conversor de câmbio e partes do blog/post têm texto fixo em português ou inglês, produzindo experiência híbrida em en/es. | Resolved locally — Sprint 1B localized scoped interface copy in pt-BR, en and es |
 | JH-018 | P2 | Data Trust | Origem, atualização e natureza derivada/estimada dos dados são comunicadas de formas diferentes entre mercados, indicadores, notícias e conversor. | Open |
 | JH-019 | P2 | Visual System | Cards, cores semânticas, superfícies e tratamento de estados variam por tela em vez de derivarem de padrões compartilhados. | Open |
 | JH-020 | P2 | Navigation / Responsive | Header desktop fica denso em larguras intermediárias; a troca para menu mobile acontece tarde para seis destinos, três idiomas e tema. | Open |
@@ -267,3 +267,16 @@ Proposed Sprint 1 implementation roadmap:
 2. **Sprint 1C — Entry point and navigation**: ajustar hierarquia/grade da Home e densidade/responsividade da navegação sem mudar a estrutura do produto. Findings: JH-020, JH-024. Areas: `Index`, `Header`, `Navigation`, `MobileNav`, `Footer`.
 3. **Sprint 1D — Financial workspaces**: padronizar abas, formulários, resultados, gráficos e ações de refresh das telas financeiras. Findings: JH-018, JH-021, JH-022. Areas: Markets, Indicators, Calculators e `ExchangeCalculator`.
 4. **Sprint 1E — Editorial and responsive polish**: corrigir feedback/cópia do Blog e validar os ajustes de conteúdo em mobile. Findings: JH-017, JH-023, JH-025. Areas: BlogList, BlogPost, PrivacyPolicy e traduções.
+
+### Sprint 1B — Copy & Localization Baseline
+
+Status:
+Concluída localmente.
+
+Entregas:
+- remoção, nas superfícies avaliadas, de promessas absolutas de dados em tempo real/oficiais e da estatística `100%` da Home;
+- descrições factuais para Home, Markets, Indicators e referências de câmbio;
+- CDI explicitamente identificado como estimativa;
+- cópia de Indicators, Exchange Calculator e metadados/controles de Blog Post localizada em pt-BR, en e es;
+- conteúdo armazenado dos artigos preservado no idioma de origem, sem tradução artificial;
+- ESLint, TypeScript e build aprovados localmente.
