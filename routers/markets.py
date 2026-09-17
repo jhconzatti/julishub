@@ -387,12 +387,35 @@ async def get_exchange_rates(response: Response):
     )
 
     result = {pair: rate for item in fiat_results if item is not None for pair, rate in (item,)}
-    ars_brl = result.get("ARS_BRL")
-    if ars_brl is not None and float(ars_brl["valor"]) != 0:
-        result["BRL_ARS"] = {
-            "valor": f"{1 / float(ars_brl['valor']):.4f}",
-            "var": f"{-float(ars_brl['var']):.2f}",
-            "label": "Real → Peso Argentino",
+    yahoo_base_quotes = (
+        ("BRL=X", "USD_BRL", "Dólar Comercial → Real"),
+        ("EURUSD=X", "EUR_USD", "Euro → Dólar"),
+        ("ARS=X", "USD_ARS", "Dólar → Peso Argentino"),
+        ("CLP=X", "USD_CLP", "Dólar → Peso Chileno"),
+        ("MXN=X", "USD_MXN", "Dólar → Peso Mexicano"),
+    )
+    yahoo_results = await asyncio.gather(
+        *(fetch_yahoo_fx(*quote) for quote in yahoo_base_quotes if quote[1] not in result),
+    )
+    result.update({pair: rate for item in yahoo_results if item is not None for pair, rate in (item,)})
+
+    derived_pairs = (
+        ("EUR_BRL", "EUR_USD", "USD_BRL", lambda left, right: left * right, "Euro → Real"),
+        ("ARS_BRL", "USD_BRL", "USD_ARS", lambda left, right: left / right, "Peso Argentino → Real"),
+        ("BRL_ARS", "USD_ARS", "USD_BRL", lambda left, right: left / right, "Real → Peso Argentino"),
+        ("CLP_BRL", "USD_BRL", "USD_CLP", lambda left, right: left / right, "Peso Chileno → Real"),
+        ("MXN_BRL", "USD_BRL", "USD_MXN", lambda left, right: left / right, "Peso Mexicano → Real"),
+    )
+    for pair, left_key, right_key, operation, label in derived_pairs:
+        if pair in result or left_key not in result or right_key not in result:
+            continue
+        right_value = float(result[right_key]["valor"])
+        if right_value == 0:
+            continue
+        result[pair] = {
+            "valor": f"{operation(float(result[left_key]['valor']), right_value):.4f}",
+            "var": None,
+            "label": label,
         }
 
     if isinstance(btc_result, Exception):
@@ -467,6 +490,39 @@ async def get_brazil_indexes(response: Response):
 
 
 YAHOO_INDEX_URL = "https://query1.finance.yahoo.com/v8/finance/chart"
+
+
+async def fetch_yahoo_fx(symbol: str, pair: str, label: str) -> Optional[tuple[str, dict]]:
+    """Obtém uma cotação fiat de fallback no endpoint estruturado do Yahoo Finance."""
+    try:
+        response = await get_client().get(
+            f"{YAHOO_INDEX_URL}/{symbol}?range=5d&interval=1d",
+            headers={"User-Agent": "Mozilla/5.0 (compatible; JulisHub/1.0)"},
+        )
+        if response.status_code != 200:
+            logger.warning("⚠️ Yahoo Finance %s returned %s", symbol, response.status_code)
+            return None
+        chart = response.json().get("chart", {})
+        results = chart.get("result")
+        if chart.get("error") is not None or not isinstance(results, list) or not results:
+            logger.warning("⚠️ Yahoo Finance %s returned an invalid payload", symbol)
+            return None
+        meta = results[0].get("meta", {})
+        price = meta.get("regularMarketPrice")
+        change = meta.get("regularMarketChangePercent")
+        if not is_numeric_value(price):
+            logger.warning("⚠️ Yahoo Finance %s returned an invalid price", symbol)
+            return None
+        return pair, {
+            "valor": str(price),
+            "var": str(change) if is_numeric_value(change) else None,
+            "label": label,
+        }
+    except httpx.TimeoutException:
+        logger.warning("⚠️ Yahoo Finance %s timed out", symbol)
+    except Exception as error:
+        logger.warning("⚠️ Yahoo Finance %s request failed: %s", symbol, type(error).__name__)
+    return None
 
 
 async def fetch_yahoo_index(symbol: str, name: str, label: str, description: str) -> Optional[dict]:

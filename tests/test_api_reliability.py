@@ -20,7 +20,7 @@ class FakeResponse:
 
 class ExchangeClient:
     fiat_payloads = {
-        "USD-BRL": ("USDBRL", {"bid": "0", "pctChange": "0"}),
+        "USD-BRL": ("USDBRL", {"bid": "5", "pctChange": "0"}),
         "EUR-BRL": ("EURBRL", {"bid": "6.20", "pctChange": "0.10"}),
         "EUR-USD": ("EURUSD", {"bid": "1.10", "pctChange": "-0.20"}),
         "USD-ARS": ("USDARS", {"bid": "1200", "pctChange": "0.30"}),
@@ -41,6 +41,13 @@ class ExchangeClient:
 class FailingClient:
     async def get(self, _url, **_kwargs):
         raise httpx.TimeoutException("provider timeout")
+
+
+class ZeroExchangeClient(ExchangeClient):
+    fiat_payloads = {
+        **ExchangeClient.fiat_payloads,
+        "USD-BRL": ("USDBRL", {"bid": "0", "pctChange": "0"}),
+    }
 
 
 class IncompleteExchangeClient(ExchangeClient):
@@ -105,6 +112,68 @@ class MalformedPairClient(PairFailureExchangeClient):
     failures = {"CLP-BRL": "malformed"}
 
 
+class YahooFallbackClient(AwesomeUnavailableClient):
+    yahoo_values = {
+        "BRL=X": (5, 0.1),
+        "EURUSD=X": (1.1, 0.2),
+        "ARS=X": (1000, 0.3),
+        "CLP=X": (900, 0.4),
+        "MXN=X": (20, 0.5),
+    }
+    yahoo_failures = {}
+
+    async def get(self, url, **_kwargs):
+        if "query1.finance.yahoo.com" in url:
+            symbol = next((candidate for candidate in self.yahoo_values if candidate in url), None)
+            failure = self.yahoo_failures.get(symbol)
+            if isinstance(failure, Exception):
+                raise failure
+            if isinstance(failure, int):
+                return FakeResponse({}, failure)
+            price, change = self.yahoo_values[symbol]
+            if failure == "invalid":
+                price = "invalid"
+            meta = {"regularMarketPrice": price}
+            if change is not None:
+                meta["regularMarketChangePercent"] = change
+            return FakeResponse({"chart": {"result": [{"meta": meta}], "error": None}})
+        return await super().get(url)
+
+
+class PartialAwesomeYahooClient(ExchangeClient):
+    async def get(self, url, **_kwargs):
+        if "query1.finance.yahoo.com" in url:
+            return await YahooFallbackClient().get(url)
+        if url.endswith("USD-BRL"):
+            raise httpx.TimeoutException("USD-BRL timeout")
+        return await super().get(url)
+
+
+class DirectCrossYahooClient(YahooFallbackClient):
+    async def get(self, url, **_kwargs):
+        if url.endswith("EUR-BRL"):
+            return await ExchangeClient().get(url)
+        return await super().get(url)
+
+
+class YahooUnavailableCoinGeckoUnavailableClient(YahooFallbackClient):
+    async def get(self, url, **_kwargs):
+        if "coingecko" in url:
+            raise httpx.TimeoutException("CoinGecko timeout")
+        return await super().get(url)
+
+
+class YahooTrackingExchangeClient(ExchangeClient):
+    def __init__(self):
+        self.yahoo_called = False
+
+    async def get(self, url, **_kwargs):
+        if "query1.finance.yahoo.com" in url:
+            self.yahoo_called = True
+            return FakeResponse({}, 500)
+        return await super().get(url)
+
+
 class YahooIndexesClient:
     values = {
         "%5EMERV": (2345678.9, 1.23),
@@ -160,7 +229,7 @@ class ApiReliabilityTests(unittest.TestCase):
             cache["timestamp"] = None
 
     def test_valid_provider_response_accepts_legitimate_zero(self):
-        with patch("routers.markets.get_client", return_value=ExchangeClient()):
+        with patch("routers.markets.get_client", return_value=ZeroExchangeClient()):
             response = self.client.get("/api/exchange-rates")
 
         self.assertEqual(response.status_code, 200)
@@ -176,6 +245,78 @@ class ApiReliabilityTests(unittest.TestCase):
             "USD_BRL", "EUR_BRL", "EUR_USD", "USD_ARS", "ARS_BRL", "BRL_ARS",
             "USD_CLP", "CLP_BRL", "USD_MXN", "MXN_BRL",
         }.issubset(response.json()))
+
+    def test_yahoo_fallback_is_not_called_for_valid_awesome_base_rates(self):
+        client = YahooTrackingExchangeClient()
+        with patch("routers.markets.get_client", return_value=client):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["USD_BRL"]["valor"], "5")
+        self.assertFalse(client.yahoo_called)
+
+    def test_yahoo_fallback_supplies_fiat_when_awesomeapi_fails(self):
+        with patch("routers.markets.get_client", return_value=YahooFallbackClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["USD_BRL"]["valor"], "5")
+        self.assertEqual(response.json()["EUR_BRL"]["valor"], "5.5000")
+
+    def test_yahoo_fiat_rates_survive_coin_gecko_failure(self):
+        with patch("routers.markets.get_client", return_value=YahooUnavailableCoinGeckoUnavailableClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertNotIn("BTC_USD", response.json())
+
+    def test_yahoo_fallback_fills_only_missing_usd_brl(self):
+        with patch("routers.markets.get_client", return_value=PartialAwesomeYahooClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["USD_BRL"]["valor"], "5")
+        self.assertEqual(response.json()["EUR_BRL"]["valor"], "6.20")
+
+    def test_yahoo_base_quotes_derive_cross_rates_without_variation(self):
+        with patch("routers.markets.get_client", return_value=YahooFallbackClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        data = response.json()
+        self.assertEqual(data["ARS_BRL"]["valor"], "0.0050")
+        self.assertEqual(data["BRL_ARS"]["valor"], "200.0000")
+        self.assertEqual(data["CLP_BRL"]["valor"], "0.0056")
+        self.assertEqual(data["MXN_BRL"]["valor"], "0.2500")
+        self.assertIsNone(data["EUR_BRL"]["var"])
+
+    def test_direct_awesome_cross_rate_is_not_overwritten_by_yahoo_derivation(self):
+        with patch("routers.markets.get_client", return_value=DirectCrossYahooClient()):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["EUR_BRL"]["valor"], "6.20")
+
+    def test_one_yahoo_failure_does_not_remove_other_fallback_rates(self):
+        client = YahooFallbackClient()
+        client.yahoo_failures = {"ARS=X": 429}
+        with patch("routers.markets.get_client", return_value=client):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("USD_BRL", response.json())
+        self.assertNotIn("USD_ARS", response.json())
+        self.assertIn("USD_CLP", response.json())
+
+    def test_invalid_yahoo_price_is_omitted_without_invalidating_siblings(self):
+        client = YahooFallbackClient()
+        client.yahoo_failures = {"CLP=X": "invalid"}
+        with patch("routers.markets.get_client", return_value=client):
+            response = self.client.get("/api/exchange-rates")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("USD_CLP", response.json())
+        self.assertIn("USD_BRL", response.json())
 
     def test_one_non_200_fiat_pair_does_not_remove_siblings(self):
         with patch("routers.markets.get_client", return_value=OneNon200PairClient()):
@@ -193,7 +334,7 @@ class ApiReliabilityTests(unittest.TestCase):
         self.assertIn("USD_BRL", response.json())
         self.assertNotIn("EUR_USD", response.json())
         self.assertNotIn("USD_CLP", response.json())
-        self.assertNotIn("MXN_BRL", response.json())
+        self.assertEqual(response.json()["MXN_BRL"]["valor"], "0.2778")
 
     def test_timed_out_fiat_pair_does_not_remove_siblings(self):
         with patch("routers.markets.get_client", return_value=TimedOutPairClient()):
@@ -201,7 +342,8 @@ class ApiReliabilityTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("USD_BRL", response.json())
-        self.assertNotIn("EUR_BRL", response.json())
+        self.assertEqual(response.json()["EUR_BRL"]["valor"], "5.5000")
+        self.assertIsNone(response.json()["EUR_BRL"]["var"])
 
     def test_malformed_fiat_pair_does_not_remove_siblings(self):
         with patch("routers.markets.get_client", return_value=MalformedPairClient()):
@@ -209,7 +351,8 @@ class ApiReliabilityTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("USD_BRL", response.json())
-        self.assertNotIn("CLP_BRL", response.json())
+        self.assertEqual(response.json()["CLP_BRL"]["valor"], "0.0053")
+        self.assertIsNone(response.json()["CLP_BRL"]["var"])
 
     def test_primary_provider_failure_uses_real_fallback(self):
         fallback = {
@@ -267,15 +410,17 @@ class ApiReliabilityTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("USD_BRL", response.json())
         self.assertIn("BTC_USD", response.json())
-        self.assertNotIn("MXN_BRL", response.json())
+        self.assertEqual(response.json()["MXN_BRL"]["valor"], "0.2778")
+        self.assertIsNone(response.json()["MXN_BRL"]["var"])
 
     def test_invalid_ars_brl_omits_derived_brl_ars(self):
         with patch("routers.markets.get_client", return_value=InvalidArsExchangeClient()):
             response = self.client.get("/api/exchange-rates")
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn("ARS_BRL", response.json())
-        self.assertNotIn("BRL_ARS", response.json())
+        self.assertEqual(response.json()["ARS_BRL"]["valor"], "0.0042")
+        self.assertEqual(response.json()["BRL_ARS"]["valor"], "240.0000")
+        self.assertIsNone(response.json()["ARS_BRL"]["var"])
 
     def test_exchange_failure_preserves_stale_cache(self):
         cached = {
