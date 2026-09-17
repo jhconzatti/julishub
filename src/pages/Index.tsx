@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Calculator, Activity, ChartBar, Sparkles, ArrowRight, Home, Newspaper, BookOpen } from 'lucide-react';
+import { TrendingUp, Calculator, Activity, Sparkles, ArrowRight, Home, Newspaper, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLang } from '@/hooks/use-lang';
 
@@ -59,10 +59,10 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Card Mercado */}
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-100"
+            className="flex flex-col cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-100"
             onClick={() => navigate(lp('/markets'))}
           >
             <CardHeader>
@@ -74,7 +74,7 @@ const Index = () => {
                 {t('home.features.markets.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button variant="ghost" className="w-full justify-between">
                 {t('home.features.markets.action')}
                 <ArrowRight className="h-4 w-4" />
@@ -84,7 +84,7 @@ const Index = () => {
 
           {/* Card Notícias */}
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-150"
+            className="flex flex-col cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-150"
             onClick={() => navigate(lp('/news'))}
           >
             <CardHeader>
@@ -96,7 +96,7 @@ const Index = () => {
                 {t('home.features.news.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button variant="ghost" className="w-full justify-between">
                 {t('home.features.news.action')}
                 <ArrowRight className="h-4 w-4" />
@@ -106,7 +106,7 @@ const Index = () => {
 
           {/* Card Calculadoras */}
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-200"
+            className="flex flex-col cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-200"
             onClick={() => navigate(lp('/calculators'))}
           >
             <CardHeader>
@@ -118,7 +118,7 @@ const Index = () => {
                 {t('home.features.calculators.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button variant="ghost" className="w-full justify-between">
                 {t('home.features.calculators.action')}
                 <ArrowRight className="h-4 w-4" />
@@ -128,7 +128,7 @@ const Index = () => {
 
           {/* Card Indicadores */}
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-300"
+            className="flex flex-col cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-300"
             onClick={() => navigate(lp('/indicators'))}
           >
             <CardHeader>
@@ -140,7 +140,7 @@ const Index = () => {
                 {t('home.features.indicators.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button variant="ghost" className="w-full justify-between">
                 {t('home.features.indicators.action')}
                 <ArrowRight className="h-4 w-4" />
@@ -150,7 +150,7 @@ const Index = () => {
 
           {/* Card Blog */}
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-350"
+            className="flex flex-col cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in slide-in-from-bottom-4 duration-500 delay-350 lg:col-start-2"
             onClick={() => navigate(lp('/blog'))}
           >
             <CardHeader>
@@ -162,40 +162,13 @@ const Index = () => {
                 {t('home.features.blog.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button variant="ghost" className="w-full justify-between">
                 {t('home.features.blog.action')}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
-        </div>
-      </section>
-
-      {/* Call to Action - Destaque */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-blue-600 p-12 text-white animate-in slide-in-from-bottom-4 duration-500 delay-400">
-        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]" />
-        
-        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-6">
-          <ChartBar className="h-16 w-16 mx-auto opacity-90" />
-          
-          <h2 className="text-4xl font-bold">
-            {t('home.cta.title')}
-          </h2>
-          
-          <p className="text-lg text-white/90">
-            {t('home.cta.description')}
-          </p>
-          
-          <Button
-            size="lg"
-            variant="secondary"
-            className="text-lg px-8 mt-4"
-            onClick={() => navigate(lp('/calculators'))}
-          >
-            {t('home.cta.button')}
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
         </div>
       </section>
 

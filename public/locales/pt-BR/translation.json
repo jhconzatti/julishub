@@ -5,7 +5,9 @@
     "indicators": "Indicadores",
     "calculators": "Calculadoras",
     "news": "Notícias",
-    "blog": "Blog"
+    "blog": "Blog",
+    "openMenu": "Abrir menu",
+    "menuTitle": "Menu de navegação"
   },
   "home": {
     "tagline": "Seu hub financeiro completo",
@@ -201,6 +203,7 @@
     "rateUnavailable": "Não há uma taxa válida disponível para esta conversão."
   },
   "common": {
+    "toggleTheme": "Alternar tema",
     "price": "Preço",
     "change": "Variação",
     "volume": "Volume",

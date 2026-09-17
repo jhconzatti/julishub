@@ -7,10 +7,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { clearAllCache } from "@/lib/apiCache";
 import { useLang } from "@/hooks/use-lang";
+import { useTranslation } from "react-i18next";
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const { lp } = useLang();
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,7 +31,7 @@ const Header = () => {
         </div>
 
         {/* 2. Navegação Central */}
-        <div className="hidden md:flex">
+        <div className="hidden xl:flex">
             <Navigation />
         </div>
 
@@ -44,7 +46,8 @@ const Header = () => {
             size="icon"
             onClick={toggleTheme}
             className="rounded-full w-10 h-10 sm:w-9 sm:h-9"
-            title="Alternar Tema"
+            aria-label={t("common.toggleTheme")}
+            title={t("common.toggleTheme")}
           >
             {theme === 'dark' ? (
               <Sun className="h-5 w-5 text-orange-400 transition-all" />

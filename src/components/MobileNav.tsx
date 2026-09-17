@@ -32,15 +32,15 @@ const MobileNav = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden"
-          aria-label="Abrir menu"
+          className="xl:hidden"
+          aria-label={t('nav.openMenu')}
         >
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[280px] sm:w-[320px]">
         <SheetHeader>
-          <SheetTitle>Menu de Navegação</SheetTitle>
+          <SheetTitle>{t('nav.menuTitle')}</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-2 mt-8">
           {navItems.map((item) => {
