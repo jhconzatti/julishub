@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowDownUp, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
+import { DataFreshness, DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
 import { fetchWithCache } from "@/lib/apiCache";
 import { fetchJsonWithRetry } from "@/lib/apiRequest";
 import { isExchangeRatesResponse, type ExchangeRatesResponse } from "@/lib/apiValidators";
@@ -76,7 +76,7 @@ export default function ExchangeCalculator() {
   const [ratesError, setRatesError] = useState(false);
   const [conversionError, setConversionError] = useState(false);
   const [isStale, setIsStale] = useState(false);
-  const [staleTimestamp, setStaleTimestamp] = useState<number | null>(null);
+  const [dataTimestamp, setDataTimestamp] = useState<number | null>(null);
   const { t } = useTranslation();
   const warningItemsValue = t("calculators.warning_items", { returnObjects: true });
   const warningItems = Array.isArray(warningItemsValue)
@@ -99,13 +99,13 @@ export default function ExchangeCalculator() {
       );
       setExchangeRates(response.data);
       setIsStale(response.isStale);
-      setStaleTimestamp(response.isStale ? response.timestamp : null);
+      setDataTimestamp(response.timestamp);
     } catch (requestError) {
       console.error("Erro ao buscar taxas de câmbio:", requestError);
       setExchangeRates(null);
       setRatesError(true);
       setIsStale(false);
-      setStaleTimestamp(null);
+      setDataTimestamp(null);
     } finally {
       setRatesLoading(false);
     }
@@ -156,8 +156,8 @@ export default function ExchangeCalculator() {
 
       {ratesLoading ? <p className="text-sm text-muted-foreground" role="status">{t('dataStates.loading')}</p> : null}
       <SlowLoadingNotice loading={ratesLoading} />
-      {ratesError ? <DataUnavailable onRetry={() => void fetchExchangeRates(true)} retrying={ratesLoading} /> : null}
-      {isStale ? <StaleDataNotice timestamp={staleTimestamp} /> : null}
+      {ratesError ? <DataUnavailable onRetry={() => void fetchExchangeRates(true)} retrying={ratesLoading} external /> : null}
+      {!ratesLoading && !ratesError && (isStale ? <StaleDataNotice timestamp={dataTimestamp} /> : <DataFreshness timestamp={dataTimestamp} />)}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

@@ -3,7 +3,7 @@ import { DollarSign, Euro, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
+import { DataFreshness, DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
 import MarketExchange from "@/components/markets/MarketExchange";
 import MarketBrazil from "@/components/markets/MarketBrazil";
 import MarketArgentina from "@/components/markets/MarketArgentina";
@@ -109,10 +109,11 @@ function TabPanel({ state, skeletonCount, onRetry, children }: TabPanelProps) {
       </div>
     );
   }
-  if (state.error) return <DataUnavailable onRetry={onRetry} />;
+  if (state.error) return <DataUnavailable onRetry={onRetry} external />;
   return (
     <div className="space-y-4">
       {state.stale ? <StaleDataNotice timestamp={state.timestamp} /> : null}
+      {!state.stale ? <DataFreshness timestamp={state.timestamp} /> : null}
       {children}
     </div>
   );
@@ -215,6 +216,8 @@ export default function Markets() {
           type="button"
           onClick={handleManualRefresh}
           disabled={isRefreshing}
+          aria-label={t("dataStates.refresh")}
+          aria-busy={isRefreshing}
           className="rounded-full p-2 transition-all hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
           title={t("dataStates.refresh")}
         >

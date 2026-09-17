@@ -3,7 +3,7 @@ import { RefreshCw, ExternalLink, Newspaper } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
+import { DataFreshness, DataUnavailable, SlowLoadingNotice, StaleDataNotice } from "@/components/DataState";
 import { fetchWithCache, canManualRefresh, getLastManualRefresh, getRemainingCooldown, updateManualRefreshTimestamp } from "@/lib/apiCache";
 import { fetchJsonWithRetry } from "@/lib/apiRequest";
 import { isNewsResponse, type NewsItem } from "@/lib/apiValidators";
@@ -25,7 +25,7 @@ export default function News() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(false);
   const [isStale, setIsStale] = useState(false);
-  const [staleTimestamp, setStaleTimestamp] = useState<number | null>(null);
+  const [dataTimestamp, setDataTimestamp] = useState<number | null>(null);
 
   const fetchNoticias = useCallback(async (forceRefresh = false): Promise<boolean> => {
     setLoading(true);
@@ -39,14 +39,14 @@ export default function News() {
       );
       setNoticias(result.data);
       setIsStale(result.isStale);
-      setStaleTimestamp(result.isStale ? result.timestamp : null);
+      setDataTimestamp(result.timestamp);
       return !result.refreshFailed;
     } catch (requestError) {
       console.warn("Erro ao buscar notícias:", requestError);
       setNoticias([]);
       setError(true);
       setIsStale(false);
-      setStaleTimestamp(null);
+      setDataTimestamp(null);
       return false;
     } finally {
       setLoading(false);
@@ -92,6 +92,8 @@ export default function News() {
         <button 
           onClick={handleManualRefresh}
           disabled={isRefreshing}
+          aria-label={t('news.refresh')}
+          aria-busy={isRefreshing}
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           title={t('news.refresh') || "Atualizar notícias (disponível a cada 5 minutos)"}
         >
@@ -99,7 +101,7 @@ export default function News() {
         </button>
       </div>
 
-      {!loading && !error && isStale ? <StaleDataNotice timestamp={staleTimestamp} /> : null}
+      {!loading && !error && (isStale ? <StaleDataNotice timestamp={dataTimestamp} /> : <DataFreshness timestamp={dataTimestamp} />)}
 
       {loading ? (
         <div className="space-y-4">
@@ -117,7 +119,7 @@ export default function News() {
           </div>
         </div>
       ) : error ? (
-        <DataUnavailable onRetry={() => void fetchNoticias(true)} />
+        <DataUnavailable onRetry={() => void fetchNoticias(true)} external />
       ) : noticias.length === 0 ? (
         <Card className="p-12 text-center">
           <Newspaper className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />

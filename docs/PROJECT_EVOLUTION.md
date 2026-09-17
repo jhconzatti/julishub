@@ -244,11 +244,11 @@ New findings:
 |---|---|---|---|---|
 | JH-016 | P1 | Data Trust / Content | Afirmações de dados “em tempo real”, “oficiais” e “100%” são absolutas e entram em conflito com cache, providers externos e estados stale/indisponível. | Resolved locally — Sprint 1B removed scoped absolute claims and the Home quality statistic |
 | JH-017 | P1 | Content | Indicadores, conversor de câmbio e partes do blog/post têm texto fixo em português ou inglês, produzindo experiência híbrida em en/es. | Resolved locally — Sprint 1B localized scoped interface copy in pt-BR, en and es |
-| JH-018 | P2 | Data Trust | Origem, atualização e natureza derivada/estimada dos dados são comunicadas de formas diferentes entre mercados, indicadores, notícias e conversor. | Open |
+| JH-018 | P2 | Data Trust | Origem, atualização e natureza derivada/estimada dos dados são comunicadas de formas diferentes entre mercados, indicadores, notícias e conversor. | Resolved locally — Sprint 1C applies shared current/stale/external-unavailable trust messaging to scoped data screens |
 | JH-019 | P2 | Visual System | Cards, cores semânticas, superfícies e tratamento de estados variam por tela em vez de derivarem de padrões compartilhados. | Open |
 | JH-020 | P2 | Navigation / Responsive | Header desktop fica denso em larguras intermediárias; a troca para menu mobile acontece tarde para seis destinos, três idiomas e tema. | Open |
 | JH-021 | P2 | Calculators / Responsive | As quatro abas de calculadoras ficam apertadas em 360 px e a hierarquia entre formulário, resultado e gráfico não é padronizada entre ferramentas. | Open |
-| JH-022 | P2 | Feedback States | Skeletons, aviso de lentidão, refresh e estados vazios existem, mas a ação de refresh depende de ícone/tooltip e o estado persistente de atualização não é consistente. | Open |
+| JH-022 | P2 | Feedback States | Skeletons, aviso de lentidão, refresh e estados vazios existem, mas a ação de refresh depende de ícone/tooltip e o estado persistente de atualização não é consistente. | Resolved locally — Sprint 1C unifies freshness/degraded messaging and adds refresh accessible names |
 | JH-023 | P2 | Blog | Falha de carregamento de artigo pode parecer “não encontrado”; credencial de autor, leitura e compartilhamento contêm cópia fixa e/ou não localizada. | Open |
 | JH-024 | P2 | Home | Cinco cards formam uma grade 4+1 em desktop e a segunda CTA/estatísticas reiteram a mesma promessa antes de levar o usuário ao produto. | Open |
 | JH-025 | P3 | Accessibility | Alguns controles somente com ícone dependem de `title`; contraste de textos em superfícies coloridas e indicação de foco precisam de checagem visual compartilhada. | Open |
@@ -280,3 +280,16 @@ Entregas:
 - cópia de Indicators, Exchange Calculator e metadados/controles de Blog Post localizada em pt-BR, en e es;
 - conteúdo armazenado dos artigos preservado no idioma de origem, sem tradução artificial;
 - ESLint, TypeScript e build aprovados localmente.
+
+### Sprint 1C — Data Trust & Feedback States
+
+Status:
+Concluída localmente.
+
+Entregas:
+- `DataFreshness` compartilhado para indicar a atualização do cache/fetch em dados atuais;
+- alerta stale esclarece que os dados exibidos são os últimos válidos em cache e que a atualização falhou;
+- indisponibilidade de dados externos comunica a dependência de fontes externas, sem expor detalhes de provider;
+- Markets aplica o padrão por aba; Indicators preserva datas de referência SELIC/IPCA separadas da atualização frontend; News e Exchange Calculator seguem o mesmo padrão;
+- ações compactas de refresh em Markets e News recebem `aria-label` e estado `aria-busy`;
+- mensagens adicionadas em pt-BR, en e es, sem alteração de APIs, cache, providers ou cálculos.

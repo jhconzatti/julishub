@@ -44,19 +44,35 @@ export function StaleDataNotice({ timestamp }: { timestamp: number | null }) {
   );
 }
 
+export function DataFreshness({ timestamp }: { timestamp: number | null }) {
+  const { t, i18n } = useTranslation();
+  const formattedTimestamp = timestamp
+    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: "short", timeStyle: "short" }).format(timestamp)
+    : null;
+
+  if (!formattedTimestamp) return null;
+
+  return (
+    <p className="text-xs text-muted-foreground" role="status">
+      {t("dataStates.currentAt", { date: formattedTimestamp })}
+    </p>
+  );
+}
+
 interface DataUnavailableProps {
   onRetry: () => void;
   retrying?: boolean;
+  external?: boolean;
 }
 
-export function DataUnavailable({ onRetry, retrying = false }: DataUnavailableProps) {
+export function DataUnavailable({ onRetry, retrying = false, external = false }: DataUnavailableProps) {
   const { t } = useTranslation();
 
   return (
     <Alert variant="destructive" className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-2">
         <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-        <AlertDescription>{t("dataStates.unavailable")}</AlertDescription>
+        <AlertDescription>{t(external ? "dataStates.externalUnavailable" : "dataStates.unavailable")}</AlertDescription>
       </div>
       <Button type="button" variant="outline" size="sm" onClick={onRetry} disabled={retrying}>
         <RefreshCw className={`mr-2 h-4 w-4 ${retrying ? "animate-spin" : ""}`} />

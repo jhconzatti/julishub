@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Landmark, TrendingUp, Activity, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
-import { DataUnavailable, SlowLoadingNotice, StaleDataNotice } from '@/components/DataState';
+import { DataFreshness, DataUnavailable, SlowLoadingNotice, StaleDataNotice } from '@/components/DataState';
 import { fetchWithCache } from '@/lib/apiCache';
 import { fetchJsonWithRetry } from '@/lib/apiRequest';
 import { isIndicatorsResponse, type IndicatorsResponse } from '@/lib/apiValidators';
@@ -28,7 +28,7 @@ const Indicators = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isStale, setIsStale] = useState(false);
-  const [staleTimestamp, setStaleTimestamp] = useState<number | null>(null);
+  const [dataTimestamp, setDataTimestamp] = useState<number | null>(null);
 
   const fetchIndicadores = useCallback(async (forceRefresh = false) => {
     setLoading(true);
@@ -42,12 +42,12 @@ const Indicators = () => {
       );
       setIndicadores(result.data);
       setIsStale(result.isStale);
-      setStaleTimestamp(result.isStale ? result.timestamp : null);
+      setDataTimestamp(result.timestamp);
     } catch (requestError) {
       console.error('Erro ao buscar indicadores:', requestError);
       setError(true);
       setIsStale(false);
-      setStaleTimestamp(null);
+      setDataTimestamp(null);
     } finally {
       setLoading(false);
     }
@@ -84,12 +84,12 @@ const Indicators = () => {
 
   const renderBrasilTab = () => {
     if (error || !indicadores) {
-      return <DataUnavailable onRetry={() => void fetchIndicadores(true)} retrying={loading} />;
+      return <DataUnavailable onRetry={() => void fetchIndicadores(true)} retrying={loading} external />;
     }
 
     return (
       <div className="space-y-6">
-        {isStale ? <StaleDataNotice timestamp={staleTimestamp} /> : null}
+        {isStale ? <StaleDataNotice timestamp={dataTimestamp} /> : <DataFreshness timestamp={dataTimestamp} />}
 
         {/* Cards dos Indicadores */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
