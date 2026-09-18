@@ -43,6 +43,56 @@ class FailingClient:
         raise httpx.TimeoutException("provider timeout")
 
 
+class HistoricalClient:
+    payloads = {
+        "USD-BRL": [
+            {"timestamp": "1725235200", "bid": "5.20"},
+            {"timestamp": "1725062400", "bid": "5.10"},
+        ],
+        "EUR-BRL": [
+            {"timestamp": "1725235200", "bid": "6.20"},
+            {"timestamp": "1725062400", "bid": "6.10"},
+        ],
+        "BTC-USD": [
+            {"timestamp": "1725235200", "bid": "58000"},
+            {"timestamp": "1725062400", "bid": "57000"},
+        ],
+    }
+
+    async def get(self, url, **_kwargs):
+        if "query1.finance.yahoo.com" in url:
+            return FakeResponse({"chart": {"result": [{
+                "timestamp": [1725062400, 1725235200],
+                "indicators": {"quote": [{"close": [5.10, 5.20]}]},
+            }], "error": None}})
+        symbol = url.split("/daily/", 1)[1].rsplit("/", 1)[0]
+        return FakeResponse(self.payloads[symbol])
+
+
+class HistoricalPrimaryFailureClient(HistoricalClient):
+    def __init__(self, failure="timeout"):
+        self.failure = failure
+        self.yahoo_called = False
+
+    async def get(self, url, **kwargs):
+        if "query1.finance.yahoo.com" in url:
+            self.yahoo_called = True
+            return await super().get(url, **kwargs)
+        if self.failure == "timeout":
+            raise httpx.TimeoutException("history timeout")
+        if self.failure == "non-200":
+            return FakeResponse({}, 502)
+        return FakeResponse([{"timestamp": "invalid", "bid": "invalid"}])
+
+
+class HistoricalAllFailureClient(HistoricalPrimaryFailureClient):
+    async def get(self, url, **kwargs):
+        if "query1.finance.yahoo.com" in url:
+            self.yahoo_called = True
+            raise httpx.TimeoutException("Yahoo timeout")
+        return await super().get(url, **kwargs)
+
+
 class ZeroExchangeClient(ExchangeClient):
     fiat_payloads = {
         **ExchangeClient.fiat_payloads,
@@ -227,6 +277,133 @@ class ApiReliabilityTests(unittest.TestCase):
         ):
             cache["data"] = None
             cache["timestamp"] = None
+        for cache in markets._cache_history.values():
+            cache["data"] = None
+            cache["timestamp"] = None
+
+    def test_historical_awesomeapi_success_returns_structured_contract(self):
+        expected = {
+            "dolar": ("USD_BRL", "USD/BRL"),
+            "euro": ("EUR_BRL", "EUR/BRL"),
+            "bitcoin": ("BTC_USD", "BTC/USD"),
+        }
+        with patch("routers.markets.get_client", return_value=HistoricalClient()):
+            for route_key, (instrument, pair) in expected.items():
+                with self.subTest(route_key=route_key):
+                    response = self.client.get(f"/api/historico/{route_key}")
+                    data = response.json()
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(data["instrument"], instrument)
+                    self.assertEqual(data["pair"], pair)
+                    self.assertEqual(data["source"], "awesomeapi")
+                    self.assertEqual(data["price_type"], "bid")
+                    self.assertEqual([point["date"] for point in data["points"]], sorted(point["date"] for point in data["points"]))
+                    self.assertTrue(all(point["value"] > 0 for point in data["points"]))
+
+    def test_historical_unsupported_instrument_is_404_without_provider_call(self):
+        with patch("routers.markets.get_client") as get_client:
+            response = self.client.get("/api/historico/invalida")
+
+        self.assertEqual(response.status_code, 404)
+        get_client.assert_not_called()
+
+    def test_historical_usd_brl_uses_yahoo_for_primary_failures(self):
+        for failure in ("timeout", "non-200", "malformed"):
+            with self.subTest(failure=failure):
+                client = HistoricalPrimaryFailureClient(failure)
+                with patch("routers.markets.get_client", return_value=client):
+                    response = self.client.get("/api/historico/dolar")
+                data = response.json()
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(client.yahoo_called)
+                self.assertEqual(data["source"], "yahoo")
+                self.assertEqual(data["price_type"], "close")
+                for cache in markets._cache_history.values():
+                    cache["data"] = None
+                    cache["timestamp"] = None
+
+    def test_historical_euro_and_bitcoin_fail_without_unapproved_fallbacks(self):
+        for route_key in ("euro", "bitcoin"):
+            with self.subTest(route_key=route_key):
+                client = HistoricalPrimaryFailureClient()
+                with patch("routers.markets.get_client", return_value=client):
+                    response = self.client.get(f"/api/historico/{route_key}")
+                self.assertEqual(response.status_code, 503)
+                self.assertFalse(client.yahoo_called)
+
+    def test_historical_usd_brl_returns_503_when_all_providers_fail(self):
+        client = HistoricalAllFailureClient()
+        with patch("routers.markets.get_client", return_value=client):
+            response = self.client.get("/api/historico/dolar")
+
+        self.assertEqual(response.status_code, 503)
+        self.assertTrue(client.yahoo_called)
+
+    def test_historical_normalization_filters_invalid_records_and_requires_two_points(self):
+        points = markets.normalize_historical_points([
+            {"timestamp": "1725235200", "bid": "5.2"},
+            {"timestamp": "1725062400", "bid": "5.1"},
+            {"timestamp": None, "bid": "5.0"},
+            {"timestamp": "1725148800", "bid": "invalid"},
+            {"timestamp": "1725148800", "bid": "0"},
+            {"timestamp": "1725148800", "bid": "-1"},
+            {"timestamp": "1725148800", "bid": "nan"},
+            {"timestamp": "1725148800", "bid": "inf"},
+        ], "bid")
+        self.assertEqual([point["value"] for point in points], [5.1, 5.2])
+        self.assertIsNone(markets.normalize_historical_points([
+            {"timestamp": "1725235200", "bid": "5.2"},
+            {"timestamp": None, "bid": "5.0"},
+        ], "bid"))
+
+    def test_historical_normalization_orders_and_deduplicates_dates_deterministically(self):
+        points = markets.normalize_historical_points([
+            {"timestamp": "1725238800", "bid": "5.3"},
+            {"timestamp": "1725062400", "bid": "5.1"},
+            {"timestamp": "1725235200", "bid": "5.2"},
+        ], "bid")
+        self.assertEqual([point["date"] for point in points], ["2024-08-31", "2024-09-02"])
+        self.assertEqual(points[-1]["value"], 5.3)
+
+    def test_historical_fresh_cache_skips_provider(self):
+        cached = {"instrument": "USD_BRL", "pair": "USD/BRL", "source": "awesomeapi", "price_type": "bid", "points": [
+            {"date": "2024-09-01", "value": 5.1}, {"date": "2024-09-02", "value": 5.2},
+        ]}
+        markets._cache_history["dolar"] = {"data": cached, "timestamp": datetime.now()}
+        with patch("routers.markets.get_client") as get_client:
+            response = self.client.get("/api/historico/dolar")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), cached)
+        get_client.assert_not_called()
+        self.assertNotIn("X-Data-Stale", response.headers)
+
+    def test_historical_expired_cache_returns_stale_and_preserves_it_after_failed_refresh(self):
+        cached = {"instrument": "USD_BRL", "pair": "USD/BRL", "source": "awesomeapi", "price_type": "bid", "points": [
+            {"date": "2024-09-01", "value": 5.1}, {"date": "2024-09-02", "value": 5.2},
+        ]}
+        markets._cache_history["dolar"] = {
+            "data": cached,
+            "timestamp": datetime.now() - timedelta(hours=7),
+        }
+        with patch("routers.markets.get_client", return_value=HistoricalAllFailureClient()):
+            response = self.client.get("/api/historico/dolar")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["X-Data-Stale"], "true")
+        self.assertEqual(response.json(), cached)
+        self.assertEqual(markets._cache_history["dolar"]["data"], cached)
+
+    def test_historical_successful_refresh_replaces_expired_cache(self):
+        old = {"instrument": "USD_BRL", "pair": "USD/BRL", "source": "awesomeapi", "price_type": "bid", "points": [
+            {"date": "2024-09-01", "value": 4.1}, {"date": "2024-09-02", "value": 4.2},
+        ]}
+        markets._cache_history["dolar"] = {"data": old, "timestamp": datetime.now() - timedelta(hours=7)}
+        with patch("routers.markets.get_client", return_value=HistoricalClient()):
+            refreshed = __import__("asyncio").run(markets.refresh_historical_data("dolar"))
+
+        self.assertTrue(refreshed)
+        self.assertNotEqual(markets._cache_history["dolar"]["data"], old)
 
     def test_valid_provider_response_accepts_legitimate_zero(self):
         with patch("routers.markets.get_client", return_value=ZeroExchangeClient()):

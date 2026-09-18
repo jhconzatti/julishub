@@ -2,7 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
 import httpx
 import asyncio
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import logging
 
@@ -39,9 +39,34 @@ _cache_cotacao     = {"data": None, "timestamp": None}
 _cache_indexes     = {"data": None, "timestamp": None}
 _cache_argentina_indexes = {"data": None, "timestamp": None}
 _cache_usa_indexes       = {"data": None, "timestamp": None}
+_cache_history = {
+    "dolar": {"data": None, "timestamp": None},
+    "euro": {"data": None, "timestamp": None},
+    "bitcoin": {"data": None, "timestamp": None},
+}
 
 CACHE_DURATION = timedelta(hours=1)
+HISTORY_CACHE_DURATION = timedelta(hours=6)
 SERVICE_UNAVAILABLE_DETAIL = "Dados temporariamente indisponíveis."
+
+HISTORICAL_INSTRUMENTS = {
+    "dolar": {
+        "instrument": "USD_BRL",
+        "pair": "USD/BRL",
+        "awesome_symbol": "USD-BRL",
+        "yahoo_symbol": "BRL=X",
+    },
+    "euro": {
+        "instrument": "EUR_BRL",
+        "pair": "EUR/BRL",
+        "awesome_symbol": "EUR-BRL",
+    },
+    "bitcoin": {
+        "instrument": "BTC_USD",
+        "pair": "BTC/USD",
+        "awesome_symbol": "BTC-USD",
+    },
+}
 
 
 def is_cache_valid(cache_timestamp: Optional[datetime]) -> bool:
@@ -49,6 +74,13 @@ def is_cache_valid(cache_timestamp: Optional[datetime]) -> bool:
     if cache_timestamp is None:
         return False
     return datetime.now() - cache_timestamp < CACHE_DURATION
+
+
+def is_history_cache_valid(cache_timestamp: Optional[datetime]) -> bool:
+    """Histórico diário muda menos frequentemente que as cotações atuais."""
+    if cache_timestamp is None:
+        return False
+    return datetime.now() - cache_timestamp < HISTORY_CACHE_DURATION
 
 
 def set_stale_headers(response: Response, timestamp: Optional[datetime]) -> None:
@@ -297,41 +329,130 @@ async def get_cotacao(background_tasks: BackgroundTasks, response: Response):
     raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
 
-@router.get("/historico/{moeda}")
-async def get_historico(moeda: str):
-    """Retorna histórico de 30 dias de uma moeda via AwesomeAPI"""
-    logger.info(f"📈 Requisição recebida: /historico/{moeda}")
-    symbol_map = {"dolar": "USD-BRL", "euro": "EUR-BRL", "bitcoin": "BTC-USD"}
+def normalize_historical_points(records: object, value_key: str) -> Optional[list[dict]]:
+    """Normaliza dados diários em UTC, mantém a primeira observação por data."""
+    if not isinstance(records, list):
+        return None
 
-    symbol = symbol_map.get(moeda)
-    if not symbol:
-        logger.warning(f"⚠️ Moeda inválida: {moeda}")
-        return []
+    points_by_date: dict[str, dict] = {}
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        timestamp = record.get("timestamp")
+        value = record.get(value_key)
+        if not is_numeric_value(timestamp) or not is_numeric_value(value):
+            continue
+        numeric_value = float(value)
+        if numeric_value <= 0:
+            continue
+        try:
+            # UTC avoids a local-machine timezone shifting a daily observation.
+            date = datetime.fromtimestamp(float(timestamp), tz=timezone.utc).date().isoformat()
+        except (OverflowError, OSError, ValueError):
+            continue
+        points_by_date.setdefault(date, {"date": date, "value": numeric_value})
 
+    points = [points_by_date[date] for date in sorted(points_by_date)]
+    return points if len(points) >= 2 else None
+
+
+async def fetch_awesomeapi_history(config: dict) -> Optional[dict]:
     try:
-        url = f"https://economia.awesomeapi.com.br/json/daily/{symbol}/30"
-        logger.info(f"   → Buscando histórico: {url}")
-        resp = await get_client().get(url)
-
-        if resp.status_code != 200:
-            logger.error(f"❌ Erro ao buscar histórico: status {resp.status_code}")
-            return []
-
-        data = resp.json()
-        historico = [
-            {"data": datetime.fromtimestamp(int(item["timestamp"])).strftime("%d/%m"), "valor": float(item["bid"])}
-            for item in data
-        ]
-
-        logger.info(f"✅ Histórico retornado: {len(historico)} registros")
-        return historico[::-1]
-
+        response = await get_client().get(
+            f"https://economia.awesomeapi.com.br/json/daily/{config['awesome_symbol']}/30"
+        )
+        if response.status_code != 200:
+            logger.warning("⚠️ AwesomeAPI history returned %s", response.status_code)
+            return None
+        points = normalize_historical_points(response.json(), "bid")
+        if points is None:
+            logger.warning("⚠️ AwesomeAPI history returned no usable observations")
+            return None
+        return {
+            "instrument": config["instrument"],
+            "pair": config["pair"],
+            "source": "awesomeapi",
+            "price_type": "bid",
+            "points": points,
+        }
     except httpx.TimeoutException:
-        logger.error(f"❌ Timeout ao buscar histórico de {moeda}")
-        return []
-    except Exception as e:
-        logger.error(f"❌ Erro ao buscar histórico de {moeda}: {e}")
-        return []
+        logger.warning("⚠️ AwesomeAPI history timed out for %s", config["instrument"])
+    except Exception as error:
+        logger.warning("⚠️ AwesomeAPI history failed for %s: %s", config["instrument"], type(error).__name__)
+    return None
+
+
+async def fetch_yahoo_usd_brl_history(config: dict) -> Optional[dict]:
+    """Uses Yahoo daily close only as the verified USD/BRL fallback."""
+    try:
+        response = await get_client().get(
+            f"{YAHOO_INDEX_URL}/{config['yahoo_symbol']}?range=1mo&interval=1d",
+            headers={"User-Agent": "Mozilla/5.0 (compatible; JulisHub/1.0)"},
+        )
+        if response.status_code != 200:
+            logger.warning("⚠️ Yahoo Finance USD/BRL history returned %s", response.status_code)
+            return None
+        chart = response.json().get("chart", {})
+        results = chart.get("result")
+        if chart.get("error") is not None or not isinstance(results, list) or not results:
+            return None
+        result = results[0]
+        timestamps = result.get("timestamp")
+        quotes = result.get("indicators", {}).get("quote")
+        closes = quotes[0].get("close") if isinstance(quotes, list) and quotes else None
+        if not isinstance(timestamps, list) or not isinstance(closes, list):
+            return None
+        points = normalize_historical_points(
+            [{"timestamp": timestamp, "close": close} for timestamp, close in zip(timestamps, closes)],
+            "close",
+        )
+        if points is None:
+            return None
+        return {
+            "instrument": config["instrument"],
+            "pair": config["pair"],
+            "source": "yahoo",
+            "price_type": "close",
+            "points": points,
+        }
+    except httpx.TimeoutException:
+        logger.warning("⚠️ Yahoo Finance USD/BRL history timed out")
+    except Exception as error:
+        logger.warning("⚠️ Yahoo Finance USD/BRL history failed: %s", type(error).__name__)
+    return None
+
+
+async def refresh_historical_data(moeda: str) -> bool:
+    """Refreshes only a valid series and never erases last-known-good cache data."""
+    config = HISTORICAL_INSTRUMENTS[moeda]
+    data = await fetch_awesomeapi_history(config)
+    if data is None and moeda == "dolar":
+        data = await fetch_yahoo_usd_brl_history(config)
+    if data is None:
+        return False
+    _cache_history[moeda]["data"] = data
+    _cache_history[moeda]["timestamp"] = datetime.now()
+    return True
+
+
+@router.get("/historico/{moeda}")
+async def get_historico(moeda: str, background_tasks: BackgroundTasks, response: Response):
+    """Returns normalized, provider-attributed daily history with stale fallback."""
+    logger.info("📈 Requisição recebida: /historico/%s", moeda)
+    if moeda not in HISTORICAL_INSTRUMENTS:
+        raise HTTPException(status_code=404, detail="Instrumento histórico não suportado.")
+
+    cache = _cache_history[moeda]
+    if is_history_cache_valid(cache["timestamp"]):
+        return cache["data"]
+    if cache["data"] is not None:
+        set_stale_headers(response, cache["timestamp"])
+        background_tasks.add_task(refresh_historical_data, moeda)
+        return cache["data"]
+
+    if await refresh_historical_data(moeda):
+        return _cache_history[moeda]["data"]
+    raise HTTPException(status_code=503, detail=SERVICE_UNAVAILABLE_DETAIL)
 
 
 @router.get("/exchange-rates")

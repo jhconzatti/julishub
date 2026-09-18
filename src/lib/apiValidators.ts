@@ -3,6 +3,10 @@ const EXCHANGE_PAIRS = [
   "ARS_BRL", "BRL_ARS", "USD_CLP", "CLP_BRL", "USD_MXN", "MXN_BRL",
 ] as const;
 
+const HISTORICAL_INSTRUMENTS = ["USD_BRL", "EUR_BRL", "BTC_USD"] as const;
+const HISTORICAL_SOURCES = ["awesomeapi", "yahoo"] as const;
+const HISTORICAL_PRICE_TYPES = ["bid", "close"] as const;
+
 export interface ExchangeRate {
   valor: string;
   var: string | null;
@@ -11,6 +15,23 @@ export interface ExchangeRate {
 
 export type ExchangePair = typeof EXCHANGE_PAIRS[number];
 export type ExchangeRatesResponse = Partial<Record<ExchangePair, ExchangeRate>>;
+
+export type HistoricalExchangeInstrument = typeof HISTORICAL_INSTRUMENTS[number];
+export type HistoricalExchangeSource = typeof HISTORICAL_SOURCES[number];
+export type HistoricalExchangePriceType = typeof HISTORICAL_PRICE_TYPES[number];
+
+export interface HistoricalExchangePoint {
+  date: string;
+  value: number;
+}
+
+export interface HistoricalExchangeResponse {
+  instrument: HistoricalExchangeInstrument;
+  pair: string;
+  source: HistoricalExchangeSource;
+  price_type: HistoricalExchangePriceType;
+  points: HistoricalExchangePoint[];
+}
 
 export interface MarketIndex {
   name: string;
@@ -51,6 +72,29 @@ const isNonEmptyString = (value: unknown): value is string =>
 const isNumericValue = (value: unknown): value is string => {
   if (typeof value !== "string" || value.trim() === "") return false;
   return Number.isFinite(Number(value));
+};
+
+const isHistoricalPoint = (value: unknown): value is HistoricalExchangePoint =>
+  isRecord(value)
+  && typeof value.date === "string"
+  && /^\d{4}-\d{2}-\d{2}$/.test(value.date)
+  && typeof value.value === "number"
+  && Number.isFinite(value.value)
+  && value.value > 0;
+
+export const isHistoricalExchangeResponse = (value: unknown): value is HistoricalExchangeResponse => {
+  if (!isRecord(value)
+    || !HISTORICAL_INSTRUMENTS.includes(value.instrument as HistoricalExchangeInstrument)
+    || !isNonEmptyString(value.pair)
+    || !HISTORICAL_SOURCES.includes(value.source as HistoricalExchangeSource)
+    || !HISTORICAL_PRICE_TYPES.includes(value.price_type as HistoricalExchangePriceType)
+    || !Array.isArray(value.points)
+    || value.points.length < 2
+    || !value.points.every(isHistoricalPoint)) {
+    return false;
+  }
+
+  return value.points.every((point, index) => index === 0 || point.date > value.points[index - 1].date);
 };
 
 const isExchangeRate = (value: unknown): value is ExchangeRate =>

@@ -35,7 +35,7 @@ Sprint 0H concluída localmente. A identidade técnica e os metadados públicos 
 | JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
 | JH-014 | P1 | API/Integration | Exchange rates usam contrato all-or-nothing, permitindo que uma falha de provider ou par torne todos os dados indisponíveis. | R2 foi validado em produção: respostas parciais retornam HTTP 200 e o frontend renderiza somente as taxas disponíveis. | Resolved in production |
 | JH-015 | P1 | API/Integration | AwesomeAPI não disponibiliza taxas fiat no backend de produção, deixando conversões fiat ordinárias indisponíveis. | Produção após R2 retornou somente BTC da CoinGecko; R3 mantém AwesomeAPI como primária e adiciona Yahoo Finance como fallback de taxas fiat. | Resolved locally — production validation pending |
-| JH-026 | P1 | API/Integration | O endpoint histórico responde `200 []` para instrumento inválido e para falhas de provider/payload/timeout, sem cache, stale ou fallback, impedindo uma leitura confiável em produto. | Sprint 2D: produção retornou lista vazia para USD/BRL, EUR/BRL, BTC/USD e entrada inválida, enquanto AwesomeAPI respondeu os três pares diretamente no ambiente de avaliação. | Open — Sprint 2E candidate |
+| JH-026 | P1 | API/Integration | O endpoint histórico respondia `200 []` para instrumento inválido e para falhas de provider/payload/timeout, sem cache, stale ou fallback, impedindo uma leitura confiável em produto. | Sprint 2E substituiu a lista ambígua por contrato estruturado, 404/503 explícitos, cache por instrumento e fallback Yahoo somente para USD/BRL; testes locais aprovados. | Resolved locally — production validation pending |
 
 ## Technical Baseline
 
@@ -433,3 +433,16 @@ Decisão:
 
 Sprint 2E recomendada:
 **Historical Exchange Data Reliability.** Definir contrato máquina (`YYYY-MM-DD`/timestamp e valor `bid` explícito), 404 para instrumento não suportado, 503 sem cache em falha de provider, cache por par com stale headers, validação/ordenação/deduplicação de payload e testes focados. Estratégia mínima: AwesomeAPI primária para os três pares atuais; Yahoo como fallback somente para USD/BRL inicialmente; avaliar CoinGecko BTC/USD em contrato separado antes de adotá-lo. A visualização e a expansão para cross-rates permanecem fora do escopo.
+
+### Sprint 2E — Historical Exchange Data Reliability
+
+Status:
+Concluída localmente — validação pós-deploy pendente.
+
+Entrega:
+- contrato histórico estruturado para USD/BRL, EUR/BRL e BTC/USD, com instrumento, par, fonte, semântica de preço e pontos máquina (`YYYY-MM-DD`, valor numérico positivo);
+- entrada não suportada retorna 404 e indisponibilidade de provider sem last-known-good retorna 503, sem resposta ambígua `200 []`;
+- AwesomeAPI permanece primária; Yahoo Finance é fallback apenas de USD/BRL, identificado como `close`; EUR/BRL e BTC/USD não recebem fallback adicional;
+- cache em memória independente por instrumento, válido por seis horas, preserva resposta/fonte e devolve last-known-good stale com headers durante refresh em segundo plano;
+- normalização UTC, filtragem de registros inválidos, mínimo de dois pontos, ordenação cronológica e deduplicação por data;
+- cobertura automatizada para contrato, falhas/fallback, normalização, cache fresco, stale e preservação/atualização do cache. A visualização histórica permanece fora do escopo.
