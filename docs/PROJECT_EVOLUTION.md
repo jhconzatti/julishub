@@ -347,3 +347,35 @@ Concluída localmente, com smoke pós-deploy e responsivo/acessível ainda pende
 Resumo:
 - cópia e localização do produto, confiança/feedback de dados, hierarquia de Home/navegação, consistência visual, responsividade das calculadoras, confiabilidade editorial e linha de base de acessibilidade foram refinadas;
 - não representa conformidade integral de acessibilidade, SLA de produção ou tradução de corpos de artigos.
+
+## Sprint 2A — Product Opportunity Assessment
+
+Status:
+Concluída — avaliação de oportunidade sem alteração de código de produto.
+
+Propósito:
+Definir o próximo incremento funcional do JulisHub a partir da base atual de mercados, indicadores, calculadoras, notícias e conteúdo, priorizando utilidade financeira, baixo risco operacional e evolução incremental.
+
+Categorias avaliadas:
+- planejamento financeiro orientado a objetivo e reserva de emergência;
+- profundidade das calculadoras de investimento e financiamento;
+- histórico de câmbio e consulta de mercado selecionada pelo usuário;
+- exportação/compartilhamento de simulações;
+- descoberta contextual entre ferramentas e conteúdo;
+- personalização local e possibilidade de dashboard leve.
+
+Shortlist:
+1. **Planejador de Reserva e Meta Financeira** — direção recomendada para Sprint 2B. Traduz despesas, reserva existente, prazo/meses de cobertura e aporte em uma meta, prazo estimado e evolução. É uma extensão coerente das calculadoras, não depende de provider e pode começar inteiramente no navegador, com persistência local opcional.
+2. **Comparação de amortização de financiamento** — boa continuação por resolver a decisão entre prazo, parcela e aporte extra; exige um contrato de cálculo/testes mais rigoroso e, por isso, fica depois do planejador.
+3. **Histórico visual de câmbio** — aproveita a rota já existente para USD/BRL, EUR/BRL e BTC/USD, mas só deve preceder as outras opções se o endpoint passar a ter contrato validado, cache/stale e indisponibilidade explícita; hoje amplia a dependência da AwesomeAPI.
+
+Direção recomendada:
+**Sprint 2B — Planejador de Reserva e Meta Financeira.** O MVP deve orientar uma decisão prática (quanto formar, quanto aportar e quando a meta pode ser atingida), sem contas, banco de dados, autenticação, provider financeiro adicional ou recomendação personalizada de investimento.
+
+Ideias adiadas ou rejeitadas:
+- dashboard pessoal amplo: com os dados atuais seria majoritariamente uma nova superfície para métricas já vistas, antes de existir informação pessoal útil;
+- autenticação, banco de dados e persistência entre dispositivos: não há necessidade de compartilhamento/cross-device que justifique privacidade, operação e manutenção adicionais;
+- watchlist de ativos: o universo atual é pequeno e fixo; favoritos não melhorariam materialmente a descoberta antes de haver mais instrumentos selecionáveis;
+- nova integração pesada de cotações/históricos: fragilidade, rate limit e manutenção não se justificam para o primeiro incremento;
+- IA, recomendações ou análises preditivas: não resolvem uma necessidade comprovada e aumentariam risco de confiança financeira;
+- exportação isolada: é uma melhoria de saída útil, mas depende de uma simulação orientada a objetivo mais clara para ter valor suficiente.
