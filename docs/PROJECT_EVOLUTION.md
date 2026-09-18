@@ -14,7 +14,7 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 0H concluída localmente. A identidade técnica e os metadados públicos usam JulisHub, favicon local e descrições factuais; a fase Sprint 0 está encerrada com validação pós-deploy ainda pendente.
+Sprint 2 está com implementação completa e validação manual/pós-deploy pendente. O produto evoluiu de correções de base para utilitários financeiros orientados a decisão e contexto histórico de câmbio, sem ampliar o escopo para uma plataforma financeira completa.
 
 ## Known Issues
 
@@ -56,8 +56,8 @@ Sprint 0H concluída localmente. A identidade técnica e os metadados públicos 
 
 ### Tests
 
-- Vinte e sete testes `unittest`: quinze de confiabilidade/mercados e doze da calculadora CLT 2026.
-- A suíte abrangente de produto permanece pendente em JH-008.
+- Cinquenta e oito testes `unittest` aprovados localmente, incluindo confiabilidade/mercados, cálculo CLT e antecipação Price.
+- A cobertura automatizada de comportamento frontend e a suíte abrangente de produto permanecem pendentes em JH-008.
 
 ### Build
 
@@ -458,3 +458,31 @@ Entrega:
 - gráfico responsivo de observações históricas, intervalo observado, contagem, fonte e semântica explícita de preço (`bid` AwesomeAPI ou `close` Yahoo Finance);
 - cache frontend separado por instrumento, com estados independentes de carregamento, stale, indisponibilidade e retry;
 - visualização contextual, sem dados em tempo real, previsão, análise técnica, derivação de pares ou funcionalidades de trading.
+
+### Sprint 2G — Sprint 2 Review & Closure
+
+Status:
+Concluída — implementação do ciclo revisada; gate final de validação manual e pós-deploy permanece aberto.
+
+Revisão:
+- Sprint 2 confirmou a hipótese de que calculadoras orientadas a decisão agregam valor: o Planejador de Reserva usa modelo determinístico local, e a antecipação aprofunda a calculadora Price existente com matemática testada no backend;
+- a sequência avaliação → contrato de confiabilidade → visualização foi útil para histórico de câmbio, onde a incerteza de provider era material; não é uma exigência universal para toda funcionalidade futura;
+- `localStorage`, routers FastAPI, validadores de resposta, cache/stale e Recharts foram reutilizados de forma proporcional; não há evidência atual que justifique nova abstração;
+- testes backend conhecidos: 58 `unittest` aprovados localmente; ESLint, TypeScript e build aprovados nas entregas. Não há cobertura automatizada de comportamento frontend;
+- JH-026 permanece **Resolved locally — production validation pending**. Dependência de providers externos continua sendo risco operacional, não reabertura do defeito de contrato;
+- riscos concretos: disponibilidade de providers, pares históricos limitados e validação manual/pós-deploy pendente. Limitações intencionais: persistência somente no navegador, simulações financeiras simplificadas e ausência de cross-rates históricos.
+
+Oportunidades adiadas:
+- retorno real de investimentos permanece adiado: inflação e tributação aumentariam a carga de manutenção além da calculadora atual;
+- watchlist e dashboard continuam sem justificativa suficiente com o universo atual de instrumentos e estado pessoal local;
+- exportação/compartilhamento ganhou relevância potencial após os utilitários orientados a decisão, mas deve ser avaliada após validar seu uso manual;
+- links contextuais entre calculadoras e conteúdo dependem de confirmar que o Blog oferece correspondência editorial útil.
+
+Próxima direção:
+**STABILIZATION. Sprint 3A — Validação de Produção do Sprint 2.** Confirmar os fluxos manuais do Planejador de Reserva, comparação de antecipação e histórico de câmbio em produção, incluindo estados stale/indisponível quando observáveis, sem adicionar funcionalidades. Saída esperada: registro factual de validação, falhas reproduzíveis ou decisão de encerramento validado.
+
+## Sprint 2 Closure
+
+**SPRINT 2 IMPLEMENTATION COMPLETE — VALIDATION PENDING**
+
+As capacidades previstas foram implementadas e possuem validação local proporcional, mas os smokes manuais do Planejador de Reserva e da antecipação, além da validação pós-deploy do histórico de câmbio e sua visualização, ainda não estão documentados como concluídos.

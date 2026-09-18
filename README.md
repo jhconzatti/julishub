@@ -12,7 +12,9 @@ Production frontend: [julishub.vercel.app](https://julishub.vercel.app)
 
 - Market dashboard for currencies and indexes from Brazil, Argentina, and the United States.
 - Economic indicators including SELIC, IPCA, and estimated CDI.
-- Compound-interest, financing, CLT net-salary, and currency-conversion calculators.
+- Compound-interest, CLT net-salary, currency-conversion, and reserve-planning calculators.
+- Price-financing prepayment comparison for reduced-term and reduced-installment scenarios.
+- Recent historical exchange visualization for USD/BRL, EUR/BRL, and BTC/USD.
 - Financial news aggregated from Google News RSS.
 - Educational blog content.
 - Portuguese (Brazil), English, and Spanish locales.
@@ -154,7 +156,7 @@ Current baseline:
 - ESLint: 0 errors and 0 warnings
 - TypeScript: 0 errors
 - Production build: passing
-- Backend tests: 27 passing
+- Backend tests: 58 passing
 
 On macOS or Linux, use `.venv/bin/python` for the unittest command.
 
