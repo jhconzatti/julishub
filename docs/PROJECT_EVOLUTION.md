@@ -446,3 +446,15 @@ Entrega:
 - cache em memória independente por instrumento, válido por seis horas, preserva resposta/fonte e devolve last-known-good stale com headers durante refresh em segundo plano;
 - normalização UTC, filtragem de registros inválidos, mínimo de dois pontos, ordenação cronológica e deduplicação por data;
 - cobertura automatizada para contrato, falhas/fallback, normalização, cache fresco, stale e preservação/atualização do cache. A visualização histórica permanece fora do escopo.
+
+### Sprint 2F — Historical Exchange Visualization
+
+Status:
+Concluída localmente — validação manual e pós-deploy pendentes.
+
+Entrega:
+- seção de histórico recente dentro do Conversor de Moedas, sem nova rota ou alteração da conversão atual;
+- seletor independente limitado a USD/BRL, EUR/BRL e BTC/USD, usando o contrato estruturado e validado do Sprint 2E;
+- gráfico responsivo de observações históricas, intervalo observado, contagem, fonte e semântica explícita de preço (`bid` AwesomeAPI ou `close` Yahoo Finance);
+- cache frontend separado por instrumento, com estados independentes de carregamento, stale, indisponibilidade e retry;
+- visualização contextual, sem dados em tempo real, previsão, análise técnica, derivação de pares ou funcionalidades de trading.

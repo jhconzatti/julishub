@@ -259,6 +259,21 @@
     "referenceTableDescription": "Principais referências de câmbio disponíveis",
     "currencies": { "BRL": "Real brasileiro", "USD": "Dólar americano", "EUR": "Euro", "BTC": "Bitcoin", "ARS": "Peso argentino", "CLP": "Peso chileno", "MXN": "Peso mexicano" }
   },
+  "exchangeHistory": {
+    "title": "Histórico recente de câmbio",
+    "description": "Consulte observações históricas recentes disponíveis para pares selecionados.",
+    "instrument": "Par histórico",
+    "source": "Fonte",
+    "sourceAwesome": "AwesomeAPI",
+    "sourceYahoo": "Yahoo Finance",
+    "reference": "Referência",
+    "bid": "Compra (bid)",
+    "close": "Fechamento (close)",
+    "observedPeriod": "Período observado",
+    "observations_one": "{{count}} observação",
+    "observations_other": "{{count}} observações",
+    "chartLabel": "Histórico de {{pair}}"
+  },
   "dataStates": {
     "loading": "Carregando dados...",
     "slow": "A conexão está levando mais tempo que o normal.",

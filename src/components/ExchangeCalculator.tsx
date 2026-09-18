@@ -11,6 +11,7 @@ import { DataFreshness, DataUnavailable, SlowLoadingNotice, StaleDataNotice } fr
 import { fetchWithCache } from "@/lib/apiCache";
 import { fetchJsonWithRetry } from "@/lib/apiRequest";
 import { isExchangeRatesResponse, type ExchangeRatesResponse } from "@/lib/apiValidators";
+import ExchangeHistoryChart from "@/components/ExchangeHistoryChart";
 
 const getApiUrl = () => {
   const url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -309,6 +310,8 @@ export default function ExchangeCalculator() {
           </div>
         </CardContent>
       </Card>
+
+      <ExchangeHistoryChart apiBaseUrl={API_BASE_URL} />
     </div>
   );
 }
