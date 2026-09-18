@@ -35,6 +35,7 @@ Sprint 0H concluída localmente. A identidade técnica e os metadados públicos 
 | JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
 | JH-014 | P1 | API/Integration | Exchange rates usam contrato all-or-nothing, permitindo que uma falha de provider ou par torne todos os dados indisponíveis. | R2 foi validado em produção: respostas parciais retornam HTTP 200 e o frontend renderiza somente as taxas disponíveis. | Resolved in production |
 | JH-015 | P1 | API/Integration | AwesomeAPI não disponibiliza taxas fiat no backend de produção, deixando conversões fiat ordinárias indisponíveis. | Produção após R2 retornou somente BTC da CoinGecko; R3 mantém AwesomeAPI como primária e adiciona Yahoo Finance como fallback de taxas fiat. | Resolved locally — production validation pending |
+| JH-026 | P1 | API/Integration | O endpoint histórico responde `200 []` para instrumento inválido e para falhas de provider/payload/timeout, sem cache, stale ou fallback, impedindo uma leitura confiável em produto. | Sprint 2D: produção retornou lista vazia para USD/BRL, EUR/BRL, BTC/USD e entrada inválida, enquanto AwesomeAPI respondeu os três pares diretamente no ambiente de avaliação. | Open — Sprint 2E candidate |
 
 ## Technical Baseline
 
@@ -413,3 +414,22 @@ Entrega:
 Validação local:
 - testes automatizados de financiamento: baseline Price, antecipação padrão, taxa zero, quitação integral, validação/invariantes e compatibilidade do endpoint existente;
 - compile/import Python, suíte backend completa, ESLint, TypeScript, build e `git diff --check` aprovados.
+
+### Sprint 2D — Exchange History Reliability Assessment
+
+Status:
+Concluída — avaliação/documentação somente; nenhuma mudança de código de produto.
+
+Achados:
+- rota atual `GET /api/historico/{moeda}` limita o mapeamento a USD/BRL, EUR/BRL e BTC/USD via AwesomeAPI, usa `bid` e inverte os registros; porém devolve `200 []` igualmente para moeda inválida, timeout, HTTP não-200, payload malformado e erro de parsing;
+- execução local isolada retornou 30 registros para os três pares. Na produção Render, os três pares suportados e `invalida` retornaram HTTP 200 com lista vazia (latência aproximada de 251–839 ms); o contrato não permite distinguir causa operacional de entrada inválida;
+- AwesomeAPI respondeu HTTP 200 com 30 registros, `timestamp` único e `bid` positivo/finito para USD/BRL, EUR/BRL e BTC/USD no ambiente de avaliação. Os registros vieram em ordem decrescente; a requisição representa 30 registros do provider, não uma garantia de 30 dias de calendário;
+- o payload público reduz a data a `DD/MM` por conversão de timezone local, sem ano ou timestamp máquina. Isso não é contrato suficiente para gráfico confiável entre anos nem prova ordenação cronológica após o provider;
+- não há validação de entrada/payload, cache por par, stale headers, fallback, testes históricos, validador frontend ou consumidor atual da rota;
+- Yahoo Finance já respondeu histórico diário para `BRL=X`, `EURUSD=X`, `ARS=X`, `CLP=X` e `MXN=X`; USD/BRL é candidato direto de fallback e EUR/BRL exigiria cross-rate diário com alinhamento de timestamps. CoinGecko respondeu 31 pontos válidos BTC/USD, mas seu endpoint histórico não é usado hoje e possui semântica de preço/agregação diferente.
+
+Decisão:
+**RELIABILITY WORK REQUIRED.** Histórico continua útil, mas não é adequado para visualização enquanto lista vazia puder mascarar indisponibilidade e não existir contrato de data, cache/stale e validação equivalentes aos dados de mercado atuais.
+
+Sprint 2E recomendada:
+**Historical Exchange Data Reliability.** Definir contrato máquina (`YYYY-MM-DD`/timestamp e valor `bid` explícito), 404 para instrumento não suportado, 503 sem cache em falha de provider, cache por par com stale headers, validação/ordenação/deduplicação de payload e testes focados. Estratégia mínima: AwesomeAPI primária para os três pares atuais; Yahoo como fallback somente para USD/BRL inicialmente; avaliar CoinGecko BTC/USD em contrato separado antes de adotá-lo. A visualização e a expansão para cross-rates permanecem fora do escopo.
