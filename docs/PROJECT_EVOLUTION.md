@@ -14,7 +14,7 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-Sprint 2 está com implementação completa e validação manual/pós-deploy pendente. O produto evoluiu de correções de base para utilitários financeiros orientados a decisão e contexto histórico de câmbio, sem ampliar o escopo para uma plataforma financeira completa.
+**SPRINT 2 CLOSED.** A implementação planejada, as validações local/estática/automatizada e a validação manual em produção foram concluídas sem defeito material identificado. O produto evoluiu de correções de base para utilitários financeiros orientados a decisão e contexto histórico de câmbio, sem ampliar o escopo para uma plataforma financeira completa.
 
 ## Known Issues
 
@@ -35,7 +35,7 @@ Sprint 2 está com implementação completa e validação manual/pós-deploy pen
 | JH-013 | P3 | Error Handling | Cooldown de refresh manual não persiste como pretendido. | Timestamp agora possui chave versionada própria, criada no início de cada refresh manual em Markets e News. | Resolved locally |
 | JH-014 | P1 | API/Integration | Exchange rates usam contrato all-or-nothing, permitindo que uma falha de provider ou par torne todos os dados indisponíveis. | R2 foi validado em produção: respostas parciais retornam HTTP 200 e o frontend renderiza somente as taxas disponíveis. | Resolved in production |
 | JH-015 | P1 | API/Integration | AwesomeAPI não disponibiliza taxas fiat no backend de produção, deixando conversões fiat ordinárias indisponíveis. | Produção após R2 retornou somente BTC da CoinGecko; R3 mantém AwesomeAPI como primária e adiciona Yahoo Finance como fallback de taxas fiat. | Resolved locally — production validation pending |
-| JH-026 | P1 | API/Integration | O endpoint histórico respondia `200 []` para instrumento inválido e para falhas de provider/payload/timeout, sem cache, stale ou fallback, impedindo uma leitura confiável em produto. | Sprint 2E substituiu a lista ambígua por contrato estruturado, 404/503 explícitos, cache por instrumento e fallback Yahoo somente para USD/BRL; testes locais aprovados. | Resolved locally — production validation pending |
+| JH-026 | P1 | API/Integration | O endpoint histórico respondia `200 []` para instrumento inválido e para falhas de provider/payload/timeout, sem cache, stale ou fallback, impedindo uma leitura confiável em produto. | Sprint 2E substituiu a lista ambígua por contrato estruturado, 404/503 explícitos, cache por instrumento e fallback Yahoo somente para USD/BRL; validação local e manual em produção concluídas. | Validated in production |
 
 ## Technical Baseline
 
@@ -384,7 +384,7 @@ Ideias adiadas ou rejeitadas:
 ### Sprint 2B — Reserve & Financial Goal Planner
 
 Status:
-Concluída localmente — validação de interface manual pendente.
+Concluída localmente e validada manualmente em produção.
 
 Entrega:
 - planejador de reserva para responder quanto falta acumular e a projeção aproximada de conclusão a partir de despesas essenciais, meses de cobertura, reserva atual e aporte mensal;
@@ -401,7 +401,7 @@ Validação local:
 ### Sprint 2C — Financing Prepayment Comparison
 
 Status:
-Concluída localmente — validação de interface manual pendente.
+Concluída localmente e validada manualmente em produção.
 
 Entrega:
 - comparação de antecipação para responder como um pagamento extraordinário após uma parcela altera o mesmo financiamento Price ao reduzir prazo ou reduzir parcela;
@@ -437,7 +437,7 @@ Sprint 2E recomendada:
 ### Sprint 2E — Historical Exchange Data Reliability
 
 Status:
-Concluída localmente — validação pós-deploy pendente.
+Concluída localmente e validada manualmente em produção.
 
 Entrega:
 - contrato histórico estruturado para USD/BRL, EUR/BRL e BTC/USD, com instrumento, par, fonte, semântica de preço e pontos máquina (`YYYY-MM-DD`, valor numérico positivo);
@@ -450,7 +450,7 @@ Entrega:
 ### Sprint 2F — Historical Exchange Visualization
 
 Status:
-Concluída localmente — validação manual e pós-deploy pendentes.
+Concluída localmente e validada manualmente em produção.
 
 Entrega:
 - seção de histórico recente dentro do Conversor de Moedas, sem nova rota ou alteração da conversão atual;
@@ -462,15 +462,15 @@ Entrega:
 ### Sprint 2G — Sprint 2 Review & Closure
 
 Status:
-Concluída — implementação do ciclo revisada; gate final de validação manual e pós-deploy permanece aberto.
+Concluída — ciclo revisado e validação manual/pós-deploy concluída.
 
 Revisão:
 - Sprint 2 confirmou a hipótese de que calculadoras orientadas a decisão agregam valor: o Planejador de Reserva usa modelo determinístico local, e a antecipação aprofunda a calculadora Price existente com matemática testada no backend;
 - a sequência avaliação → contrato de confiabilidade → visualização foi útil para histórico de câmbio, onde a incerteza de provider era material; não é uma exigência universal para toda funcionalidade futura;
 - `localStorage`, routers FastAPI, validadores de resposta, cache/stale e Recharts foram reutilizados de forma proporcional; não há evidência atual que justifique nova abstração;
 - testes backend conhecidos: 58 `unittest` aprovados localmente; ESLint, TypeScript e build aprovados nas entregas. Não há cobertura automatizada de comportamento frontend;
-- JH-026 permanece **Resolved locally — production validation pending**. Dependência de providers externos continua sendo risco operacional, não reabertura do defeito de contrato;
-- riscos concretos: disponibilidade de providers, pares históricos limitados e validação manual/pós-deploy pendente. Limitações intencionais: persistência somente no navegador, simulações financeiras simplificadas e ausência de cross-rates históricos.
+- JH-026 foi validado em produção. Dependência de providers externos continua sendo risco operacional, não reabertura do defeito de contrato;
+- riscos concretos: disponibilidade de providers e pares históricos limitados. Limitações intencionais: persistência somente no navegador, simulações financeiras simplificadas e ausência de cross-rates históricos.
 
 Oportunidades adiadas:
 - retorno real de investimentos permanece adiado: inflação e tributação aumentariam a carga de manutenção além da calculadora atual;
@@ -478,11 +478,34 @@ Oportunidades adiadas:
 - exportação/compartilhamento ganhou relevância potencial após os utilitários orientados a decisão, mas deve ser avaliada após validar seu uso manual;
 - links contextuais entre calculadoras e conteúdo dependem de confirmar que o Blog oferece correspondência editorial útil.
 
-Próxima direção:
-**STABILIZATION. Sprint 3A — Validação de Produção do Sprint 2.** Confirmar os fluxos manuais do Planejador de Reserva, comparação de antecipação e histórico de câmbio em produção, incluindo estados stale/indisponível quando observáveis, sem adicionar funcionalidades. Saída esperada: registro factual de validação, falhas reproduzíveis ou decisão de encerramento validado.
-
 ## Sprint 2 Closure
 
-**SPRINT 2 IMPLEMENTATION COMPLETE — VALIDATION PENDING**
+**SPRINT 2 CLOSED**
 
-As capacidades previstas foram implementadas e possuem validação local proporcional, mas os smokes manuais do Planejador de Reserva e da antecipação, além da validação pós-deploy do histórico de câmbio e sua visualização, ainda não estão documentados como concluídos.
+As capacidades planejadas foram implementadas; validação local/estática/automatizada e validação manual subsequente em produção foram concluídas, sem defeito material identificado.
+
+## Sprint 3A — Product Depth Opportunity Assessment
+
+Objetivo:
+Identificar o próximo incremento que prolongue uma decisão útil já produzida pelas calculadoras, sem adicionar infraestrutura ou amplitude decorativa.
+
+Áreas avaliadas:
+- comparação e cenários locais para reserva, financiamento e investimentos;
+- retenção/revisita, resumo copiável e compartilhamento de simulações;
+- profundidade de investimentos, reserva e financiamento;
+- conexões ferramenta-conteúdo, descoberta contextual, histórico de câmbio, dashboard/watchlist e consolidação.
+
+Shortlist:
+1. **Cenários nomeados e comparação no Planejador de Reserva** — direção selecionada: permite avaliar cobertura, reserva atual e aporte antes de agir, com cálculo determinístico e `localStorage` já estabelecido.
+2. **Resumo copiável de decisão para reserva e antecipação** — útil para reter ou comunicar premissas, mas seu valor depende de uma decisão/situação já escolhida e deve permanecer uma saída simples, não PDF.
+3. **Aporte recorrente ou múltiplas antecipações no financiamento** — poderia aprofundar a escolha, porém transforma o modelo de pagamento extraordinário único em motor de amortização mais amplo, com custo e risco maiores.
+
+Direção recomendada:
+**Sprint 3B — Cenários de Reserva Salvos e Comparáveis.** MVP limitado a planos nomeados no navegador e comparação legível das saídas existentes (meta, falta, progresso e prazo estimado), sem rendimento, recomendação, conta, banco de dados ou provider.
+
+Ideias adiadas:
+- inflação, retorno real e tributação de investimentos; regras e premissas adicionais não se justificam para este incremento;
+- exportação PDF, persistência entre dispositivos, autenticação e banco de dados;
+- financiamento com múltiplas/recorrentes antecipações;
+- dashboard, watchlist, IA e nova expansão de histórico de câmbio; o estado pessoal e o universo selecionável atuais não justificam o custo;
+- links ferramenta-conteúdo até que haja correspondência editorial específica além dos artigos existentes sobre reserva e juros compostos.
