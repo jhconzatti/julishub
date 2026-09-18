@@ -19,6 +19,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import ExchangeCalculator from "@/components/ExchangeCalculator";
+import ReservePlanner from "@/components/ReservePlanner";
 
 // --- CONFIGURAÇÃO DA API ---
 const getApiBaseUrl = () => {
@@ -389,11 +390,12 @@ export default function Calculators() {
       </div>
 
       <Tabs defaultValue="investimento" className="w-full">
-        <TabsList className="mb-4 grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4">
+        <TabsList className="mb-4 grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-3 lg:grid-cols-5">
           <TabsTrigger value="investimento" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.investments')}</TabsTrigger>
           <TabsTrigger value="financiamento" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.loans')}</TabsTrigger>
           <TabsTrigger value="salario" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.netSalary')}</TabsTrigger>
           <TabsTrigger value="exchange" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('calculators.exchange')}</TabsTrigger>
+          <TabsTrigger value="reserve" className="h-11 whitespace-normal px-2 text-xs leading-tight sm:h-8 sm:px-3 sm:text-sm">{t('reservePlanner.tab')}</TabsTrigger>
         </TabsList>
 
         {/* --- ABA DE INVESTIMENTOS --- */}
@@ -793,6 +795,10 @@ export default function Calculators() {
         {/* --- ABA DE CÂMBIO --- */}
         <TabsContent value="exchange" className="mt-4 space-y-6">
           <ExchangeCalculator />
+        </TabsContent>
+
+        <TabsContent value="reserve" className="mt-4 space-y-6">
+          <ReservePlanner />
         </TabsContent>
       </Tabs>
     </div>

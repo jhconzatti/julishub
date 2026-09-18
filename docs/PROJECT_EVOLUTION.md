@@ -379,3 +379,20 @@ Ideias adiadas ou rejeitadas:
 - nova integração pesada de cotações/históricos: fragilidade, rate limit e manutenção não se justificam para o primeiro incremento;
 - IA, recomendações ou análises preditivas: não resolvem uma necessidade comprovada e aumentariam risco de confiança financeira;
 - exportação isolada: é uma melhoria de saída útil, mas depende de uma simulação orientada a objetivo mais clara para ter valor suficiente.
+
+### Sprint 2B — Reserve & Financial Goal Planner
+
+Status:
+Concluída localmente — validação de interface manual pendente.
+
+Entrega:
+- planejador de reserva para responder quanto falta acumular e a projeção aproximada de conclusão a partir de despesas essenciais, meses de cobertura, reserva atual e aporte mensal;
+- arquitetura somente frontend: nenhum dado do planejador é enviado ao backend e não há provider externo, conta, autenticação ou banco de dados;
+- fórmula determinística: reserva-alvo = despesas essenciais mensais × meses de cobertura; saldo faltante é limitado a zero e a projeção usa apenas reserva atual mais aporte mensal;
+- persistência somente do formulário atual em `localStorage` do navegador/dispositivo, sem histórico ou múltiplos planos;
+- progresso visual limitado a 100%, preservando o valor real da reserva; meta alcançada retorna zero meses e aporte zero abaixo da meta não recebe horizonte artificial;
+- gráfico responsivo de evolução sem rendimento, inflação, juros ou impostos, limitado a 120 intervalos plotados para horizontes longos.
+
+Validação local:
+- casos determinísticos de reserva-alvo, saldo, progresso, meta alcançada e aporte zero verificados;
+- ESLint, TypeScript, build e `git diff --check` aprovados.
