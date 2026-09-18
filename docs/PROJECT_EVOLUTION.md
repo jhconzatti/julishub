@@ -396,3 +396,20 @@ Entrega:
 Validação local:
 - casos determinísticos de reserva-alvo, saldo, progresso, meta alcançada e aporte zero verificados;
 - ESLint, TypeScript, build e `git diff --check` aprovados.
+
+### Sprint 2C — Financing Prepayment Comparison
+
+Status:
+Concluída localmente — validação de interface manual pendente.
+
+Entrega:
+- comparação de antecipação para responder como um pagamento extraordinário após uma parcela altera o mesmo financiamento Price ao reduzir prazo ou reduzir parcela;
+- matemática financeira concentrada no backend: a antecipação ocorre depois da parcela mensal escolhida e é limitada ao saldo devedor remanescente;
+- reduzir prazo mantém a parcela Price regular até a quitação; reduzir parcela recalcula a prestação Price para os meses restantes do vencimento original;
+- os totais incluem a antecipação efetivamente aplicada e as economias de juros derivam das tabelas de amortização, sem arredondamentos intermediários de saldo;
+- evolução de saldo devedor retornada pelo backend, com início, mês de antecipação e finais preservados e até 150 pontos;
+- modelo deliberadamente simplificado: taxa fixa Price, sem datas irregulares, seguros, tarifas, impostos, indexação ou regras específicas de instituição.
+
+Validação local:
+- testes automatizados de financiamento: baseline Price, antecipação padrão, taxa zero, quitação integral, validação/invariantes e compatibilidade do endpoint existente;
+- compile/import Python, suíte backend completa, ESLint, TypeScript, build e `git diff --check` aprovados.

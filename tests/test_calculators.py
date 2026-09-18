@@ -1,8 +1,10 @@
 import unittest
 
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from app import app
+from routers.calculators import FinanciamentoInput
 
 
 class SalaryCalculator2026Tests(unittest.TestCase):
@@ -114,6 +116,152 @@ class SalaryCalculator2026Tests(unittest.TestCase):
             with self.subTest(payload=payload):
                 response = self.client.post("/api/salario-liquido", json=payload)
                 self.assertEqual(response.status_code, 422)
+
+
+class FinancingCalculatorTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.client = TestClient(app)
+
+    def test_basic_price_financing_keeps_existing_contract(self):
+        response = self.client.post("/api/financiamento", json={
+            "valor_financiamento": 100000,
+            "taxa_mensal": 1,
+            "meses": 60,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertAlmostEqual(payload["valor_prestacao"], 2224.44, places=2)
+        self.assertAlmostEqual(payload["total_pago"], 133466.69, places=2)
+        self.assertAlmostEqual(payload["total_juros"], 33466.69, places=2)
+
+    def test_standard_prepayment_comparison(self):
+        response = self.client.post("/api/financiamento-antecipacao", json={
+            "valor_financiamento": 100000,
+            "taxa_mensal": 1,
+            "meses": 60,
+            "mes_antecipacao": 12,
+            "valor_antecipacao": 20000,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertAlmostEqual(payload["original"]["prestacao"], 2224.44, places=2)
+        self.assertAlmostEqual(payload["original"]["total_juros"], 33466.69, places=2)
+        self.assertEqual(payload["antecipacao"]["mes"], 12)
+        self.assertEqual(payload["antecipacao"]["valor_aplicado"], 20000)
+
+        prazo = payload["reduzir_prazo"]
+        self.assertEqual(prazo["prazo"], 47)
+        self.assertEqual(prazo["meses_economizados"], 13)
+        self.assertAlmostEqual(prazo["total_pago"], 123207.68, places=2)
+        self.assertAlmostEqual(prazo["total_juros"], 23207.68, places=2)
+        self.assertAlmostEqual(prazo["juros_economizados"], 10259.00, places=2)
+        self.assertAlmostEqual(prazo["prestacao_final"], 883.22, places=2)
+
+        parcela = payload["reduzir_parcela"]
+        self.assertEqual(parcela["prazo"], 60)
+        self.assertEqual(parcela["parcelas_restantes"], 48)
+        self.assertAlmostEqual(parcela["prestacao_recalculada"], 1697.77, places=2)
+        self.assertAlmostEqual(parcela["reducao_prestacao"], 526.68, places=2)
+        self.assertAlmostEqual(parcela["total_pago"], 128186.20, places=2)
+        self.assertAlmostEqual(parcela["total_juros"], 28186.20, places=2)
+        self.assertAlmostEqual(parcela["juros_economizados"], 5280.48, places=2)
+
+        self.assertEqual(payload["evolucao"][0]["mes"], 0)
+        self.assertIn(12, [point["mes"] for point in payload["evolucao"]])
+        self.assertLessEqual(len(payload["evolucao"]), 150)
+        self.assertLessEqual(abs(
+            prazo["juros_economizados"] - (payload["original"]["total_juros"] - prazo["total_juros"]),
+        ), 0.011)
+        self.assertLessEqual(abs(
+            parcela["juros_economizados"] - (payload["original"]["total_juros"] - parcela["total_juros"]),
+        ), 0.011)
+        self.assertLessEqual(prazo["prazo"], payload["original"]["prazo"])
+        self.assertEqual(parcela["prazo"], payload["original"]["prazo"])
+        for point in payload["evolucao"]:
+            self.assertGreaterEqual(point["original"], 0)
+            self.assertGreaterEqual(point["reduzir_prazo"], 0)
+            self.assertGreaterEqual(point["reduzir_parcela"], 0)
+        prepayment_point = next(point for point in payload["evolucao"] if point["mes"] == 12)
+        self.assertLessEqual(prepayment_point["reduzir_prazo"], prepayment_point["original"])
+
+    def test_zero_interest_prepayment(self):
+        response = self.client.post("/api/financiamento-antecipacao", json={
+            "valor_financiamento": 12000,
+            "taxa_mensal": 0,
+            "meses": 12,
+            "mes_antecipacao": 3,
+            "valor_antecipacao": 3000,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["original"]["prestacao"], 1000)
+        self.assertEqual(payload["original"]["total_juros"], 0)
+        self.assertEqual(payload["reduzir_prazo"]["prazo"], 9)
+        self.assertEqual(payload["reduzir_prazo"]["meses_economizados"], 3)
+        self.assertEqual(payload["reduzir_prazo"]["total_juros"], 0)
+        self.assertAlmostEqual(payload["reduzir_parcela"]["prestacao_recalculada"], 666.67, places=2)
+        self.assertEqual(payload["reduzir_parcela"]["total_juros"], 0)
+
+    def test_full_settlement_caps_extra_payment_and_ends_scenarios(self):
+        response = self.client.post("/api/financiamento-antecipacao", json={
+            "valor_financiamento": 12000,
+            "taxa_mensal": 0,
+            "meses": 12,
+            "mes_antecipacao": 3,
+            "valor_antecipacao": 100000,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["antecipacao"]["valor_aplicado"], 9000)
+        self.assertTrue(payload["reduzir_prazo"]["quitado"])
+        self.assertTrue(payload["reduzir_parcela"]["quitado"])
+        self.assertEqual(payload["reduzir_prazo"]["prazo"], 3)
+        self.assertEqual(payload["reduzir_parcela"]["parcelas_restantes"], 0)
+        self.assertIsNone(payload["reduzir_parcela"]["prestacao_recalculada"])
+        self.assertEqual(payload["evolucao"][-1]["original"], 0)
+        self.assertEqual(payload["evolucao"][-1]["reduzir_prazo"], 0)
+        self.assertEqual(payload["evolucao"][-1]["reduzir_parcela"], 0)
+        self.assertTrue(all(
+            point["reduzir_prazo"] == 0 and point["reduzir_parcela"] == 0
+            for point in payload["evolucao"] if point["mes"] > 3
+        ))
+
+    def test_invalid_financing_and_prepayment_inputs_are_rejected(self):
+        invalid_basic = (
+            {"valor_financiamento": 0, "taxa_mensal": 1, "meses": 60},
+            {"valor_financiamento": -1, "taxa_mensal": 1, "meses": 60},
+            {"valor_financiamento": 1000, "taxa_mensal": -1, "meses": 60},
+            {"valor_financiamento": 1000, "taxa_mensal": 1, "meses": 0},
+            {"valor_financiamento": 1000, "taxa_mensal": 1, "meses": 601},
+        )
+        for payload in invalid_basic:
+            with self.subTest(payload=payload):
+                self.assertEqual(self.client.post("/api/financiamento", json=payload).status_code, 422)
+
+        for invalid_amount in ("NaN", "Infinity"):
+            with self.subTest(invalid_amount=invalid_amount):
+                with self.assertRaises(ValidationError):
+                    FinanciamentoInput.model_validate({
+                        "valor_financiamento": float(invalid_amount.lower().replace("infinity", "inf")),
+                        "taxa_mensal": 1,
+                        "meses": 60,
+                    })
+
+        invalid_prepayment = (
+            {"mes_antecipacao": 0, "valor_antecipacao": 100},
+            {"mes_antecipacao": 60, "valor_antecipacao": 100},
+            {"mes_antecipacao": 1, "valor_antecipacao": 0},
+            {"mes_antecipacao": 1, "valor_antecipacao": -1},
+        )
+        base = {"valor_financiamento": 1000, "taxa_mensal": 1, "meses": 60}
+        for extra in invalid_prepayment:
+            with self.subTest(payload=extra):
+                self.assertEqual(self.client.post("/api/financiamento-antecipacao", json={**base, **extra}).status_code, 422)
 
 
 if __name__ == "__main__":

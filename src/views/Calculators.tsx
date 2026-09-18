@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import ExchangeCalculator from "@/components/ExchangeCalculator";
 import ReservePlanner from "@/components/ReservePlanner";
+import FinancingPrepaymentComparison from "@/components/FinancingPrepaymentComparison";
 
 // --- CONFIGURAÇÃO DA API ---
 const getApiBaseUrl = () => {
@@ -700,6 +701,7 @@ export default function Calculators() {
                       <CardContent><div className="text-2xl font-bold text-orange-500">R$ {resultadoLoan.total_juros?.toLocaleString()}</div></CardContent>
                     </Card>
                   </div>
+                  <FinancingPrepaymentComparison financing={formLoan} />
                 </div>
               ) : (
                 <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-muted-foreground sm:min-h-[300px] sm:p-10">
