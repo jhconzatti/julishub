@@ -7,7 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CopySummaryButton from "@/components/CopySummaryButton";
+import DecisionGuidanceCard from "@/components/DecisionGuidanceCard";
 import { buildFinancingDecisionSummary, type FinancingComparisonRequest, type FinancingComparisonResult } from "@/lib/decisionSummaries";
+import { decisionGuidanceArticles } from "@/lib/decisionGuidance";
+import { useLang } from "@/hooks/use-lang";
 
 interface FinancingForm {
   valor_financiamento: number;
@@ -24,6 +27,7 @@ const API_BASE_URL = getApiBaseUrl();
 
 export default function FinancingPrepaymentComparison({ financing }: { financing: FinancingForm }) {
   const { t, i18n } = useTranslation();
+  const { lp } = useLang();
   const [month, setMonth] = useState(12);
   const [amount, setAmount] = useState(20000);
   const [result, setResult] = useState<FinancingComparisonResult | null>(null);
@@ -118,6 +122,7 @@ export default function FinancingPrepaymentComparison({ financing }: { financing
             </Card>
           </div>
 
+          <DecisionGuidanceCard title={t("decisionGuidance.financing.title")} points={[t("decisionGuidance.financing.comparison"), t("decisionGuidance.financing.tradeoff")]} disclaimer={t("decisionGuidance.financing.disclaimer")} learnMore={t("decisionGuidance.learnMore")} href={lp(`/blog/${decisionGuidanceArticles.financingPrepayment}`)} />
           <Card className="border-border/70 bg-card">
             <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingDown className="h-5 w-5 text-primary" />{t("financingPrepayment.chartTitle")}</CardTitle><CardDescription>{t("financingPrepayment.chartDescription")}</CardDescription></CardHeader>
             <CardContent className="h-[240px] pt-2 sm:h-[300px]">

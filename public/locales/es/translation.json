@@ -107,6 +107,21 @@
       "title": "También te puede gustar"
     }
   },
+  "decisionGuidance": {
+    "learnMore": "Leer la explicación completa",
+    "reserve": {
+      "title": "Comprendé este resultado",
+      "target": "La meta surge de los gastos esenciales mensuales multiplicados por los meses de cobertura elegidos; esa duración es un supuesto de planificación, no una regla universal.",
+      "horizon": "La estimación supone un aporte mensual constante y no considera rendimientos ni inflación.",
+      "disclaimer": "Este contenido es educativo y no constituye asesoramiento financiero personalizado."
+    },
+    "financing": {
+      "title": "Comprendé esta comparación",
+      "comparison": "La simulación aplica el mismo pago extraordinario al capital y compara reducir plazo con reducir cuota.",
+      "tradeoff": "Las estrategias afectan duración, cuota regular e intereses de forma diferente; ninguna es automáticamente correcta.",
+      "disclaimer": "Es una simulación educativa simplificada. El cálculo de la entidad es la referencia para una operación real."
+    }
+  },
   "indicators": {
     "title": "Indicadores Económicos",
     "description": "Indicadores económicos y referencias de mercado",

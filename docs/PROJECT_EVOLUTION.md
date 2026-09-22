@@ -613,3 +613,22 @@ Direções mantidas em espera:
 - IA financeira: não há problema que exija geração não determinística, nem base suficiente para administrar risco de alucinação.
 - Aprofundamento de News: o agregador permanece uma superfície secundária e pouco diferenciada; de-empenhá-lo é preferível a ampliar escopo sem uma conexão decisória concreta.
 - Observabilidade e testes de comportamento frontend: permanecem contexto de engenharia; devem ser reavaliados se revelarem bloqueio de release, regressão ou incidente recorrente.
+
+## Sprint 4B — Contextual Decision Guidance
+
+Status:
+Implementado localmente — validação manual de navegador pendente.
+
+Entrega:
+- orientação educativa contextual somente após resultado ativo do Planejador de Reserva e comparação ativa de antecipação de financiamento;
+- mapeamento determinístico e independente de valores pessoais: Reserva → `reserva-de-emergencia`; Antecipação → `antecipacao-financiamento`;
+- orientação explica premissas, limites e trade-offs sem recomendar estratégia, produto ou ação personalizada;
+- artigo de reserva reescrito como referência sóbria e artigo novo de antecipação criado, ambos disponíveis em pt-BR, en e es;
+- contrato de Blog recebe `lang` opcional (`pt-BR` por padrão) para lista e detalhe; artigos legados permanecem somente em pt-BR e retornam 404 quando a localização não existe;
+- seleção e navegação de conteúdo não enviam valores financeiros, não fazem request adicional por resultado e não adicionam provider, IA, conta, banco de dados ou CMS;
+- testes de contrato cobrem idioma padrão, pt-BR explícito, listas en/es, detalhes dos dois artigos, isolamento de legado, slug desconhecido e locale inválido.
+
+Validação local:
+- ESLint, TypeScript, build de produção, parse dos JSONs de tradução, compile/import Python, testes focados de Blog e suíte backend completa aprovados (63 testes);
+- o shim global de npm permanece indisponível no ambiente local, mas os executáveis versionados em `node_modules` realizaram as validações de frontend;
+- smoke manual permanece pendente para resultados de Reserva/Antecipação, CTA localizada, troca de idioma dentro do artigo, estados de Blog, responsividade e temas.

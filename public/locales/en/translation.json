@@ -107,6 +107,21 @@
       "title": "You might also like"
     }
   },
+  "decisionGuidance": {
+    "learnMore": "Read the full explanation",
+    "reserve": {
+      "title": "Understand this result",
+      "target": "The target comes from monthly essential expenses multiplied by selected coverage months; that duration is a planning assumption, not a universal rule.",
+      "horizon": "The estimate assumes a constant monthly contribution and does not include investment returns or inflation.",
+      "disclaimer": "This content is educational and is not personalized financial advice."
+    },
+    "financing": {
+      "title": "Understand this comparison",
+      "comparison": "The simulation applies the same extra principal payment and compares reducing the term with reducing the installment.",
+      "tradeoff": "The strategies affect duration, regular payment, and interest differently; neither is automatically correct.",
+      "disclaimer": "This is a simplified educational simulation. The lender's calculation is the reference for a real transaction."
+    }
+  },
   "indicators": {
     "title": "Economic Indicators",
     "description": "Economic indicators and market references",

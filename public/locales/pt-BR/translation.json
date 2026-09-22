@@ -107,6 +107,21 @@
       "title": "Você também pode gostar"
     }
   },
+  "decisionGuidance": {
+    "learnMore": "Ler explicação completa",
+    "reserve": {
+      "title": "Entenda este resultado",
+      "target": "A meta resulta das despesas essenciais mensais multiplicadas pelos meses de cobertura escolhidos; essa duração é uma premissa de planejamento, não uma regra universal.",
+      "horizon": "A estimativa pressupõe aporte mensal constante e não considera rendimentos nem inflação.",
+      "disclaimer": "Este conteúdo é educativo e não constitui recomendação financeira personalizada."
+    },
+    "financing": {
+      "title": "Entenda esta comparação",
+      "comparison": "A simulação aplica o mesmo pagamento extraordinário ao principal e compara reduzir prazo com reduzir parcela.",
+      "tradeoff": "As estratégias afetam duração, parcela regular e juros de maneiras diferentes; nenhuma é automaticamente a correta.",
+      "disclaimer": "É uma simulação educativa simplificada. O cálculo da instituição financeira é a referência para uma operação real."
+    }
+  },
   "indicators": {
     "title": "Indicadores Econômicos",
     "description": "Indicadores econômicos e referências de mercado",

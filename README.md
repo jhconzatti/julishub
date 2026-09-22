@@ -17,6 +17,7 @@ Production frontend: [julishub.vercel.app](https://julishub.vercel.app)
 - Recent historical exchange visualization for USD/BRL, EUR/BRL, and BTC/USD.
 - Financial news aggregated from Google News RSS.
 - Educational blog content.
+- Contextual educational guidance after Reserve Planner and financing-prepayment results.
 - Portuguese (Brazil), English, and Spanish locales.
 - Light and dark themes.
 - Cookie consent controlling optional analytics.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, BookOpen, Calendar, Tag, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -27,34 +27,17 @@ const API_BASE_URL = getApiUrl();
 
 export default function BlogList() {
   const { t } = useTranslation();
-  const { lp } = useLang();
+  const { lang, lp } = useLang();
   
   const [artigos, setArtigos] = useState<Artigo[]>([]);
   const [filteredArtigos, setFilteredArtigos] = useState<Artigo[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchArtigos();
-  }, []);
-
-  useEffect(() => {
-    // Filtrar artigos conforme o termo de busca
-    if (searchTerm.trim() === "") {
-      setFilteredArtigos(artigos);
-    } else {
-      const filtered = artigos.filter(artigo =>
-        artigo.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        artigo.resumo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        artigo.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredArtigos(filtered);
-    }
-  }, [searchTerm, artigos]);
-
-  const fetchArtigos = async () => {
+  const fetchArtigos = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/blog`);
+      const response = await fetch(`${API_BASE_URL}/blog?lang=${encodeURIComponent(lang)}`);
       if (!response.ok) {
         // Se API em produção ainda não tem o endpoint, não quebra
         console.warn(`⚠️ API retornou ${response.status}. Aguardando deploy do backend...`);
@@ -68,7 +51,24 @@ export default function BlogList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lang]);
+
+  useEffect(() => {
+    void fetchArtigos();
+  }, [fetchArtigos]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredArtigos(artigos);
+    } else {
+      const filtered = artigos.filter(artigo =>
+        artigo.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        artigo.resumo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        artigo.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredArtigos(filtered);
+    }
+  }, [searchTerm, artigos]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">

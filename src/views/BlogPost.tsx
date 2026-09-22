@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -40,25 +40,21 @@ export default function BlogPost() {
   const { slug } = useParams<{ lang: string; slug: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { lp } = useLang();
+  const { lang, lp } = useLang();
   
   const [artigo, setArtigo] = useState<Artigo | null>(null);
   const [artigosRelacionados, setArtigosRelacionados] = useState<Artigo[]>([]);
   const [articleState, setArticleState] = useState<ArticleState>("loading");
+  const articleRequestId = useRef(0);
 
-  useEffect(() => {
-    if (slug) {
-      fetchArtigo(slug);
-      window.scrollTo(0, 0);
-    }
-  }, [slug]);
-
-  const fetchArtigo = async (slug: string) => {
+  const fetchArtigo = useCallback(async (slug: string) => {
+    const requestId = ++articleRequestId.current;
     setArticleState("loading");
     setArtigo(null);
     setArtigosRelacionados([]);
     try {
-      const response = await fetch(`${API_BASE_URL}/blog/${slug}`);
+      const response = await fetch(`${API_BASE_URL}/blog/${slug}?lang=${encodeURIComponent(lang)}`);
+      if (requestId !== articleRequestId.current) return;
       if (response.status === 404) {
         setArticleState("not-found");
         return;
@@ -66,16 +62,19 @@ export default function BlogPost() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = (await response.json()) as Artigo;
+      if (requestId !== articleRequestId.current) return;
       setArtigo(data);
       setArticleState("loaded");
 
       try {
-        const allResponse = await fetch(`${API_BASE_URL}/blog`);
+        const allResponse = await fetch(`${API_BASE_URL}/blog?lang=${encodeURIComponent(lang)}`);
+        if (requestId !== articleRequestId.current) return;
         if (!allResponse.ok) {
           console.warn(`Não foi possível carregar artigos relacionados: HTTP ${allResponse.status}`);
           return;
         }
         const allArtigos = (await allResponse.json()) as Artigo[];
+        if (requestId !== articleRequestId.current) return;
         const relacionados = allArtigos
           .filter((a: Artigo) => a.slug !== slug)
           .map((a: Artigo) => ({
@@ -91,10 +90,18 @@ export default function BlogPost() {
         console.warn("Não foi possível carregar artigos relacionados:", relatedError);
       }
     } catch (error) {
+      if (requestId !== articleRequestId.current) return;
       console.error("Erro ao carregar artigo:", error);
       setArticleState("unavailable");
     }
-  };
+  }, [lang]);
+
+  useEffect(() => {
+    if (slug) {
+      void fetchArtigo(slug);
+      window.scrollTo(0, 0);
+    }
+  }, [fetchArtigo, slug]);
 
   const handleShare = (platform: 'whatsapp' | 'linkedin' | 'twitter') => {
     const url = window.location.href;

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, Query
+from typing import Literal
 import logging
 
 router = APIRouter()
@@ -455,48 +455,194 @@ O Tesouro Direto é perfeito para:
 ]
 
 
+LEGACY_ARTICLES = ARTIGOS[1:]
+
+
+GUIDANCE_ARTICLES = {
+    "reserva-de-emergencia": {
+        "data": "10/01/2026",
+        "imagem_capa": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=1200&h=600&fit=crop",
+        "localizations": {
+            "pt-BR": {"titulo": "Reserva de emergência: como usar uma meta de cobertura", "resumo": "Uma referência para entender cobertura de despesas, aportes recorrentes e os limites do Planejador de Reserva.", "tags": ["Reserva de Emergência", "Planejamento", "Educação Financeira"], "conteudo": """# Reserva de emergência: como usar uma meta de cobertura
+
+Uma reserva de emergência é um valor separado para lidar com despesas inesperadas ou perda temporária de renda. Ela pode reduzir a necessidade de recorrer a crédito em um momento de pressão, mas não elimina todos os riscos financeiros.
+
+## Comece pelas despesas essenciais
+
+Despesas essenciais mensais são uma base útil porque representam o custo de manter a vida cotidiana. Multiplicar esse valor por meses de cobertura cria uma meta de planejamento, não uma regra universal. A duração adequada depende, por exemplo, da estabilidade da renda, de responsabilidades e de outras fontes de apoio. Exemplos de faixas usados em educação financeira são apenas heurísticas; o contexto pessoal importa.
+
+## Onde manter a reserva
+
+Liquidez, acessibilidade, risco e preservação do valor são critérios relevantes. Cada produto financeiro tem condições, riscos, prazos e regras próprias. Compare informações atualizadas e documentação da instituição antes de decidir onde manter recursos destinados a emergências.
+
+## O efeito dos aportes
+
+Aportes recorrentes encurtam o tempo necessário para alcançar uma meta quando permanecem constantes. Esse horizonte deve ser revisto se despesas, renda, valor já reservado ou capacidade de aporte mudarem.
+
+## O que o Planejador de Reserva calcula
+
+No JulisHub, você escolhe despesas essenciais mensais, meses de cobertura, reserva atual e aporte mensal. O planejador deriva a meta, o valor restante, o progresso e uma estimativa de conclusão. A estimativa pressupõe que o aporte informado continua constante.
+
+O cálculo não modela inflação, rendimento de investimentos, mudanças de aporte ou mudanças de despesas. Ele é uma ferramenta educativa de planejamento, não aconselhamento financeiro personalizado."""},
+            "en": {"titulo": "Emergency reserve: using a coverage target", "resumo": "A reference for understanding expense coverage, recurring contributions, and the Reserve Planner's limits.", "tags": ["Emergency Reserve", "Planning", "Financial Education"], "conteudo": """# Emergency reserve: using a coverage target
+
+An emergency reserve is money set aside for unexpected expenses or a temporary loss of income. It can reduce the need to use credit under pressure, but it does not remove every financial risk.
+
+## Start with essential expenses
+
+Monthly essential expenses are a useful basis because they represent the cost of maintaining daily life. Multiplying them by coverage months creates a planning target, not a universal rule. A suitable duration depends on income stability, responsibilities, and other support. Ranges used in financial education are heuristics, not prescriptions.
+
+## Where to keep a reserve
+
+Liquidity, accessibility, risk, and preservation of value are relevant criteria. Financial products have their own conditions, risks, terms, and rules. Review current information and the institution's documentation before deciding where to keep emergency resources.
+
+## The effect of recurring contributions
+
+Recurring contributions shorten the time needed to reach a target when they remain constant. Review the plan when expenses, income, the amount already saved, or contribution capacity changes.
+
+## What JulisHub calculates
+
+The JulisHub Reserve Planner uses essential monthly expenses, coverage months, current reserve, and monthly contribution to derive a target, remaining amount, progress, and estimated completion horizon. The estimate assumes the entered contribution remains constant. It does not model inflation, investment returns, changing contributions, or changing expenses. It is an educational planning tool, not personalized financial advice."""},
+            "es": {"titulo": "Reserva de emergencia: cómo usar una meta de cobertura", "resumo": "Una referencia para comprender cobertura de gastos, aportes recurrentes y los límites del Planificador de Reserva.", "tags": ["Reserva de Emergencia", "Planificación", "Educación Financiera"], "conteudo": """# Reserva de emergencia: cómo usar una meta de cobertura
+
+Una reserva de emergencia es dinero separado para gastos inesperados o una pérdida temporal de ingresos. Puede reducir la necesidad de usar crédito bajo presión, pero no elimina todos los riesgos financieros.
+
+## Empezá por los gastos esenciales
+
+Los gastos esenciales mensuales son una base útil porque representan el costo de mantener la vida cotidiana. Multiplicarlos por meses de cobertura crea una meta de planificación, no una regla universal. Una duración adecuada depende de la estabilidad de los ingresos, responsabilidades y otros apoyos. Los rangos usados en educación financiera son heurísticas, no prescripciones.
+
+## Dónde mantener la reserva
+
+Liquidez, accesibilidad, riesgo y preservación del valor son criterios relevantes. Los productos financieros tienen condiciones, riesgos, plazos y reglas propias. Revisá información actualizada y la documentación de la institución antes de decidir dónde mantener recursos de emergencia.
+
+## El efecto de los aportes recurrentes
+
+Los aportes recurrentes reducen el tiempo necesario para alcanzar una meta cuando se mantienen constantes. Revisá el plan si cambian los gastos, ingresos, reserva actual o capacidad de aporte.
+
+## Qué calcula JulisHub
+
+El Planificador de Reserva de JulisHub usa gastos esenciales mensuales, meses de cobertura, reserva actual y aporte mensual para derivar meta, monto restante, progreso y horizonte estimado. La estimación supone que el aporte informado permanece constante. No modela inflación, rendimientos, cambios de aportes ni cambios de gastos. Es una herramienta educativa de planificación, no asesoramiento financiero personalizado."""},
+        },
+    },
+    "antecipacao-financiamento": {
+        "data": "22/09/2026",
+        "imagem_capa": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=600&fit=crop",
+        "localizations": {
+            "pt-BR": {"titulo": "Antecipação de financiamento: prazo, parcela e juros", "resumo": "Entenda os trade-offs de um pagamento extraordinário em um modelo Price simplificado.", "tags": ["Financiamento", "Antecipação", "Planejamento"], "conteudo": """# Antecipação de financiamento: prazo, parcela e juros
+
+Antecipar um financiamento significa usar um pagamento extraordinário para reduzir o saldo devedor antes do cronograma original. A antecipação pode ser parcial ou total; neste artigo, o foco é uma antecipação parcial em uma simulação educativa.
+
+## Saldo devedor e juros futuros
+
+Em um financiamento com juros, reduzir o principal pendente pode alterar os juros que incidiriam sobre esse saldo no futuro. O momento e o valor de um pagamento extraordinário influenciam a simulação. O valor solicitado pode não ser integralmente aplicado quando ultrapassa o saldo devedor restante.
+
+## Duas consequências no JulisHub
+
+Na comparação do JulisHub, ambas as estratégias aplicam o mesmo pagamento extraordinário ao principal depois da parcela escolhida.
+
+### Reduzir prazo
+
+No modelo simplificado, a prestação regular permanece alinhada ao cronograma original e menos meses podem ser necessários. A última parcela pode diferir. Como o saldo permanece em aberto por menos tempo, o total de juros pode cair.
+
+### Reduzir parcela
+
+No modelo simplificado, o vencimento original é mantido. O principal restante é redistribuído pelos períodos programados restantes, e a prestação regular pode diminuir. A economia de juros pode ser diferente da opção de reduzir prazo.
+
+Nenhuma dessas estratégias é automaticamente a correta. Duração da dívida, fluxo de caixa mensal e juros totais são trade-offs que podem ter importâncias diferentes para cada pessoa.
+
+## Limites da simulação
+
+O JulisHub usa uma taxa fixa e o sistema Price. A simulação não representa data real de liquidação, tarifas contratuais, seguros, tributos, indexação, convenções da instituição ou outros ajustes específicos. Para uma transação real, o demonstrativo e o cálculo de liquidação do credor são a referência aplicável."""},
+            "en": {"titulo": "Loan prepayment: term, installment, and interest", "resumo": "Understand the trade-offs of an extra principal payment in a simplified Price-method model.", "tags": ["Financing", "Prepayment", "Planning"], "conteudo": """# Loan prepayment: term, installment, and interest
+
+Prepaying a loan means using an extra payment to reduce outstanding principal before the original schedule. A prepayment can be partial or total; this article focuses on a partial prepayment in an educational simulation.
+
+## Outstanding principal and future interest
+
+In an interest-bearing loan, reducing outstanding principal can change the interest that would apply to that balance in the future. The timing and amount of an extra payment affect the simulation. A requested amount may not be fully applied when it exceeds the remaining balance.
+
+## Two consequences in JulisHub
+
+In JulisHub's comparison, both strategies apply the same extra payment to principal after the selected installment.
+
+### Reduce term
+
+In the simplified model, the regular installment remains aligned with the original schedule and fewer months may be required. The final installment may differ. Because principal remains outstanding for less time, total interest may fall.
+
+### Reduce installment
+
+In the simplified model, the original maturity is retained. Remaining principal is redistributed across the remaining scheduled periods, and the regular installment may decrease. Interest savings may differ from the reduce-term option.
+
+Neither strategy is automatically correct. Debt duration, monthly cash flow, and total interest are trade-offs that can matter differently to each person.
+
+## Simulation limits
+
+JulisHub uses a fixed rate and the Price method. It does not represent an actual settlement date, contractual fees, insurance, taxes, indexation, lender conventions, or other contract-specific adjustments. For a real transaction, the lender's statement and settlement calculation are the applicable reference."""},
+            "es": {"titulo": "Pago anticipado de financiamiento: plazo, cuota e intereses", "resumo": "Comprendé los trade-offs de un pago extraordinario al capital en un modelo Price simplificado.", "tags": ["Financiamiento", "Pago anticipado", "Planificación"], "conteudo": """# Pago anticipado de financiamiento: plazo, cuota e intereses
+
+Anticipar un financiamiento significa usar un pago extraordinario para reducir el capital pendiente antes del cronograma original. Puede ser parcial o total; este artículo aborda un pago parcial en una simulación educativa.
+
+## Capital pendiente e intereses futuros
+
+En un financiamiento con intereses, reducir el capital pendiente puede cambiar los intereses que se aplicarían a ese saldo en el futuro. El momento y el monto de un pago extraordinario influyen en la simulación. Un monto solicitado puede no aplicarse completamente si supera el saldo restante.
+
+## Dos consecuencias en JulisHub
+
+En la comparación de JulisHub, ambas estrategias aplican el mismo pago extraordinario al capital después de la cuota elegida.
+
+### Reducir plazo
+
+En el modelo simplificado, la cuota regular permanece alineada con el cronograma original y pueden requerirse menos meses. La cuota final puede diferir. Como el capital permanece pendiente por menos tiempo, el total de intereses puede disminuir.
+
+### Reducir cuota
+
+En el modelo simplificado, se mantiene el vencimiento original. El capital restante se redistribuye entre los períodos programados restantes y la cuota regular puede disminuir. El ahorro de intereses puede diferir de la opción de reducir plazo.
+
+Ninguna estrategia es automáticamente correcta. Duración de la deuda, flujo de caja mensual e intereses totales son trade-offs que pueden importar de manera diferente para cada persona.
+
+## Límites de la simulación
+
+JulisHub usa una tasa fija y el sistema Price. No representa la fecha real de liquidación, cargos contractuales, seguros, impuestos, indexación, convenciones de la entidad u otros ajustes específicos. Para una operación real, el estado y cálculo de liquidación del acreedor son la referencia aplicable."""},
+        },
+    },
+}
+
+SUPPORTED_BLOG_LANGS = ("pt-BR", "en", "es")
+BlogLang = Literal["pt-BR", "en", "es"]
+
+
+def localized_article(slug: str, lang: BlogLang) -> dict | None:
+    guidance = GUIDANCE_ARTICLES.get(slug)
+    if guidance:
+        localized = guidance["localizations"].get(lang)
+        if localized is None:
+            return None
+        return {"slug": slug, "data": guidance["data"], "imagem_capa": guidance["imagem_capa"], **localized}
+    legacy = next((article for article in LEGACY_ARTICLES if article["slug"] == slug), None)
+    return legacy if legacy is not None and lang == "pt-BR" else None
+
+
+def localized_articles(lang: BlogLang) -> list[dict]:
+    slugs = ["reserva-de-emergencia", "antecipacao-financiamento"] + [article["slug"] for article in LEGACY_ARTICLES]
+    return [article for slug in slugs if (article := localized_article(slug, lang)) is not None]
+
+
 @router.get("/blog")
-async def get_artigos():
-    """
-    Retorna lista de todos os artigos (sem o campo 'conteudo' para otimizar performance).
-    Ideal para a listagem do blog.
-    """
+async def get_artigos(lang: BlogLang = Query("pt-BR")):
+    """Returns localized article metadata; legacy articles are PT-BR only."""
     try:
-        logger.info(f"📚 Listando {len(ARTIGOS)} artigos do blog")
-        
-        # Remove o campo 'conteudo' para deixar a resposta mais leve
-        artigos_resumo = [
-            {k: v for k, v in artigo.items() if k != 'conteudo'}
-            for artigo in ARTIGOS
-        ]
-        
-        return artigos_resumo
-    
-    except Exception as e:
-        logger.error(f"❌ Erro ao listar artigos: {e}")
+        articles = localized_articles(lang)
+        logger.info("Listing %s blog articles for %s", len(articles), lang)
+        return [{key: value for key, value in article.items() if key != "conteudo"} for article in articles]
+    except Exception as error:
+        logger.error("Could not list blog articles: %s", error)
         raise HTTPException(status_code=500, detail="Erro ao carregar artigos")
 
 
 @router.get("/blog/{slug}")
-async def get_artigo(slug: str):
-    """
-    Retorna um artigo completo (incluindo conteúdo em Markdown) pelo slug.
-    """
-    try:
-        logger.info(f"📖 Buscando artigo: {slug}")
-        
-        # Busca o artigo pelo slug
-        artigo = next((a for a in ARTIGOS if a["slug"] == slug), None)
-        
-        if not artigo:
-            logger.warning(f"⚠️ Artigo não encontrado: {slug}")
-            raise HTTPException(status_code=404, detail=f"Artigo '{slug}' não encontrado")
-        
-        logger.info(f"✅ Artigo encontrado: {artigo['titulo']}")
-        return artigo
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Erro ao buscar artigo '{slug}': {e}")
-        raise HTTPException(status_code=500, detail="Erro ao carregar artigo")
+async def get_artigo(slug: str, lang: BlogLang = Query("pt-BR")):
+    """Returns one localized article; unavailable translations never fall back silently."""
+    article = localized_article(slug, lang)
+    if article is None:
+        raise HTTPException(status_code=404, detail=f"Artigo '{slug}' não disponível para {lang}")
+    return article
