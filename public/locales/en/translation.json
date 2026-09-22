@@ -9,6 +9,11 @@
     "openMenu": "Open menu",
     "menuTitle": "Navigation menu"
   },
+  "copySummary": {
+    "copy": "Copy summary",
+    "copied": "Summary copied.",
+    "failed": "Could not copy the summary."
+  },
   "home": {
     "tagline": "Your complete financial hub",
     "title": {
@@ -236,9 +241,21 @@
     "comparisonResults": "Results",
     "estimatedCompletion": "Estimated completion",
     "estimatedMonthsValue": "{{months}} months",
-    "monthsValue": "{{months}} months"
+    "monthsValue": "{{months}} months",
+    "summaryTitle": "JulisHub — Reserve Planner",
+    "summaryAssumptions": "Assumptions",
+    "summaryResults": "Result",
+    "summaryCaveat": "Planning simulation based on the values entered; it does not include investment returns or inflation and is not financial advice."
   },
   "financingPrepayment": {
+    "summaryTitle": "JulisHub — Prepayment comparison",
+    "summaryAssumptions": "Financing assumptions",
+    "summaryFinancedAmount": "Financed amount",
+    "summaryMonthlyRate": "Monthly rate",
+    "summaryPrepayment": "Prepayment",
+    "summaryRequestedAmount": "Requested amount",
+    "summaryAppliedAmount": "Amount actually applied",
+    "summaryOriginal": "Original financing",
     "title": "Prepayment comparison",
     "description": "Compare the effect of an extra principal payment after an installment has been paid.",
     "month": "Prepay after installment",

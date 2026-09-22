@@ -524,3 +524,18 @@ Entrega:
 Validação local:
 - verificações determinísticas de cálculo, cenários, limite, nomes duplicados e leitura segura de armazenamento aprovadas;
 - ESLint, TypeScript, build de produção, parse dos JSONs de tradução e `git diff --check` aprovados; smoke manual permanece pendente.
+
+## Sprint 3C — Copyable Decision Summaries
+
+Status:
+Implementado localmente — validação manual pendente.
+
+Entrega:
+- resumo em texto simples copiado explicitamente para a área de transferência nos resultados ativos do Planejador de Reserva e da Comparação de Antecipação;
+- mecanismo de cópia compartilhado, com conteúdo e ressalvas específicos de cada domínio, localizado em pt-BR, en e es e processado somente no navegador;
+- o resumo de financiamento usa o snapshot das premissas que gerou a resposta e é invalidado quando valores de financiamento ou antecipação mudam;
+- sem PDF, arquivos, compartilhamento social, backend, persistência adicional ou plataforma genérica de exportação.
+
+Validação local:
+- verificações determinísticas dos resumos de reserva (normal, meta alcançada e sem horizonte) e financiamento aprovadas;
+- ESLint, TypeScript, build de produção, parse dos JSONs de tradução e `git diff --check` aprovados; smoke manual de cópia, estados de falha, locale e responsividade permanece pendente.

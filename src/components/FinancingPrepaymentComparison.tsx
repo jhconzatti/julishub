@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Line, LineChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { GitCompare, TrendingDown } from "lucide-react";
@@ -6,19 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import CopySummaryButton from "@/components/CopySummaryButton";
+import { buildFinancingDecisionSummary, type FinancingComparisonRequest, type FinancingComparisonResult } from "@/lib/decisionSummaries";
 
 interface FinancingForm {
   valor_financiamento: number;
   taxa_mensal: number;
   meses: number;
-}
-
-interface PrepaymentResponse {
-  original: { prestacao: number; prazo: number; total_pago: number; total_juros: number };
-  antecipacao: { mes: number; valor_solicitado: number; valor_aplicado: number };
-  reduzir_prazo: { prestacao_regular: number; prestacao_final: number; prazo: number; meses_economizados: number; total_pago: number; total_juros: number; juros_economizados: number; quitado: boolean };
-  reduzir_parcela: { prestacao_original: number; prestacao_recalculada: number | null; reducao_prestacao: number | null; prazo: number; parcelas_restantes: number; total_pago: number; total_juros: number; juros_economizados: number; quitado: boolean };
-  evolucao: Array<{ mes: number; original: number; reduzir_prazo: number; reduzir_parcela: number }>;
 }
 
 const getApiBaseUrl = () => {
@@ -32,23 +26,35 @@ export default function FinancingPrepaymentComparison({ financing }: { financing
   const { t, i18n } = useTranslation();
   const [month, setMonth] = useState(12);
   const [amount, setAmount] = useState(20000);
-  const [result, setResult] = useState<PrepaymentResponse | null>(null);
+  const [result, setResult] = useState<FinancingComparisonResult | null>(null);
+  const [requestSnapshot, setRequestSnapshot] = useState<FinancingComparisonRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const currency = new Intl.NumberFormat(i18n.language, { style: "currency", currency: "BRL" });
+  const currency = useMemo(() => new Intl.NumberFormat(i18n.language, { style: "currency", currency: "BRL" }), [i18n.language]);
+  const invalidateResult = () => { setResult(null); setRequestSnapshot(null); };
+  useEffect(() => { invalidateResult(); }, [financing.valor_financiamento, financing.taxa_mensal, financing.meses]);
+  const activeResult = result && requestSnapshot
+    && requestSnapshot.valor_financiamento === financing.valor_financiamento
+    && requestSnapshot.taxa_mensal === financing.taxa_mensal
+    && requestSnapshot.meses === financing.meses
+    && requestSnapshot.mes_antecipacao === month
+    && requestSnapshot.valor_antecipacao === amount ? result : null;
+  const summary = useMemo(() => activeResult && requestSnapshot ? buildFinancingDecisionSummary(requestSnapshot, activeResult, { t, currency: (value) => currency.format(value), percent: (value) => new Intl.NumberFormat(i18n.language, { style: "percent", maximumFractionDigits: 2 }).format(value) }) : null, [activeResult, currency, i18n.language, requestSnapshot, t]);
 
   const compare = async () => {
     setLoading(true);
     setError(null);
-    setResult(null);
+    invalidateResult();
+    const request: FinancingComparisonRequest = { ...financing, mes_antecipacao: month, valor_antecipacao: amount };
     try {
       const response = await fetch(`${API_BASE_URL}/financiamento-antecipacao`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...financing, mes_antecipacao: month, valor_antecipacao: amount }),
+        body: JSON.stringify(request),
       });
       if (!response.ok) throw new Error("prepayment comparison failed");
-      setResult((await response.json()) as PrepaymentResponse);
+      setResult((await response.json()) as FinancingComparisonResult);
+      setRequestSnapshot(request);
     } catch {
       setError(t("financingPrepayment.validationError"));
     } finally {
@@ -66,12 +72,12 @@ export default function FinancingPrepaymentComparison({ financing }: { financing
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="prepayment-month">{t("financingPrepayment.month")}</Label>
-            <Input id="prepayment-month" type="number" min="1" max={Math.max(financing.meses - 1, 1)} step="1" value={month} onChange={(event) => setMonth(Number(event.target.value))} />
+            <Input id="prepayment-month" type="number" min="1" max={Math.max(financing.meses - 1, 1)} step="1" value={month} onChange={(event) => { setMonth(Number(event.target.value)); invalidateResult(); }} />
             <p className="text-xs text-muted-foreground">{t("financingPrepayment.monthHelp")}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="prepayment-amount">{t("financingPrepayment.amount")}</Label>
-            <Input id="prepayment-amount" type="number" min="0" step="0.01" value={amount} onChange={(event) => setAmount(Number(event.target.value))} />
+            <Input id="prepayment-amount" type="number" min="0" step="0.01" value={amount} onChange={(event) => { setAmount(Number(event.target.value)); invalidateResult(); }} />
             <p className="text-xs text-muted-foreground">{t("financingPrepayment.amountHelp")}</p>
           </div>
         </div>
@@ -79,34 +85,35 @@ export default function FinancingPrepaymentComparison({ financing }: { financing
         {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
         <p className="text-xs text-muted-foreground">{t("financingPrepayment.disclaimer")}</p>
 
-        {result ? <div className="space-y-6">
+        {activeResult ? <div className="space-y-6">
           <Card className="border-border/70 bg-muted/30">
             <CardHeader className="pb-2"><CardTitle className="text-sm">{t("financingPrepayment.original")}</CardTitle></CardHeader>
             <CardContent className="grid gap-3 text-sm sm:grid-cols-3">
-              <p><span className="text-muted-foreground">{t("financingPrepayment.installment")}: </span><strong>{currency.format(result.original.prestacao)}</strong></p>
-              <p><span className="text-muted-foreground">{t("financingPrepayment.term")}: </span><strong>{t("financingPrepayment.monthCount", { count: result.original.prazo })}</strong></p>
-              <p><span className="text-muted-foreground">{t("financingPrepayment.totalInterest")}: </span><strong>{currency.format(result.original.total_juros)}</strong></p>
+              <p><span className="text-muted-foreground">{t("financingPrepayment.installment")}: </span><strong>{currency.format(activeResult.original.prestacao)}</strong></p>
+              <p><span className="text-muted-foreground">{t("financingPrepayment.term")}: </span><strong>{t("financingPrepayment.monthCount", { count: activeResult.original.prazo })}</strong></p>
+              <p><span className="text-muted-foreground">{t("financingPrepayment.totalInterest")}: </span><strong>{currency.format(activeResult.original.total_juros)}</strong></p>
             </CardContent>
           </Card>
 
-          <p className="text-sm text-muted-foreground">{t("financingPrepayment.applied", { month: result.antecipacao.mes, value: currency.format(result.antecipacao.valor_aplicado) })}</p>
+          <p className="text-sm text-muted-foreground">{t("financingPrepayment.applied", { month: activeResult.antecipacao.mes, value: currency.format(activeResult.antecipacao.valor_aplicado) })}</p>
+          {summary ? <CopySummaryButton text={summary} label={t("copySummary.copy")} copiedLabel={t("copySummary.copied")} failedLabel={t("copySummary.failed")} /> : null}
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="border-border/70 bg-card">
               <CardHeader className="pb-2"><CardTitle className="text-base">{t("financingPrepayment.reduceTerm")}</CardTitle><CardDescription>{t("financingPrepayment.reduceTermTradeoff")}</CardDescription></CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p><span className="text-muted-foreground">{t("financingPrepayment.monthsSaved")}: </span><strong>{t("financingPrepayment.monthCount", { count: result.reduzir_prazo.meses_economizados })}</strong></p>
-                <p><span className="text-muted-foreground">{t("financingPrepayment.interestSaved")}: </span><strong>{currency.format(result.reduzir_prazo.juros_economizados)}</strong></p>
-                <p><span className="text-muted-foreground">{t("financingPrepayment.term")}: </span>{t("financingPrepayment.monthCount", { count: result.reduzir_prazo.prazo })}</p>
-                <p><span className="text-muted-foreground">{t("financingPrepayment.totalInterest")}: </span>{currency.format(result.reduzir_prazo.total_juros)}</p>
-                {result.reduzir_prazo.quitado ? <p className="font-medium text-green-700 dark:text-green-400">{t("financingPrepayment.fullyPaid")}</p> : null}
+                <p><span className="text-muted-foreground">{t("financingPrepayment.monthsSaved")}: </span><strong>{t("financingPrepayment.monthCount", { count: activeResult.reduzir_prazo.meses_economizados })}</strong></p>
+                <p><span className="text-muted-foreground">{t("financingPrepayment.interestSaved")}: </span><strong>{currency.format(activeResult.reduzir_prazo.juros_economizados)}</strong></p>
+                <p><span className="text-muted-foreground">{t("financingPrepayment.term")}: </span>{t("financingPrepayment.monthCount", { count: activeResult.reduzir_prazo.prazo })}</p>
+                <p><span className="text-muted-foreground">{t("financingPrepayment.totalInterest")}: </span>{currency.format(activeResult.reduzir_prazo.total_juros)}</p>
+                {activeResult.reduzir_prazo.quitado ? <p className="font-medium text-green-700 dark:text-green-400">{t("financingPrepayment.fullyPaid")}</p> : null}
               </CardContent>
             </Card>
             <Card className="border-border/70 bg-card">
               <CardHeader className="pb-2"><CardTitle className="text-base">{t("financingPrepayment.reduceInstallment")}</CardTitle><CardDescription>{t("financingPrepayment.reduceInstallmentTradeoff")}</CardDescription></CardHeader>
               <CardContent className="space-y-2 text-sm">
-                {result.reduzir_parcela.quitado ? <p className="font-medium text-green-700 dark:text-green-400">{t("financingPrepayment.fullyPaid")}</p> : <><p><span className="text-muted-foreground">{t("financingPrepayment.newInstallment")}: </span><strong>{currency.format(result.reduzir_parcela.prestacao_recalculada ?? 0)}</strong></p><p><span className="text-muted-foreground">{t("financingPrepayment.installmentReduction")}: </span><strong>{currency.format(result.reduzir_parcela.reducao_prestacao ?? 0)}</strong></p></>}
-                <p><span className="text-muted-foreground">{t("financingPrepayment.interestSaved")}: </span><strong>{currency.format(result.reduzir_parcela.juros_economizados)}</strong></p>
-                <p><span className="text-muted-foreground">{t("financingPrepayment.totalInterest")}: </span>{currency.format(result.reduzir_parcela.total_juros)}</p>
+                {activeResult.reduzir_parcela.quitado ? <p className="font-medium text-green-700 dark:text-green-400">{t("financingPrepayment.fullyPaid")}</p> : <><p><span className="text-muted-foreground">{t("financingPrepayment.newInstallment")}: </span><strong>{currency.format(activeResult.reduzir_parcela.prestacao_recalculada ?? 0)}</strong></p><p><span className="text-muted-foreground">{t("financingPrepayment.installmentReduction")}: </span><strong>{currency.format(activeResult.reduzir_parcela.reducao_prestacao ?? 0)}</strong></p></>}
+                <p><span className="text-muted-foreground">{t("financingPrepayment.interestSaved")}: </span><strong>{currency.format(activeResult.reduzir_parcela.juros_economizados)}</strong></p>
+                <p><span className="text-muted-foreground">{t("financingPrepayment.totalInterest")}: </span>{currency.format(activeResult.reduzir_parcela.total_juros)}</p>
               </CardContent>
             </Card>
           </div>
@@ -115,7 +122,7 @@ export default function FinancingPrepaymentComparison({ financing }: { financing
             <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingDown className="h-5 w-5 text-primary" />{t("financingPrepayment.chartTitle")}</CardTitle><CardDescription>{t("financingPrepayment.chartDescription")}</CardDescription></CardHeader>
             <CardContent className="h-[240px] pt-2 sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={result.evolucao} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <LineChart data={activeResult.evolucao} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="mes" tickFormatter={(value) => t("financingPrepayment.monthShort", { count: value })} />
                   <YAxis width={70} tickFormatter={(value) => currency.format(value)} />

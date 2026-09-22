@@ -9,6 +9,11 @@
     "openMenu": "Abrir menu",
     "menuTitle": "Menu de navegação"
   },
+  "copySummary": {
+    "copy": "Copiar resumo",
+    "copied": "Resumo copiado.",
+    "failed": "Não foi possível copiar o resumo."
+  },
   "home": {
     "tagline": "Seu hub financeiro completo",
     "title": {
@@ -236,9 +241,21 @@
     "comparisonResults": "Resultados",
     "estimatedCompletion": "Conclusão estimada",
     "estimatedMonthsValue": "{{months}} meses",
-    "monthsValue": "{{months}} meses"
+    "monthsValue": "{{months}} meses",
+    "summaryTitle": "JulisHub — Planejador de Reserva",
+    "summaryAssumptions": "Premissas",
+    "summaryResults": "Resultado",
+    "summaryCaveat": "Simulação de planejamento baseada nos valores informados; não considera rendimentos ou inflação e não constitui aconselhamento financeiro."
   },
   "financingPrepayment": {
+    "summaryTitle": "JulisHub — Comparação de antecipação",
+    "summaryAssumptions": "Premissas do financiamento",
+    "summaryFinancedAmount": "Valor financiado",
+    "summaryMonthlyRate": "Taxa mensal",
+    "summaryPrepayment": "Antecipação",
+    "summaryRequestedAmount": "Valor solicitado",
+    "summaryAppliedAmount": "Valor efetivamente aplicado",
+    "summaryOriginal": "Financiamento original",
     "title": "Comparação de antecipação",
     "description": "Compare o efeito de uma antecipação de principal após uma parcela já paga.",
     "month": "Antecipar após a parcela",

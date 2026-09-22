@@ -9,6 +9,11 @@
     "openMenu": "Abrir menú",
     "menuTitle": "Menú de navegación"
   },
+  "copySummary": {
+    "copy": "Copiar resumen",
+    "copied": "Resumen copiado.",
+    "failed": "No fue posible copiar el resumen."
+  },
   "home": {
     "tagline": "Tu hub financiero completo",
     "title": {
@@ -236,9 +241,21 @@
     "comparisonResults": "Resultados",
     "estimatedCompletion": "Finalización estimada",
     "estimatedMonthsValue": "{{months}} meses",
-    "monthsValue": "{{months}} meses"
+    "monthsValue": "{{months}} meses",
+    "summaryTitle": "JulisHub — Planificador de Reserva",
+    "summaryAssumptions": "Supuestos",
+    "summaryResults": "Resultado",
+    "summaryCaveat": "Simulación de planificación basada en los valores ingresados; no considera rendimientos ni inflación y no constituye asesoramiento financiero."
   },
   "financingPrepayment": {
+    "summaryTitle": "JulisHub — Comparación de pago anticipado",
+    "summaryAssumptions": "Supuestos del financiamiento",
+    "summaryFinancedAmount": "Monto financiado",
+    "summaryMonthlyRate": "Tasa mensual",
+    "summaryPrepayment": "Pago anticipado",
+    "summaryRequestedAmount": "Monto solicitado",
+    "summaryAppliedAmount": "Monto efectivamente aplicado",
+    "summaryOriginal": "Financiamiento original",
     "title": "Comparación de pago anticipado",
     "description": "Compará el efecto de un pago extraordinario al capital después de una cuota ya pagada.",
     "month": "Anticipar después de la cuota",
