@@ -539,3 +539,27 @@ Entrega:
 Validação local:
 - verificações determinísticas dos resumos de reserva (normal, meta alcançada e sem horizonte) e financiamento aprovadas;
 - ESLint, TypeScript, build de produção, parse dos JSONs de tradução e `git diff --check` aprovados; smoke manual de cópia, estados de falha, locale e responsividade permanece pendente.
+
+## Sprint 3D — Product Depth Review
+
+Objetivo:
+Revisar se o ciclo de profundidade de produto atingiu um fluxo coerente sem ampliar JulisHub por simetria ou infraestrutura desnecessária.
+
+Revisão:
+- Sprint 3B levou o Planejador de Reserva de uma projeção única a alternativas nomeadas, recuperáveis e comparáveis, mantendo cálculo determinístico e persistência local limitada;
+- Sprint 3C tornou os resultados ativos de reserva e antecipação portáveis em texto simples, preservando premissas e ressalvas sem criar uma plataforma de exportação;
+- Sprint 3B e 3C estão validados localmente/estaticamente; smoke manual de navegador permanece pendente e não é evidência de validação em produção;
+- antecipações recorrentes ampliariam de forma desproporcional o contrato Price; persistência de financiamento criaria risco de resultados derivados obsoletos; resumo de investimento seria principalmente simetria, pois já há histórico e comparação;
+- cenário de reserva já pode ser carregado e copiado como resultado ativo; links de conteúdo existentes são navegação complementar, não uma lacuna decisória material.
+
+Decisão de retorno marginal:
+**SPRINT 3 CLOSED.** Os dois incrementos implementados resolvem retenção, comparação e comunicação dos fluxos de decisão mais maduros. As oportunidades restantes têm workaround razoável, menor valor marginal ou custo arquitetural/manutenção desproporcional. Nenhum defeito material de Sprint 3 está documentado.
+
+Próxima direção:
+**NEW PRODUCT DISCOVERY.** Um futuro Sprint 4A deve reavaliar oportunidades a partir de uma perspectiva nova de produto, sem pré-comprometer uma nova funcionalidade. A validação manual pendente de Sprint 3B/3C continua como atividade de confirmação separada, sem alegação de validação em produção.
+
+## Sprint 3 Closure
+
+**SPRINT 3 CLOSED**
+
+O ciclo aprofundou decisões de reserva por cenários locais comparáveis e permitiu reter/comunicar resultados ativos de reserva e financiamento com premissas e ressalvas. Não introduziu contas, banco de dados, contratos financeiros adicionais, providers ou uma plataforma genérica de exportação.
