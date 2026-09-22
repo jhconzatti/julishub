@@ -14,7 +14,7 @@ JulisHub é uma aplicação financeira fullstack pessoal, com mercados, indicado
 
 ## Current Status
 
-**SPRINT 2 CLOSED.** A implementação planejada, as validações local/estática/automatizada e a validação manual em produção foram concluídas sem defeito material identificado. O produto evoluiu de correções de base para utilitários financeiros orientados a decisão e contexto histórico de câmbio, sem ampliar o escopo para uma plataforma financeira completa.
+**SPRINT 3 CLOSED.** A implementação planejada, as validações local/estática/automatizada e a validação manual em produção aplicável foram concluídas sem defeito material identificado. O produto evoluiu de correções de base para utilitários financeiros orientados a decisão, contexto histórico de câmbio e persistência local limitada, sem ampliar o escopo para uma plataforma financeira completa. O smoke manual de navegador de Sprint 3B/3C permanece como acompanhamento operacional documentado.
 
 ## Known Issues
 
@@ -563,3 +563,53 @@ Próxima direção:
 **SPRINT 3 CLOSED**
 
 O ciclo aprofundou decisões de reserva por cenários locais comparáveis e permitiu reter/comunicar resultados ativos de reserva e financiamento com premissas e ressalvas. Não introduziu contas, banco de dados, contratos financeiros adicionais, providers ou uma plataforma genérica de exportação.
+
+## Sprint 4A — Fresh Product Opportunity Assessment
+
+Status:
+Concluída — avaliação/documentação somente; nenhuma alteração de código de produto.
+
+Por que uma avaliação nova:
+- Sprint 3 foi encerrada por retorno marginal decrescente; esta avaliação reconsidera o produto inteiro, em vez de prolongar por simetria os fluxos de calculadora, cópia ou persistência.
+- Não há analytics, adoção ou demanda externa documentados no repositório. As conclusões abaixo distinguem comportamento observado de interpretações que exigiriam validação posterior.
+
+Maturidade atual:
+- Fundação técnica e consistência de UX são adequadas: rotas carregadas sob demanda, estados explícitos de dados externos, cache/stale validado e localização de interface estão estabelecidos.
+- Reserva e antecipação de financiamento são os fluxos de decisão mais maduros: partem de premissas, mostram consequências, preservam limites e suportam cenários ou resumos locais quando isso ajuda a decisão.
+- Mercados e câmbio são adequados como consulta contextual, com universo deliberadamente limitado e dependência externa já relevante; expansão de instrumentos ou providers não tem justificativa nova.
+- Indicadores explicam Selic, IPCA e CDI no próprio destino, mas não levam uma dúvida financeira concreta até uma ação ou explicação editorial específica.
+- Blog é claramente subdesenvolvido como superfície de produto: há três artigos estáticos, genéricos e em português, com relações por tags apenas; o conteúdo não é escolhido pelo contexto de uma calculadora ou indicador.
+- Notícias é uma agregação confiável o suficiente para consulta, mas não demonstra diferenciação nem conexão com decisões no produto; aprofundá-la tende a aumentar manutenção sem uma nova proposta de valor.
+- Persistência pessoal é propositalmente limitada a formulário/cenários de reserva e não justifica dashboard, contas, banco de dados ou sincronização entre dispositivos.
+- A maturidade operacional é adequada para o escopo atual, mas ainda depende de checagens manuais para perceber degradação de providers; isso é uma incerteza de manutenção, não evidência de falha atual.
+
+Lacunas e categorias avaliadas:
+- Produto coerente, mas ainda composto sobretudo de destinos autônomos: Home e navegação tornam os destinos encontráveis, porém não apresentam um próximo passo contextual após resultados, indicadores ou artigos.
+- Foram avaliadas profundidade existente, coerência entre superfícies, conteúdo/educação, maturidade de engenharia, operação/observabilidade e simplificação. Não surgiu evidência nova para uma calculadora, dashboard, IA, autenticação, banco de dados, persistência ampla ou expansão de providers.
+
+Shortlist de direções estratégicas:
+1. **Conteúdo/educação contextual para decisões existentes** — evidência mais forte: reserva e antecipação já produzem decisões explícitas, enquanto o Blog tem somente três artigos genéricos e nenhuma relação ferramenta-conteúdo orientada pela necessidade atual. Benefício: reduzir a lacuna entre resultado e entendimento sem transformar o produto em recomendador. Custo: curadoria, revisão factual e localização; incerteza: ainda não há evidência de que usuários seguirão esses caminhos.
+2. **Coerência de descoberta de jornadas** — Home oferece entradas para os destinos e Calculators concentra cinco ferramentas em abas, mas a densidade não é, por si só, prova de confusão. Benefício: tornar capacidades maduras mais encontráveis. Custo: pesquisa de IA/cópia e validação; incerteza: não há evidência de descoberta falha, portanto não está pronta para implementação.
+3. **Diagnóstico operacional leve de dados externos** — múltiplos providers, cache/stale e cold start tornam a causa de indisponibilidades difícil de conhecer sem inspeção manual. Benefício: reduzir incerteza de manutenção. Custo: contrato/telemetria e operação; incerteza: não há incidente recorrente documentado que justifique priorizá-lo antes do valor de produto.
+
+Direção selecionada:
+**CONTENT / EDUCATION — tornar resultados financeiros existentes mais compreensíveis no ponto em que uma decisão é tomada.** Isso aproveita os fluxos que já demonstram profundidade e aborda a maior lacuna observável sem acrescentar dados financeiros, infraestrutura pessoal ou aconselhamento automatizado.
+
+Sprint 4B recomendada:
+**Sprint 4B — Contextual Decision Guidance.**
+
+- Problema: resultados de reserva e antecipação informam a escolha, mas o produto não oferece explicação editorial selecionada para a premissa, limite ou trade-off revelado naquele resultado.
+- Objetivo: validar e entregar uma conexão pequena, factual e contextual entre uma decisão existente e conteúdo educativo correspondente, preservando a autonomia do usuário.
+- Evidência: Planejador de Reserva e comparação de antecipação já expõem meta, horizonte, juros e trade-offs; o Blog contém somente três artigos estáticos e os relacionamentos atuais dependem exclusivamente de tags entre artigos.
+- MVP: definir uma matriz editorial explícita e pequena para os fluxos de reserva e antecipação; revisar a precisão/frescor dos artigos que ela usar; expor, após resultado elegível, um ou poucos próximos passos educativos com escopo e ressalva claros. Validar idioma, ausência de recomendação financeira e comportamento sem conteúdo aplicável.
+- Fora do escopo: novos cálculos, recomendações de investimento/crédito, IA, geração automática de conteúdo, feed de notícias personalizado, SEO em massa, contas, banco de dados, novos providers, dashboard e reorganização global da navegação.
+- Limite de arquitetura: preferir relações editoriais determinísticas no frontend/conteúdo existente; nenhum dado financeiro pessoal deve sair do navegador e nenhum novo contrato de provider ou persistência deve ser criado para a funcionalidade.
+- Resultado esperado: uma decisão madura termina com explicação relevante e verificável, ou explicitamente não sugere nada quando não houver correspondência honesta.
+
+Direções mantidas em espera:
+- Dashboard, autenticação, banco de dados e sincronização: estado pessoal ainda é pequeno, local e limitado a cenários de reserva.
+- Novas calculadoras, antecipações recorrentes, exportação adicional e simetria de persistência: Sprint 3 já encontrou retorno marginal menor e há workaround razoável.
+- Expansão de mercados, histórico de câmbio ou providers: acrescentaria dependência operacional sem problema novo identificado.
+- IA financeira: não há problema que exija geração não determinística, nem base suficiente para administrar risco de alucinação.
+- Aprofundamento de News: o agregador permanece uma superfície secundária e pouco diferenciada; de-empenhá-lo é preferível a ampliar escopo sem uma conexão decisória concreta.
+- Observabilidade e testes de comportamento frontend: permanecem contexto de engenharia; devem ser reavaliados se revelarem bloqueio de release, regressão ou incidente recorrente.
