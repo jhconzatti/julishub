@@ -509,3 +509,18 @@ Ideias adiadas:
 - financiamento com múltiplas/recorrentes antecipações;
 - dashboard, watchlist, IA e nova expansão de histórico de câmbio; o estado pessoal e o universo selecionável atuais não justificam o custo;
 - links ferramenta-conteúdo até que haja correspondência editorial específica além dos artigos existentes sobre reserva e juros compostos.
+
+## Sprint 3B — Saved and Comparable Reserve Scenarios
+
+Status:
+Implementado localmente — validação manual pendente.
+
+Entrega:
+- após calcular uma reserva válida, o usuário pode salvar até cinco cenários nomeados, locais ao navegador/dispositivo, sem modificar a persistência do formulário atual;
+- os cenários persistem em `julishub_reserve_scenarios_v1`, com versão explícita, e armazenam somente id, nome e entradas financeiras; dados malformados são ignorados com segurança;
+- os resultados são sempre recalculados por `calculateReservePlan`, e dois cenários distintos podem ser comparados por premissas, meta, falta, progresso e horizonte estimado;
+- não há backend, API, autenticação, banco de dados ou envio de valores financeiros; interface e feedback foram localizados em pt-BR, en e es.
+
+Validação local:
+- verificações determinísticas de cálculo, cenários, limite, nomes duplicados e leitura segura de armazenamento aprovadas;
+- ESLint, TypeScript, build de produção, parse dos JSONs de tradução e `git diff --check` aprovados; smoke manual permanece pendente.
