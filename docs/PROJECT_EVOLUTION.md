@@ -632,3 +632,70 @@ Validação local:
 - ESLint, TypeScript, build de produção, parse dos JSONs de tradução, compile/import Python, testes focados de Blog e suíte backend completa aprovados (63 testes);
 - o shim global de npm permanece indisponível no ambiente local, mas os executáveis versionados em `node_modules` realizaram as validações de frontend;
 - smoke manual permanece pendente para resultados de Reserva/Antecipação, CTA localizada, troca de idioma dentro do artigo, estados de Blog, responsividade e temas.
+
+## Sprint 4C — Editorial Baseline Review & Sprint 4 Closure
+
+Status:
+Concluída — avaliação, governança editorial e documentação somente; nenhuma alteração de produto.
+
+Baseline editorial adotado:
+- preferir conceitos estáveis a taxas, rendimentos, estatísticas ou condições temporárias incorporadas ao texto;
+- explicar premissas, trade-offs e limites antes de prescrever qualquer ação;
+- afirmar regras, tributos, regulação e características materiais apenas com fonte autoritativa verificável, ou omitir a afirmação variável;
+- vincular conteúdo a uma ferramenta somente quando ele ajuda a interpretar o resultado concreto dessa ferramenta;
+- não apresentar conteúdo de outro idioma como se fosse localizado;
+- manter tom sóbrio, acessível e educativo, sem promessas de riqueza, medo, urgência ou autoridade não comprovada;
+- indicar as simplificações relevantes do produto e preservar a decisão com o usuário.
+
+Inventário e disposição de conteúdo legado:
+- `juros-compostos-magia` (pt-BR somente): tem relação potencial com a calculadora de investimentos, mas contém citação atribuída sem verificação, exemplos com taxas fixas, promessas de riqueza e tom sensacionalista. **REVISE IN FUTURE**; não é destino contextual atual.
+- `tesouro-direto-guia-completo` (pt-BR somente): introduz renda fixa, mas contém taxas, tributos, liquidez, produtos e recomendações específicos e sensíveis ao tempo, além de absolutos sobre risco. **DE-EMPHASIZE**; pode permanecer acessível em pt-BR, mas não deve ser recomendado nem conectado a uma ferramenta no estado atual.
+- `reserva-de-emergencia` e `antecipacao-financiamento` são a dupla localizada de referência, em pt-BR/en/es, com mapeamento explícito para Reserva e Antecipação; não são conteúdo legado.
+
+Decisões de relação produto-conteúdo:
+- Investimentos → `juros-compostos-magia`: **ARTICLE REVISION REQUIRED FIRST**. A relação conceitual existe, mas o artigo não explica de forma confiável as premissas da calculadora atual e aumentaria o risco editorial se fosse sugerido agora.
+- Não há relacionamento forte adicional entre conteúdo existente e Indicadores, Câmbio, Mercados ou Salário. Tags não são evidência suficiente; nenhuma nova ligação é justificada.
+
+Política de localização:
+**Model B — PT-BR primary, localization only for product-linked content.** Artigos integrados a uma jornada de produto devem existir nos três idiomas da interface. Conteúdo editorial genérico pode permanecer em pt-BR até revisão deliberada; ausência de locale deve continuar explícita, sem fallback silencioso.
+
+Papel estratégico do Blog:
+**SUPPORTING EDUCATIONAL LAYER.** O Blog deve explicar conceitos e limites relevantes aos instrumentos existentes, não crescer como publicação financeira independente sem nova evidência de produto.
+
+Regra de orientação contextual:
+Adicionar orientação somente quando um resultado já produzido envolve uma premissa, limitação ou trade-off material e existe conteúdo revisado, localizado e diretamente explicativo; não adicionar por simetria de calculadora.
+
+Checklist de governança para novos artigos:
+1. Priorizar afirmações estáveis e datar/revisar as variáveis.
+2. Verificar fonte primária para regulação, tributos e regras materiais.
+3. Diferenciar educação de recomendação personalizada.
+4. Declarar simplificações e limites relevantes.
+5. Exigir relação explícita com o resultado quando houver CTA de ferramenta.
+6. Publicar os três idiomas para conteúdo ligado ao produto.
+7. Não ocultar indisponibilidade de locale com fallback de idioma.
+8. Revisar quando houver erro factual ou mudança material de produto/contexto.
+
+Gatilhos de revisão:
+- mudança nas premissas de uma calculadora vinculada;
+- alteração material de lei, regulação, tributação ou regra contratual citada;
+- envelhecimento de taxa, produto, estatística ou outra afirmação variável;
+- identificação de erro factual ou fonte não verificável;
+- promoção de artigo existente a destino contextual;
+- mudança relevante de idioma ou escopo editorial do produto.
+
+Efeito de produto e retorno marginal:
+- antes da Sprint 4, ferramentas e Blog eram superfícies majoritariamente independentes;
+- após 4B, Reserva e Antecipação terminam com uma explicação localizada, determinística e não recomendatória;
+- após 4C, existe um limite explícito para futuras conexões e uma política honesta para localização e legado;
+- adicionar orientação a todas as calculadoras, traduzir legado sem relação de produto, criar conteúdo para preencher Blog ou introduzir CMS/SEO agora teria retorno marginal baixo e aumentaria manutenção.
+
+Validação e decisão:
+- Sprint 4B possui validação local/automatizada documentada: ESLint, TypeScript, build, JSON, compile/import e 63 testes backend; o smoke manual de navegador continua pendente como acompanhamento de release, sem defeito documentado.
+- **SPRINT 4 CLOSED.** A Sprint 4 identificou a lacuna, entregou duas jornadas contextualizadas e estabeleceu governança suficiente. O smoke manual pendente não constitui bloqueio material de fechamento na ausência de defeito conhecido.
+- Próximo estado: **CONTENT MAINTENANCE.** Trabalho futuro, se necessário, deve revisar seletivamente o legado segundo esta baseline, sem criar uma nova funcionalidade ou roadmap agora.
+
+## Sprint 4 Closure
+
+**SPRINT 4 CLOSED**
+
+O ciclo tornou duas decisões maduras mais compreensíveis por meio de educação contextual localizada e definiu disciplina para que conteúdo futuro permaneça factual, proporcional e conectado ao produto apenas quando houver valor real.
